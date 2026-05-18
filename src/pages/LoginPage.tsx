@@ -5,6 +5,7 @@ import { Input } from '../components/Input'
 import { useForm } from '../hooks/useForm'
 import type { LoginFormData } from '../types/auth'
 import styles from './AuthPage.module.css'
+import { GoogleLogin } from '@react-oauth/google'
 
 const initialValues: LoginFormData = {
   email: '',
@@ -133,9 +134,28 @@ export const LoginPage: React.FC = () => {
         </div>
 
         <div className={styles.socialButtons}>
-          <button type="button" className={styles.socialBtn}>
-            <GoogleIcon /> Google로 계속하기
-          </button>
+          <GoogleLogin
+            onSuccess={async (credentialResponse) => {
+              const res = await fetch('http://localhost:8080/api/auth/google', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  credential: credentialResponse.credential,
+                }),
+              })
+
+              const data = await res.json()
+              console.log(data)
+
+              // 예: 백엔드가 accessToken을 주면 저장
+              localStorage.setItem('accessToken', data.accessToken)
+
+              navigate('/')
+            }}
+            onError={() => {
+              console.log('Google 로그인 실패')
+            }}
+          />
           <button type="button" className={styles.socialBtn}>
             <KakaoIcon /> 카카오로 계속하기
           </button>
