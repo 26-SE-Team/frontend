@@ -156,7 +156,9 @@ export const LoginPage: React.FC = () => {
               console.log('Google 로그인 실패')
             }}
           />
-          <button type="button" className={styles.socialBtn}>
+          <button type="button" className={styles.socialBtn} onClick={() => {
+            window.location.href = 'http://localhost:8080/api/auth/kakao'
+          }}>
             <KakaoIcon /> 카카오로 계속하기
           </button>
         </div>
