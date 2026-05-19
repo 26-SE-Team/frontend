@@ -1,0 +1,204 @@
+.start-screen {
+  --start-max-width: 430px;
+  --start-px: clamp(1.25rem, 5vw, 1.75rem);
+  --start-gap: clamp(1rem, 3vh, 1.5rem);
+
+  min-height: 100dvh;
+  min-height: 100svh;
+  display: flex;
+  justify-content: center;
+  background: #ffffff;
+  font-family:
+    "Pretendard",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Apple SD Gothic Neo",
+    "Noto Sans KR",
+    system-ui,
+    sans-serif;
+}
+
+.start-screen__frame {
+  width: 100%;
+  max-width: var(--start-max-width);
+  min-height: inherit;
+  display: flex;
+  flex-direction: column;
+  padding:
+    max(2.5rem, env(safe-area-inset-top))
+    var(--start-px)
+    max(0.75rem, env(safe-area-inset-bottom));
+}
+
+.start-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.625rem;
+  flex-shrink: 0;
+}
+
+.start-logo svg {
+  width: clamp(1.5rem, 5vw, 2rem);
+  height: clamp(1.5rem, 5vw, 2rem);
+}
+
+.start-logo__text {
+  font-size: clamp(1.5rem, 5.5vw, 1.875rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #c4c4c4;
+}
+
+.start-hero {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--start-gap);
+  padding: clamp(1rem, 4vh, 2.5rem) 0;
+  min-height: 0;
+}
+
+.start-hero__illustration {
+  width: min(72vw, 17.5rem);
+  height: auto;
+  flex-shrink: 0;
+}
+
+.start-hero__title {
+  margin: 0;
+  text-align: center;
+  font-size: clamp(1.125rem, 4.2vw, 1.375rem);
+  font-weight: 800;
+  line-height: 1.45;
+  letter-spacing: -0.02em;
+  color: #000000;
+}
+
+.start-actions {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
+  padding-bottom: clamp(0.5rem, 2vh, 1rem);
+}
+
+.start-error {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+.start-error p {
+  margin: 0;
+  flex: 1;
+  text-align: left;
+}
+
+.start-error button {
+  flex-shrink: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+}
+
+.start-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.start-btn:disabled:active {
+  transform: none;
+}
+
+.start-btn {
+  width: 100%;
+  min-height: clamp(3.25rem, 14vw, 4rem);
+  border-radius: 0.75rem;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.625rem;
+  font-size: clamp(1rem, 3.8vw, 1.125rem);
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  transition: transform 150ms ease, opacity 150ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.start-btn:active {
+  transform: scale(0.98);
+}
+
+.start-btn--kakao {
+  background: #fee500;
+  color: #000000;
+}
+
+.start-btn--google {
+  background: #ffffff;
+  color: #000000;
+  border: 1px solid #e5e5e5;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.start-home-indicator {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: center;
+  padding-top: 0.25rem;
+}
+
+.start-home-indicator__bar {
+  width: 8.75rem;
+  height: 0.3125rem;
+  background: #000000;
+  border-radius: 9999px;
+}
+
+@media (min-width: 768px) {
+  .start-screen {
+    background: #f5f5f5;
+    padding: 2rem 1rem;
+    box-sizing: border-box;
+  }
+
+  .start-screen__frame {
+    min-height: min(100dvh - 4rem, 52rem);
+    border-radius: 1.5rem;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+    background: #ffffff;
+  }
+}
+
+@media (max-height: 600px) {
+  .start-hero {
+    padding: 0.5rem 0;
+    gap: 0.75rem;
+  }
+
+  .start-hero__illustration {
+    width: min(55vw, 12rem);
+  }
+
+  .start-logo {
+    transform: scale(0.9);
+  }
+}

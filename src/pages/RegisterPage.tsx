@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { AuthLayout } from '../components/AuthLayout'
 import { Input } from '../components/Input'
 import { useForm } from '../hooks/useForm'
+import { useSocialLogin } from '../hooks/useSocialLogin'
 import type { RegisterFormData } from '../types/auth'
 import styles from './AuthPage.module.css'
 
@@ -69,6 +70,7 @@ function getPasswordStrength(password: string): {
 
 export const RegisterPage: React.FC = () => {
   const navigate = useNavigate()
+  const { loginWithKakao, loginWithGoogle, loading } = useSocialLogin()
 
   const {
     values,
@@ -220,10 +222,20 @@ export const RegisterPage: React.FC = () => {
         <div className={styles.divider}><span>또는</span></div>
 
         <div className={styles.socialButtons}>
-          <button type="button" className={styles.socialBtn}>
+          <button
+            type="button"
+            className={styles.socialBtn}
+            disabled={loading !== null}
+            onClick={() => void loginWithGoogle()}
+          >
             <GoogleIcon /> Google로 시작하기
           </button>
-          <button type="button" className={styles.socialBtn}>
+          <button
+            type="button"
+            className={styles.socialBtn}
+            disabled={loading !== null}
+            onClick={() => void loginWithKakao()}
+          >
             <KakaoIcon /> 카카오로 시작하기
           </button>
         </div>

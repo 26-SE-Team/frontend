@@ -1,14 +1,25 @@
-import React from 'react'
-import ReactDOM from 'react-dom/client'
-import { BrowserRouter } from 'react-router-dom'
-import { GoogleOAuthProvider } from '@react-oauth/google'
-import App from './App'
-import './styles/global.css'
+import React from "react";
+import ReactDOM from "react-dom/client";
+import { BrowserRouter } from "react-router-dom";
+import { GoogleOAuthProvider } from "@react-oauth/google";
+import App from "./App";
+import { AuthProvider } from "./contexts/AuthContext";
+import { initKakao } from "./lib/kakao";
+import "./styles/global.css";
+import "./index.css";
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
-    <BrowserRouter>
-      <App />
-    </BrowserRouter>
-  </GoogleOAuthProvider>
-)
+initKakao();
+
+const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+
+ReactDOM.createRoot(document.getElementById("root")!).render(
+  <React.StrictMode>
+    <GoogleOAuthProvider clientId={googleClientId ?? ""}>
+      <BrowserRouter>
+        <AuthProvider>
+          <App />
+        </AuthProvider>
+      </BrowserRouter>
+    </GoogleOAuthProvider>
+  </React.StrictMode>
+);
