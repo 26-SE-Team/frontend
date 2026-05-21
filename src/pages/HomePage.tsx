@@ -1,38 +1,72 @@
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext";
-import "./authCallback.css";
+import { useMemo, useState } from "react";
+import { StayViewLogo } from "../components/start/StayViewLogo";
+import { SearchBar } from "../components/home/SearchBar";
+import { ListingSection } from "../components/home/ListingSection";
+import { BottomNav } from "../components/home/BottomNav";
+import { recommendedListings, recentListings } from "../data/mockListings";
+import { filterListings } from "../utils/filterListings";
+import "./home.css";
 
 export function HomePage() {
-  const { user, logout, isLoading } = useAuth();
-  const navigate = useNavigate();
+  const [query, setQuery] = useState("");
 
-  const handleLogout = () => {
-    logout();
-    navigate("/login", { replace: true });
-  };
+  const filteredRecommended = useMemo(
+    () => filterListings(recommendedListings, query),
+    [query]
+  );
 
-  if (isLoading) {
-    return (
-      <main className="auth-callback">
-        <p className="auth-callback__message">로딩 중...</p>
-      </main>
-    );
-  }
+  const filteredRecent = useMemo(
+    () => filterListings(recentListings, query),
+    [query]
+  );
+
+  const isSearching = query.trim().length > 0;
+  const totalResults = filteredRecommended.length + filteredRecent.length;
 
   return (
-    <main className="auth-callback auth-callback--home">
-      <h1 className="auth-callback__title">StayView</h1>
-      <p className="auth-callback__message">
-        {user?.nickname || user?.email || "로그인"} 님, 환영합니다.
-      </p>
-      {user?.provider && (
-        <p className="auth-callback__sub">
-          {user.provider === "kakao" ? "카카오" : "Google"} 계정으로 로그인됨
-        </p>
-      )}
-      <button type="button" className="auth-callback__btn" onClick={handleLogout}>
-        로그아웃
-      </button>
+    <main className="home">
+      <div className="home__frame">
+        <header className="home__header">
+          <StayViewLogo />
+          <SearchBar value={query} onChange={setQuery} />
+        </header>
+
+        <div className="home__content">
+          {isSearching && (
+            <p className="home-search-status" aria-live="polite">
+              &quot;{query.trim()}&quot; 검색 결과 {totalResults}건
+            </p>
+          )}
+
+          {isSearching && totalResults === 0 ? (
+            <div className="home-empty">
+              <p className="home-empty__title">검색 결과가 없습니다</p>
+              <p className="home-empty__desc">
+                매물 유형, 가격, 지역, 층수 등으로 다시 검색해보세요.
+              </p>
+            </div>
+          ) : (
+            <>
+              <ListingSection
+                title={isSearching ? "추천 매물 검색 결과" : "추천 매물"}
+                listings={filteredRecommended}
+                hideWhenEmpty={isSearching}
+              />
+              <ListingSection
+                title={isSearching ? "최근 본 매물 검색 결과" : "최근 본 매물"}
+                listings={filteredRecent}
+                hideWhenEmpty={isSearching}
+              />
+            </>
+          )}
+
+          <button type="button" className="home__register-btn">
+            등록하기
+          </button>
+        </div>
+
+        <BottomNav active="home" />
+      </div>
     </main>
   );
 }
