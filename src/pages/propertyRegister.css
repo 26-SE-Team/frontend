@@ -1,0 +1,284 @@
+.property-register {
+  min-height: 100dvh;
+  min-height: 100svh;
+  background: #ffffff;
+  display: flex;
+  justify-content: center;
+  font-family:
+    "Pretendard",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Apple SD Gothic Neo",
+    "Noto Sans KR",
+    system-ui,
+    sans-serif;
+}
+
+.property-register__frame {
+  width: 100%;
+  max-width: 430px;
+  min-height: inherit;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+}
+
+.property-register__header {
+  flex-shrink: 0;
+  padding:
+    max(1rem, env(safe-area-inset-top))
+    1.25rem
+    0.875rem;
+  display: grid;
+  grid-template-columns: 2.5rem 1fr 2.5rem;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.property-register__header h1 {
+  margin: 0;
+  text-align: center;
+  color: #000000;
+  font-size: 1.375rem;
+  font-weight: 850;
+  letter-spacing: 0;
+}
+
+.property-register__header button {
+  width: 2.5rem;
+  height: 2.5rem;
+  border: none;
+  border-radius: 50%;
+  background: #f4f4f5;
+  color: #111111;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.property-register__form {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.property-register__upload {
+  display: flex;
+  gap: 0.75rem;
+  align-items: stretch;
+}
+
+.property-register__upload label {
+  flex: 1;
+  min-width: 0;
+  cursor: pointer;
+}
+
+.property-register__upload input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.property-register__upload label > span {
+  min-height: 5rem;
+  border: 1px solid #eeeeee;
+  border-radius: 1rem;
+  background: #f8f7fb;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.125rem;
+  padding: 1rem;
+  color: #111111;
+}
+
+.property-register__upload svg {
+  color: #7c3aed;
+  margin-bottom: 0.25rem;
+}
+
+.property-register__upload strong,
+.property-register__upload small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.property-register__upload strong {
+  font-size: 0.9375rem;
+  font-weight: 850;
+}
+
+.property-register__upload small {
+  color: #777777;
+  font-size: 0.75rem;
+}
+
+.property-register__upload button {
+  width: 5.25rem;
+  border: none;
+  border-radius: 1rem;
+  background: #111111;
+  color: #ffffff;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.property-register__section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.property-register__section h2 {
+  margin: 0;
+  color: #000000;
+  font-size: 1rem;
+  font-weight: 850;
+  letter-spacing: 0;
+}
+
+.property-register__field,
+.property-register__field-grid {
+  min-width: 0;
+}
+
+.property-register__field-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.625rem;
+}
+
+.property-register__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.property-register__field label {
+  color: #696969;
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.property-register__field input {
+  width: 100%;
+  height: 3rem;
+  border: none;
+  border-radius: 0.875rem;
+  background: #f2f2f3;
+  color: #111111;
+  padding: 0 0.875rem;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  outline: none;
+}
+
+.property-register__segments,
+.property-register__checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.property-register__segments button {
+  min-width: 5.5rem;
+  height: 2.625rem;
+  border: 1px solid #eeeeee;
+  border-radius: 9999px;
+  background: #ffffff;
+  color: #555555;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.property-register__segments button.is-active {
+  border-color: #7c3aed;
+  background: #7c3aed;
+  color: #ffffff;
+}
+
+.property-register__checks label {
+  cursor: pointer;
+}
+
+.property-register__checks input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.property-register__checks span {
+  min-height: 2.5rem;
+  border: 1px solid #eeeeee;
+  border-radius: 9999px;
+  padding: 0 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  color: #555555;
+  font-size: 0.8125rem;
+  font-weight: 800;
+}
+
+.property-register__checks input:checked + span {
+  border-color: #7c3aed;
+  background: #f3efff;
+  color: #6d28d9;
+}
+
+.property-register__saved {
+  margin: 0;
+  border-radius: 0.875rem;
+  background: #ecfdf5;
+  color: #047857;
+  padding: 0.75rem 0.875rem;
+  font-size: 0.8125rem;
+  font-weight: 800;
+}
+
+.property-register__actions {
+  display: grid;
+  grid-template-columns: 1fr 1.6fr;
+  gap: 0.625rem;
+  margin-top: auto;
+}
+
+.property-register__actions button {
+  height: 3.25rem;
+  border: none;
+  border-radius: 0.875rem;
+  font-size: 0.9375rem;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.property-register__actions button:first-child {
+  background: #f2f2f3;
+  color: #333333;
+}
+
+.property-register__actions button:last-child {
+  background: #7c3aed;
+  color: #ffffff;
+}
+
+@media (min-width: 768px) {
+  .property-register {
+    background: #f5f5f5;
+    padding: 2rem 1rem;
+    box-sizing: border-box;
+  }
+
+  .property-register__frame {
+    min-height: min(100dvh - 4rem, 52rem);
+    border-radius: 1.5rem;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  }
+}

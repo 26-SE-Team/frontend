@@ -5,7 +5,11 @@ import { AuthCallbackPage } from "./pages/AuthCallbackPage";
 import { KakaoCallbackPage } from "./pages/KakaoCallbackPage";
 import { HomePage } from "./pages/HomePage";
 import { MapPage } from "./pages/MapPage";
-import { PlaceholderPage } from "./pages/PlaceholderPage";
+import { ChatPage } from "./pages/ChatPage";
+import { MyPage } from "./pages/MyPage";
+import { ListingDetailPage } from "./pages/ListingDetailPage";
+import { PropertyRegisterPage } from "./pages/PropertyRegisterPage";
+import { ViewerPage } from "./pages/ViewerPage";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 
 function App() {
@@ -20,14 +24,11 @@ function App() {
         <Route path="/home" element={<HomePage />} />
         <Route path="/map" element={<MapPage />} />
         <Route path="/browse" element={<Navigate to="/map" replace />} />
-        <Route
-          path="/chat"
-          element={<PlaceholderPage title="채팅" navActive="chat" />}
-        />
-        <Route
-          path="/mypage"
-          element={<PlaceholderPage title="마이페이지" navActive="mypage" />}
-        />
+        <Route path="/chat" element={<ChatPage />} />
+        <Route path="/mypage" element={<MyPage />} />
+        <Route path="/listing/new" element={<PropertyRegisterPage />} />
+        <Route path="/listing/:listingId" element={<ListingDetailPage />} />
+        <Route path="/viewer" element={<ViewerPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

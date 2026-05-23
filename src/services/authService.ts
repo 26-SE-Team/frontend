@@ -73,6 +73,25 @@ export function getApiBaseUrl(): string {
   return API_BASE;
 }
 
+export function createPrototypeSession(provider: AuthProvider): AuthUser {
+  const user: AuthUser = {
+    id: `prototype-${provider}`,
+    email: `${provider}@stayview.local`,
+    nickname: provider === "kakao" ? "카카오 시연 사용자" : "Google 시연 사용자",
+    provider,
+  };
+
+  authStorage.setSession(
+    {
+      accessToken: `prototype-${provider}-${Date.now()}`,
+      refreshToken: `prototype-refresh-${provider}`,
+    },
+    user
+  );
+
+  return user;
+}
+
 /** 백엔드 OAuth 시작 (서버 리다이렉트 방식) */
 export function startOAuthRedirect(provider: AuthProvider): void {
   window.location.assign(`${API_BASE}/api/auth/${provider}`);

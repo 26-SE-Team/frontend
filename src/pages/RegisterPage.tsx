@@ -86,7 +86,7 @@ export const RegisterPage: React.FC = () => {
   } = useForm<RegisterFormData>({
     initialValues,
     validate,
-    onSubmit: async (_values) => {
+    onSubmit: async () => {
       await new Promise((res) => setTimeout(res, 1400))
       navigate('/login')
     },
