@@ -10,7 +10,33 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
+.vite
+coverage
+playwright-report
+test-results
 *.local
+.env
+.env.*
+!.env.example
+
+# Local prototype data and heavy/private assets
+public/local-models
+src/local-data
+*.glb
+*.gltf
+*.ply
+*.splat
+*.ksplat
+*.las
+*.laz
+*.obj
+*.fbx
+*.blend
+*.usdz
+
+# Deploy tool state
+.vercel
+.netlify
 
 # Editor directories and files
 .vscode/*
@@ -22,4 +48,3 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-.env

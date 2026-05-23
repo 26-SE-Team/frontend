@@ -1,4 +1,5 @@
 import type { Listing } from "../../types/listing";
+import { Link } from "react-router-dom";
 
 interface ListingCardProps {
   listing: Listing;
@@ -6,7 +7,7 @@ interface ListingCardProps {
 
 export function ListingCard({ listing }: ListingCardProps) {
   return (
-    <article className="home-card">
+    <Link to={`/listing/${listing.id}`} className="home-card">
       <div className="home-card__image-wrap">
         <img
           src={listing.imageUrl}
@@ -18,6 +19,6 @@ export function ListingCard({ listing }: ListingCardProps) {
       <p className="home-card__price">{listing.price}</p>
       <p className="home-card__type">{listing.type}</p>
       <p className="home-card__info">{listing.info}</p>
-    </article>
+    </Link>
   );
 }

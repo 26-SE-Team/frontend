@@ -1,0 +1,238 @@
+.mypage {
+  min-height: 100dvh;
+  min-height: 100svh;
+  background: #ffffff;
+  display: flex;
+  justify-content: center;
+  font-family:
+    "Pretendard",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Apple SD Gothic Neo",
+    "Noto Sans KR",
+    system-ui,
+    sans-serif;
+}
+
+.mypage__frame {
+  width: 100%;
+  max-width: 430px;
+  min-height: inherit;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.mypage__header {
+  flex-shrink: 0;
+  padding:
+    max(1rem, env(safe-area-inset-top))
+    1.25rem
+    0.875rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.mypage__header h1 {
+  margin: 0;
+  color: #000000;
+  font-size: 1.75rem;
+  font-weight: 850;
+  letter-spacing: 0;
+}
+
+.mypage__header-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.mypage__header-actions button {
+  width: 2.25rem;
+  height: 2.25rem;
+  border: none;
+  border-radius: 50%;
+  background: #f4f4f5;
+  color: #111111;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.mypage__content {
+  flex: 1;
+  padding: 0 1.25rem 7.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.mypage-profile {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  padding: 1rem;
+  border-radius: 1rem;
+  background: #f8f7fb;
+}
+
+.mypage-profile__avatar {
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 50%;
+  background: #7c3aed;
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.375rem;
+  font-weight: 850;
+}
+
+.mypage-profile div {
+  min-width: 0;
+  flex: 1;
+}
+
+.mypage-profile__name {
+  margin: 0;
+  color: #000000;
+  font-size: 1.0625rem;
+  font-weight: 850;
+}
+
+.mypage-profile__meta {
+  margin: 0.125rem 0 0;
+  color: #7a7a7a;
+  font-size: 0.8125rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mypage-profile__badge {
+  flex-shrink: 0;
+  padding: 0.375rem 0.5rem;
+  border-radius: 9999px;
+  background: #ffffff;
+  color: #7c3aed;
+  font-size: 0.6875rem;
+  font-weight: 850;
+}
+
+.mypage-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+}
+
+.mypage-stats div {
+  border: 1px solid #eeeeee;
+  border-radius: 0.875rem;
+  padding: 0.875rem 0.5rem;
+  text-align: center;
+}
+
+.mypage-stats strong {
+  display: block;
+  color: #000000;
+  font-size: 1.25rem;
+  font-weight: 850;
+}
+
+.mypage-stats span {
+  display: block;
+  margin-top: 0.125rem;
+  color: #777777;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.mypage-menu,
+.mypage-links {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.mypage-menu button,
+.mypage-links button,
+.mypage__logout {
+  width: 100%;
+  border: 1px solid #eeeeee;
+  background: #ffffff;
+  color: #111111;
+  cursor: pointer;
+  text-align: left;
+}
+
+.mypage-menu button {
+  min-height: 4.625rem;
+  border-radius: 0.875rem;
+  padding: 0.875rem;
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+}
+
+.mypage-menu__icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.75rem;
+  background: #f3efff;
+  color: #7c3aed;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.mypage-menu strong,
+.mypage-menu small {
+  display: block;
+}
+
+.mypage-menu strong {
+  font-size: 0.9375rem;
+  font-weight: 850;
+}
+
+.mypage-menu small {
+  margin-top: 0.125rem;
+  color: #8a8a8a;
+  font-size: 0.75rem;
+  line-height: 1.35;
+}
+
+.mypage-links button {
+  min-height: 2.875rem;
+  border-radius: 0.75rem;
+  padding: 0 0.875rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.mypage__logout {
+  min-height: 3rem;
+  border-radius: 0.875rem;
+  text-align: center;
+  color: #6b7280;
+  font-weight: 800;
+}
+
+@media (min-width: 768px) {
+  .mypage {
+    background: #f5f5f5;
+    padding: 2rem 1rem;
+    box-sizing: border-box;
+  }
+
+  .mypage__frame {
+    min-height: min(100dvh - 4rem, 52rem);
+    border-radius: 1.5rem;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  }
+}

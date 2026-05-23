@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { StayViewLogo } from "../components/start/StayViewLogo";
 import { SearchBar } from "../components/home/SearchBar";
 import { ListingSection } from "../components/home/ListingSection";
@@ -8,6 +9,7 @@ import { filterListings } from "../utils/filterListings";
 import "./home.css";
 
 export function HomePage() {
+  const navigate = useNavigate();
   const [query, setQuery] = useState("");
 
   const filteredRecommended = useMemo(
@@ -60,8 +62,12 @@ export function HomePage() {
             </>
           )}
 
-          <button type="button" className="home__register-btn">
-            등록하기
+          <button
+            type="button"
+            className="home__register-btn"
+            onClick={() => navigate("/listing/new")}
+          >
+            매물 등록하기
           </button>
         </div>
 

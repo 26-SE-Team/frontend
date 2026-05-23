@@ -1,8 +1,8 @@
 import { useCallback, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useGoogleLogin } from "@react-oauth/google";
 import {
   authStorage,
+  createPrototypeSession,
   exchangeGoogleAccessToken,
   fetchCurrentUser,
   fetchGoogleProfile,
@@ -15,12 +15,14 @@ import {
   type AuthUser,
 } from "../services/authService";
 import { useAuth } from "../contexts/AuthContext";
+import { useGoogleSdk } from "../contexts/GoogleSdkContext";
 
 type LoadingProvider = AuthProvider | null;
 
 export function useSocialLogin() {
   const navigate = useNavigate();
   const { setUser, refreshUser } = useAuth();
+  const { requestAccessToken } = useGoogleSdk();
   const [loading, setLoading] = useState<LoadingProvider>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -59,20 +61,18 @@ export function useSocialLogin() {
     [completeLogin]
   );
 
-  const googleLoginWithSdk = useGoogleLogin({
-    scope: "openid email profile",
-    onSuccess: async (tokenResponse) => {
-      try {
-        if (!tokenResponse.access_token) {
-          throw new Error("Google 토큰을 받지 못했습니다.");
-        }
+  const loginWithGoogle = useCallback(async () => {
+    setError(null);
+    setLoading("google");
 
+    try {
+      if (shouldUseGoogleSdk() && requestAccessToken) {
+        const accessToken = await requestAccessToken();
         const backendUp = await isBackendReachable();
+
         if (backendUp) {
           try {
-            const tokens = await exchangeGoogleAccessToken(
-              tokenResponse.access_token
-            );
+            const tokens = await exchangeGoogleAccessToken(accessToken);
             authStorage.setSession(tokens);
             await completeLogin("google");
             return;
@@ -81,42 +81,26 @@ export function useSocialLogin() {
           }
         }
 
-        await loginWithGoogleToken(tokenResponse.access_token);
-      } catch (err) {
-        setError(
-          err instanceof Error ? err.message : "Google 로그인에 실패했습니다."
-        );
-      } finally {
-        setLoading(null);
+        await loginWithGoogleToken(accessToken);
+        return;
       }
-    },
-    onError: () => {
-      setError("Google 로그인이 취소되었거나 실패했습니다.");
-      setLoading(null);
-    },
-  });
 
-  const loginWithGoogle = useCallback(async () => {
-    setError(null);
+      const backendUp = await isBackendReachable();
+      if (backendUp) {
+        startOAuthRedirect("google");
+        return;
+      }
 
-    if (shouldUseGoogleSdk()) {
-      setLoading("google");
-      googleLoginWithSdk();
-      return;
-    }
-
-    setLoading("google");
-    const backendUp = await isBackendReachable();
-    if (!backendUp) {
+      const user = createPrototypeSession("google");
+      await completeLogin("google", user);
+    } catch (err) {
       setError(
-        "백엔드 서버에 연결할 수 없습니다. .env에 VITE_GOOGLE_CLIENT_ID를 설정했는지 확인해주세요."
+        err instanceof Error ? err.message : "Google 로그인에 실패했습니다."
       );
+    } finally {
       setLoading(null);
-      return;
     }
-
-    startOAuthRedirect("google");
-  }, [googleLoginWithSdk]);
+  }, [completeLogin, loginWithGoogleToken, requestAccessToken]);
 
   const loginWithKakao = useCallback(async () => {
     setError(null);
@@ -134,11 +118,10 @@ export function useSocialLogin() {
       return;
     }
 
-    setError(
-      "백엔드(localhost:8080)에 연결할 수 없습니다. 백엔드를 실행하거나 .env에 VITE_KAKAO_JS_KEY를 추가해주세요."
-    );
+    const user = createPrototypeSession("kakao");
+    await completeLogin("kakao", user);
     setLoading(null);
-  }, []);
+  }, [completeLogin]);
 
   const clearError = useCallback(() => setError(null), []);
 
