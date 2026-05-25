@@ -1,0 +1,53 @@
+name: Deploy GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: gh-pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+        env:
+          GITHUB_PAGES: "true"
+
+      - name: Add SPA fallback
+        run: cp dist/index.html dist/404.html
+
+      - name: Publish dist to gh-pages
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin gh-pages:refs/remotes/origin/gh-pages || true
+          git worktree add --detach ../gh-pages-worktree HEAD
+          find ../gh-pages-worktree -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+          cp -R dist/. ../gh-pages-worktree/
+          cd ../gh-pages-worktree
+          touch .nojekyll
+          git add -A
+          git commit -m "deploy: update GitHub Pages" || exit 0
+          git branch -M gh-pages
+          git push origin gh-pages --force-with-lease

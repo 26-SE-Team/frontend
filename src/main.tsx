@@ -11,11 +11,15 @@ import "./index.css";
 initKakao();
 
 const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+const routerBasename =
+  import.meta.env.BASE_URL === "/"
+    ? undefined
+    : import.meta.env.BASE_URL.replace(/\/$/, "");
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <GoogleSdkProvider clientId={googleClientId}>
-      <BrowserRouter>
+      <BrowserRouter basename={routerBasename}>
         <AuthProvider>
           <App />
         </AuthProvider>
