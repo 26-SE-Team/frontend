@@ -4,6 +4,7 @@ import {
   Marker,
   useJsApiLoader,
 } from "@react-google-maps/api";
+import { publicEnv } from "../../config/publicEnv";
 import type { MapCluster } from "../../types/map";
 import { SANGDO_CENTER } from "../../data/mockMapClusters";
 import { createClusterIcon } from "../../utils/createClusterIcon";
@@ -26,7 +27,7 @@ interface PropertyMapProps {
 }
 
 export function PropertyMap({ clusters, onClusterClick }: PropertyMapProps) {
-  const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY ?? "";
+  const apiKey = publicEnv.googleMapsApiKey;
 
   const { isLoaded, loadError } = useJsApiLoader({
     id: "stayview-google-map",
@@ -49,8 +50,8 @@ export function PropertyMap({ clusters, onClusterClick }: PropertyMapProps) {
       <div className="map-page__error">
         <p className="map-page__error-title">지도 API 키가 필요합니다</p>
         <p className="map-page__error-desc">
-          .env 파일에 <code>VITE_GOOGLE_MAPS_API_KEY</code>를 추가하고 Maps
-          JavaScript API를 활성화해주세요.
+          GitHub Variables 또는 로컬 <code>.env.local</code>에{" "}
+          <code>VITE_GOOGLE_MAPS_API_KEY</code>를 설정해주세요.
         </p>
       </div>
     );

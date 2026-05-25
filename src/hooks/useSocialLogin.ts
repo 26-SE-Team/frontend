@@ -16,6 +16,7 @@ import {
 } from "../services/authService";
 import { useAuth } from "../contexts/AuthContext";
 import { useGoogleSdk } from "../contexts/GoogleSdkContext";
+import { publicEnv } from "../config/publicEnv";
 
 type LoadingProvider = AuthProvider | null;
 
@@ -106,7 +107,7 @@ export function useSocialLogin() {
     setError(null);
     setLoading("kakao");
 
-    const hasKakaoKey = Boolean(import.meta.env.VITE_KAKAO_JS_KEY?.trim());
+    const hasKakaoKey = Boolean(publicEnv.kakaoJsKey);
     if (hasKakaoKey) {
       startKakaoAuthorize();
       return;

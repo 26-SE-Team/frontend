@@ -8,9 +8,9 @@ StayView 프론트엔드는 부동산 매물을 사진, 지도, 채팅, 3D 공�
 
 | ID | 우선순위 | 요구사항 | 현재 구현 전략 |
 | --- | --- | --- | --- |
-| FR-AUTH-01 | P0 | 사용자는 카카오/Google로 앱에 진입할 수 있다. | 실제 키나 백엔드가 없으면 localStorage mock session으로 fallback |
+| FR-AUTH-01 | P0 | 사용자는 카카오/Google로 앱에 진입할 수 있다. | Google OAuth userinfo 확인 후 localStorage session 저장, 설정이 없으면 prototype session으로 fallback |
 | FR-LISTING-01 | P0 | 사용자는 추천/최근 매물을 탐색하고 검색할 수 있다. | `src/data/mockListings.ts` fixture와 필터 유틸 사용 |
-| FR-MAP-01 | P0 | 사용자는 지도에서 매물 밀집도를 볼 수 있다. | API 키가 있으면 Google Maps, 없으면 정적 prototype map |
+| FR-MAP-01 | P0 | 사용자는 지도에서 매물 밀집도를 볼 수 있다. | GitHub Variables 또는 `.env.local`의 Maps key로 Google Maps 로드, 키가 없으면 설정 안내 표시 |
 | FR-CHAT-01 | P0 | 사용자는 매물 문의 채팅 UI를 확인할 수 있다. | 로컬 채팅 fixture와 클라이언트 상태 |
 | FR-REGISTER-01 | P1 | 중개사/호스트는 매물 정보를 등록할 수 있다. | 로컬 폼, 파일명 표시, 제출 완료 상태 |
 | FR-VIEWER-01 | P1 | 사용자는 매물 상세에서 3D 공간을 볼 수 있다. | Three.js 기반 viewer shell, local GLB/PLY/JSON loader |
@@ -56,13 +56,13 @@ StayView 프론트엔드는 부동산 매물을 사진, 지도, 채팅, 3D 공�
 
 ## 지도 API 비용 전략
 
-지도 API 키가 없으면 정적 prototype map을 렌더링한다. 키가 제공되면 Google Maps adapter가 동작한다. 네이버 지도 전환 시에도 page component는 유지하고 map component 또는 adapter만 교체한다.
+지도 API 키는 GitHub Pages에서는 repository Variables, 로컬에서는 `.env.local`로만 주입한다. 키가 제공되면 Google Maps adapter가 동작한다. 키가 없거나 Google Console 제한이 맞지 않으면 설정 안내를 보여준다. 네이버 지도 전환 시에도 page component는 유지하고 map component 또는 adapter만 교체한다.
 
 ## 검증 체크리스트
 
-- `/login`: 카카오/Google 버튼이 키 없이도 홈으로 진입한다.
+- `/login`: Google 설정이 있으면 실제 OAuth 후 홈으로 진입하고, 설정이 없으면 prototype session으로 홈에 진입한다.
 - `/home`: 검색, 카드 클릭, 등록 버튼이 끊기지 않는다.
-- `/map`: API 키 없이도 cluster prototype map이 보인다.
+- `/map`: Maps key가 있으면 Google Map과 cluster marker가 보이고, 키가 없으면 설정 안내가 보인다.
 - `/chat`: 채팅방 선택과 메시지 입력이 동작한다.
 - `/mypage`: 사용자 정보, 인증/등록 메뉴, 로그아웃이 보인다.
 - `/listing/new`: 매물 등록 폼과 3D 파일 입력이 보인다.

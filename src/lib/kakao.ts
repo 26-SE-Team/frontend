@@ -1,20 +1,17 @@
-const KAKAO_JS_KEY = import.meta.env.VITE_KAKAO_JS_KEY;
+import { publicEnv } from "../config/publicEnv";
 
 export function initKakao(): boolean {
-  if (!KAKAO_JS_KEY || !window.Kakao) {
+  if (!publicEnv.kakaoJsKey || !window.Kakao) {
     return false;
   }
 
   if (!window.Kakao.isInitialized()) {
-    window.Kakao.init(KAKAO_JS_KEY);
+    window.Kakao.init(publicEnv.kakaoJsKey);
   }
 
   return window.Kakao.isInitialized();
 }
 
 export function getKakaoRedirectUri(): string {
-  return (
-    import.meta.env.VITE_KAKAO_REDIRECT_URI ||
-    `${window.location.origin}/auth/kakao/callback`
-  );
+  return publicEnv.kakaoRedirectUri || `${window.location.origin}/auth/kakao/callback`;
 }

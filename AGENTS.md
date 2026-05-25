@@ -50,13 +50,16 @@
 ## 보안과 로컬 파일
 
 - `.env`, `.env.*`, `*.local`은 커밋하지 않는다.
+- 로컬 Google OAuth/Maps 테스트 값은 `.env.local`에만 둔다.
+- GitHub Pages 배포 값은 repository Variables(`VITE_GOOGLE_CLIENT_ID`, `VITE_GOOGLE_MAPS_API_KEY`, `VITE_USE_GOOGLE_SDK`)로 주입한다.
+- `VITE_*` 값은 브라우저 JS에 공개되므로 Google Console의 origin/referrer/API 제한을 보안 경계로 본다.
 - 실제 3D 모델은 `public/local-models/` 또는 `src/local-data/`에 두고 커밋하지 않는다.
 - 테스트 산출물, 빌드 산출물, coverage, Playwright report는 커밋하지 않는다.
 - 외부 API 키가 없을 때도 프로토타입은 로컬 fallback으로 동작해야 한다.
 
 ## 현재 우선순위
 
-1. 소셜 로그인은 로컬 fallback까지 포함해 시연 가능하게 유지한다.
+1. Google OAuth는 실제 userinfo 확인 후 localStorage session을 저장하고, 설정이 없을 때만 prototype fallback으로 진입한다.
 2. 홈, 지도, 채팅, 마이페이지, 매물 등록, 3D 보기 기본 흐름을 끊기지 않게 만든다.
-3. 네이버/구글 지도 API 키는 비용 이슈가 있으므로 없을 때 정적 프로토타입 지도를 보여준다.
+3. 지도 API 키는 비용 이슈가 있으므로 referrer/API restriction과 quota를 전제로 사용한다.
 4. 가구 배치는 후순위다. 뷰어 모드와 문서상 확장 지점만 먼저 준비한다.

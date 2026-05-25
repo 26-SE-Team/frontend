@@ -1,4 +1,5 @@
 import { initKakao, getKakaoRedirectUri } from "../lib/kakao";
+import { publicEnv } from "../config/publicEnv";
 
 export type AuthProvider = "kakao" | "google";
 
@@ -18,9 +19,7 @@ const ACCESS_TOKEN_KEY = "stayview_access_token";
 const REFRESH_TOKEN_KEY = "stayview_refresh_token";
 const USER_KEY = "stayview_user";
 
-const API_BASE =
-  import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, "") ||
-  "http://localhost:8080";
+const API_BASE = publicEnv.apiBaseUrl;
 
 async function parseErrorMessage(response: Response): Promise<string> {
   try {
@@ -268,8 +267,7 @@ function normalizeTokenResponse(data: Record<string, unknown>): AuthTokens {
 }
 
 export function shouldUseGoogleSdk(): boolean {
-  if (import.meta.env.VITE_USE_GOOGLE_SDK === "false") return false;
-  return Boolean(import.meta.env.VITE_GOOGLE_CLIENT_ID);
+  return publicEnv.useGoogleSdk && Boolean(publicEnv.googleClientId);
 }
 
 /** 백엔드 서버 연결 가능 여부 (OAuth 리다이렉트 전 확인) */
