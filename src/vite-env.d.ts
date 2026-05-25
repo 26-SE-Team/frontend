@@ -6,6 +6,7 @@ interface ImportMetaEnv {
   readonly VITE_KAKAO_JS_KEY?: string;
   readonly VITE_KAKAO_REDIRECT_URI?: string;
   readonly VITE_USE_GOOGLE_SDK?: string;
+  readonly VITE_USE_BACKEND_AUTH?: string;
   readonly VITE_GOOGLE_MAPS_API_KEY?: string;
 }
 

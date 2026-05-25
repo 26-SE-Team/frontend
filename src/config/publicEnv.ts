@@ -7,6 +7,7 @@ export const publicEnv = {
   googleClientId: clean(import.meta.env.VITE_GOOGLE_CLIENT_ID),
   googleMapsApiKey: clean(import.meta.env.VITE_GOOGLE_MAPS_API_KEY),
   useGoogleSdk: import.meta.env.VITE_USE_GOOGLE_SDK !== "false",
+  useBackendAuth: import.meta.env.VITE_USE_BACKEND_AUTH === "true",
   kakaoJsKey: clean(import.meta.env.VITE_KAKAO_JS_KEY),
   kakaoRedirectUri: clean(import.meta.env.VITE_KAKAO_REDIRECT_URI),
   routerBasename:

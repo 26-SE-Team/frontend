@@ -50,7 +50,7 @@ export function PropertyMap({ clusters, onClusterClick }: PropertyMapProps) {
       <div className="map-page__error">
         <p className="map-page__error-title">지도 API 키가 필요합니다</p>
         <p className="map-page__error-desc">
-          GitHub Variables 또는 로컬 <code>.env.local</code>에{" "}
+          GitHub Secrets 또는 로컬 <code>.env.local</code>에{" "}
           <code>VITE_GOOGLE_MAPS_API_KEY</code>를 설정해주세요.
         </p>
       </div>

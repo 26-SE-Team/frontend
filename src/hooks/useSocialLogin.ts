@@ -69,14 +69,16 @@ export function useSocialLogin() {
     try {
       if (shouldUseGoogleSdk() && requestAccessToken) {
         const accessToken = await requestAccessToken();
-        const backendUp = await isBackendReachable();
 
-        if (backendUp) {
+        if (publicEnv.useBackendAuth) {
           try {
-            const tokens = await exchangeGoogleAccessToken(accessToken);
-            authStorage.setSession(tokens);
-            await completeLogin("google");
-            return;
+            const backendUp = await isBackendReachable();
+            if (backendUp) {
+              const tokens = await exchangeGoogleAccessToken(accessToken);
+              authStorage.setSession(tokens);
+              await completeLogin("google");
+              return;
+            }
           } catch {
             /* 백엔드 교환 실패 시 프론트 단독 로그인 */
           }
@@ -86,10 +88,12 @@ export function useSocialLogin() {
         return;
       }
 
-      const backendUp = await isBackendReachable();
-      if (backendUp) {
-        startOAuthRedirect("google");
-        return;
+      if (publicEnv.useBackendAuth) {
+        const backendUp = await isBackendReachable();
+        if (backendUp) {
+          startOAuthRedirect("google");
+          return;
+        }
       }
 
       const user = createPrototypeSession("google");
@@ -113,10 +117,12 @@ export function useSocialLogin() {
       return;
     }
 
-    const backendUp = await isBackendReachable();
-    if (backendUp) {
-      startOAuthRedirect("kakao");
-      return;
+    if (publicEnv.useBackendAuth) {
+      const backendUp = await isBackendReachable();
+      if (backendUp) {
+        startOAuthRedirect("kakao");
+        return;
+      }
     }
 
     const user = createPrototypeSession("kakao");

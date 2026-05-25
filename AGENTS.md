@@ -51,7 +51,7 @@
 
 - `.env`, `.env.*`, `*.local`은 커밋하지 않는다.
 - 로컬 Google OAuth/Maps 테스트 값은 `.env.local`에만 둔다.
-- GitHub Pages 배포 값은 repository Variables(`VITE_GOOGLE_CLIENT_ID`, `VITE_GOOGLE_MAPS_API_KEY`, `VITE_USE_GOOGLE_SDK`)로 주입한다.
+- GitHub Pages 배포 값은 repository Secrets(`VITE_GOOGLE_CLIENT_ID`, `VITE_GOOGLE_MAPS_API_KEY`)로 주입하고, workflow에서 `VITE_USE_GOOGLE_SDK=true`를 고정한다.
 - 프론트 런타임 설정은 Google Console의 origin/referrer/API 제한을 전제로 관리한다.
 - 실제 3D 모델은 `public/local-models/` 또는 `src/local-data/`에 두고 커밋하지 않는다.
 - 테스트 산출물, 빌드 산출물, coverage, Playwright report는 커밋하지 않는다.
@@ -59,7 +59,7 @@
 
 ## 현재 우선순위
 
-1. Google OAuth는 실제 userinfo 확인 후 localStorage session을 저장하고, 설정이 없을 때만 prototype fallback으로 진입한다.
+1. Google OAuth는 실제 userinfo 확인 후 localStorage session을 저장한다. 백엔드 token exchange는 `VITE_USE_BACKEND_AUTH=true`일 때만 사용하고, 기본값은 프론트 단독 prototype session이다.
 2. 홈, 지도, 채팅, 마이페이지, 매물 등록, 3D 보기 기본 흐름을 끊기지 않게 만든다.
 3. 지도 API 키는 비용 이슈가 있으므로 referrer/API restriction과 quota를 전제로 사용한다.
 4. 가구 배치는 후순위다. 뷰어 모드와 문서상 확장 지점만 먼저 준비한다.

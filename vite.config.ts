@@ -8,6 +8,9 @@ export default defineConfig({
   base: isGitHubPages ? '/frontend/' : '/',
   plugins: [react()],
   server: {
+    headers: {
+      "Cross-Origin-Opener-Policy": "same-origin-allow-popups",
+    },
     proxy: {
       "/api": {
         target: "http://localhost:8080",
