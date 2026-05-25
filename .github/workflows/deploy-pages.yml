@@ -42,12 +42,18 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git fetch origin gh-pages:refs/remotes/origin/gh-pages || true
-          git worktree add --detach ../gh-pages-worktree HEAD
+          if git show-ref --verify --quiet refs/remotes/origin/gh-pages; then
+            git worktree add -B gh-pages ../gh-pages-worktree origin/gh-pages
+          else
+            git worktree add --detach ../gh-pages-worktree HEAD
+            cd ../gh-pages-worktree
+            git switch --orphan gh-pages
+            cd -
+          fi
           find ../gh-pages-worktree -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
           cp -R dist/. ../gh-pages-worktree/
           cd ../gh-pages-worktree
           touch .nojekyll
           git add -A
           git commit -m "deploy: update GitHub Pages" || exit 0
-          git branch -M gh-pages
-          git push origin gh-pages --force-with-lease
+          git push origin gh-pages
