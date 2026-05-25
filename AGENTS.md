@@ -52,7 +52,7 @@
 - `.env`, `.env.*`, `*.local`은 커밋하지 않는다.
 - 로컬 Google OAuth/Maps 테스트 값은 `.env.local`에만 둔다.
 - GitHub Pages 배포 값은 repository Variables(`VITE_GOOGLE_CLIENT_ID`, `VITE_GOOGLE_MAPS_API_KEY`, `VITE_USE_GOOGLE_SDK`)로 주입한다.
-- `VITE_*` 값은 브라우저 JS에 공개되므로 Google Console의 origin/referrer/API 제한을 보안 경계로 본다.
+- 프론트 런타임 설정은 Google Console의 origin/referrer/API 제한을 전제로 관리한다.
 - 실제 3D 모델은 `public/local-models/` 또는 `src/local-data/`에 두고 커밋하지 않는다.
 - 테스트 산출물, 빌드 산출물, coverage, Playwright report는 커밋하지 않는다.
 - 외부 API 키가 없을 때도 프로토타입은 로컬 fallback으로 동작해야 한다.
