@@ -6,18 +6,19 @@ import type {
   ThreeDGSViewerHandle,
   ViewerMoveCommand,
 } from "../components/viewer/ThreeDGSViewer";
-import { defaultViewerAsset } from "../data/mockViewerAssets";
+import { defaultViewerAsset, findViewerAssetById } from "../data/mockViewerAssets";
 import { findListingById } from "../data/mockListings";
 import { loadSceneFromFile } from "../utils/sceneLoader";
 import type { ViewerAsset, ViewerMode } from "../types/viewer";
 import "./viewer.css";
 
 const supportedModelExtensions = ["glb", "gltf", "ply"] as const;
+const supportedSplatExtensions = ["splat", "ksplat"] as const;
 
 export function ViewerPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [asset, setAsset] = useState<ViewerAsset>(defaultViewerAsset);
+  const [localAsset, setLocalAsset] = useState<ViewerAsset | null>(null);
   const [mode, setMode] = useState<ViewerMode>("orbit");
   const [fileError, setFileError] = useState<string | null>(null);
   const objectUrlRef = useRef<string | null>(null);
@@ -28,6 +29,15 @@ export function ViewerPage() {
   const listingId = searchParams.get("listing") ?? undefined;
 
   const listing = useMemo(() => findListingById(listingId), [listingId]);
+  const routeAsset = useMemo(
+    () => (listing ? findViewerAssetById(listing.viewerAssetId) : defaultViewerAsset),
+    [listing]
+  );
+  const asset = localAsset ?? routeAsset;
+  const supportsGroundedWalk =
+    asset.kind === "splat-scene" &&
+    asset.navigationFrame?.floor?.enabled !== false;
+  const usesGroundedWalk = supportsGroundedWalk && mode === "orbit";
 
   const runMove = useCallback((command: ViewerMoveCommand) => {
     viewerRef.current?.move(command);
@@ -47,6 +57,10 @@ export function ViewerPage() {
     },
     [runMove, stopMove]
   );
+
+  useEffect(() => {
+    if (usesGroundedWalk) stopMove();
+  }, [usesGroundedWalk, stopMove]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -105,7 +119,7 @@ export function ViewerPage() {
     try {
       if (extension === "json") {
         const scene = await loadSceneFromFile(file);
-        setAsset({
+        setLocalAsset({
           id: `local-${Date.now()}`,
           kind: "gaussian-scene",
           label: file.name,
@@ -123,7 +137,7 @@ export function ViewerPage() {
       ) {
         const url = URL.createObjectURL(file);
         objectUrlRef.current = url;
-        setAsset({
+        setLocalAsset({
           id: `local-${Date.now()}`,
           kind: "model-file",
           label: file.name,
@@ -134,7 +148,33 @@ export function ViewerPage() {
         return;
       }
 
-      setFileError(".splat/.ksplat은 전용 3DGS renderer adapter를 붙인 뒤 열 수 있습니다.");
+      if (
+        extension &&
+        supportedSplatExtensions.includes(
+          extension as (typeof supportedSplatExtensions)[number]
+        )
+      ) {
+        const url = URL.createObjectURL(file);
+        objectUrlRef.current = url;
+        setLocalAsset({
+          id: `local-${Date.now()}`,
+          kind: "splat-scene",
+          label: file.name,
+          description: "사용자가 선택한 로컬 Gaussian Splat scene",
+          url,
+          format: extension as "splat" | "ksplat",
+          previewImageUrl: "",
+          photos: [],
+          camera: {
+            position: [-1.15, -4.2, 2.65],
+            lookAt: [0, 0.65, 0],
+            up: [0, -0.42, 0.9],
+          },
+        });
+        return;
+      }
+
+      setFileError("지원하는 파일은 .json, .glb, .gltf, .ply, .splat, .ksplat입니다.");
     } catch {
       setFileError("파일 형식이 viewer 계약과 맞지 않습니다.");
     } finally {
@@ -176,119 +216,126 @@ export function ViewerPage() {
           </div>
         </header>
 
-        <section className="viewer-page__stage" aria-label="3D 뷰어">
+        <section
+          className={`viewer-page__stage${
+            usesGroundedWalk ? " viewer-page__stage--walk" : ""
+          }`}
+          aria-label="3D 뷰어"
+        >
           <ThreeDGSViewer ref={viewerRef} asset={asset} mode={mode} />
-          <div
-            className="viewer-page__flight-controls"
-            aria-label="6자유도 이동 컨트롤"
-          >
-            <div className="viewer-page__control-pad viewer-page__control-pad--move">
-              <ControlButton
-                label="위로 이동"
-                command="up"
-                onStart={startMove}
-                onStop={stopMove}
-              >
-                ⇧
-              </ControlButton>
-              <ControlButton
-                label="앞으로 이동"
-                command="forward"
-                onStart={startMove}
-                onStop={stopMove}
-              >
-                ↑
-              </ControlButton>
-              <ControlButton
-                label="아래로 이동"
-                command="down"
-                onStart={startMove}
-                onStop={stopMove}
-              >
-                ⇩
-              </ControlButton>
-              <ControlButton
-                label="왼쪽 이동"
-                command="left"
-                onStart={startMove}
-                onStop={stopMove}
-              >
-                ←
-              </ControlButton>
-              <button type="button" onClick={() => viewerRef.current?.reset()}>
-                ⌂
-              </button>
-              <ControlButton
-                label="오른쪽 이동"
-                command="right"
-                onStart={startMove}
-                onStop={stopMove}
-              >
-                →
-              </ControlButton>
-              <span aria-hidden />
-              <ControlButton
-                label="뒤로 이동"
-                command="backward"
-                onStart={startMove}
-                onStop={stopMove}
-              >
-                ↓
-              </ControlButton>
-              <span aria-hidden />
-            </div>
+          {!usesGroundedWalk && (
+            <div
+              className="viewer-page__flight-controls"
+              aria-label="6자유도 이동 컨트롤"
+            >
+              <div className="viewer-page__control-pad viewer-page__control-pad--move">
+                <ControlButton
+                  label="위로 이동"
+                  command="up"
+                  onStart={startMove}
+                  onStop={stopMove}
+                >
+                  ⇧
+                </ControlButton>
+                <ControlButton
+                  label="앞으로 이동"
+                  command="forward"
+                  onStart={startMove}
+                  onStop={stopMove}
+                >
+                  ↑
+                </ControlButton>
+                <ControlButton
+                  label="아래로 이동"
+                  command="down"
+                  onStart={startMove}
+                  onStop={stopMove}
+                >
+                  ⇩
+                </ControlButton>
+                <ControlButton
+                  label="왼쪽 이동"
+                  command="left"
+                  onStart={startMove}
+                  onStop={stopMove}
+                >
+                  ←
+                </ControlButton>
+                <button type="button" onClick={() => viewerRef.current?.reset()}>
+                  ⌂
+                </button>
+                <ControlButton
+                  label="오른쪽 이동"
+                  command="right"
+                  onStart={startMove}
+                  onStop={stopMove}
+                >
+                  →
+                </ControlButton>
+                <span aria-hidden />
+                <ControlButton
+                  label="뒤로 이동"
+                  command="backward"
+                  onStart={startMove}
+                  onStop={stopMove}
+                >
+                  ↓
+                </ControlButton>
+                <span aria-hidden />
+              </div>
 
-            <div className="viewer-page__control-pad viewer-page__control-pad--look">
-              <ControlButton
-                label="왼쪽 회전"
-                command="yaw-left"
-                onStart={startMove}
-                onStop={stopMove}
-              >
-                ↶
-              </ControlButton>
-              <ControlButton
-                label="위로 보기"
-                command="pitch-up"
-                onStart={startMove}
-                onStop={stopMove}
-              >
-                ⤴
-              </ControlButton>
-              <ControlButton
-                label="오른쪽 회전"
-                command="yaw-right"
-                onStart={startMove}
-                onStop={stopMove}
-              >
-                ↷
-              </ControlButton>
-              <ControlButton
-                label="왼쪽 롤"
-                command="roll-left"
-                onStart={startMove}
-                onStop={stopMove}
-              >
-                ⟲
-              </ControlButton>
-              <ControlButton
-                label="아래로 보기"
-                command="pitch-down"
-                onStart={startMove}
-                onStop={stopMove}
-              >
-                ⤵
-              </ControlButton>
-              <ControlButton
-                label="오른쪽 롤"
-                command="roll-right"
-                onStart={startMove}
-                onStop={stopMove}
-              >
-                ⟳
-              </ControlButton>
+              <div className="viewer-page__control-pad viewer-page__control-pad--look">
+                <ControlButton
+                  label="왼쪽 회전"
+                  command="yaw-left"
+                  onStart={startMove}
+                  onStop={stopMove}
+                >
+                  ↶
+                </ControlButton>
+                <ControlButton
+                  label="위로 보기"
+                  command="pitch-up"
+                  onStart={startMove}
+                  onStop={stopMove}
+                >
+                  ⤴
+                </ControlButton>
+                <ControlButton
+                  label="오른쪽 회전"
+                  command="yaw-right"
+                  onStart={startMove}
+                  onStop={stopMove}
+                >
+                  ↷
+                </ControlButton>
+                <ControlButton
+                  label="왼쪽 롤"
+                  command="roll-left"
+                  onStart={startMove}
+                  onStop={stopMove}
+                >
+                  ⟲
+                </ControlButton>
+                <ControlButton
+                  label="아래로 보기"
+                  command="pitch-down"
+                  onStart={startMove}
+                  onStop={stopMove}
+                >
+                  ⤵
+                </ControlButton>
+                <ControlButton
+                  label="오른쪽 롤"
+                  command="roll-right"
+                  onStart={startMove}
+                  onStop={stopMove}
+                >
+                  ⟳
+                </ControlButton>
+              </div>
             </div>
-          </div>
+          )}
         </section>
 
         {fileError && (
@@ -303,7 +350,7 @@ export function ViewerPage() {
             className={mode === "orbit" ? "is-active" : ""}
             onClick={() => setMode("orbit")}
           >
-            공간
+            {supportsGroundedWalk ? "보행" : "공간"}
           </button>
           <button
             type="button"
