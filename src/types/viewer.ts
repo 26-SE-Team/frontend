@@ -18,6 +18,34 @@ export interface Viewpoint {
   target: Vec3;
 }
 
+export interface ViewerPhoto {
+  id: string;
+  label: string;
+  src: string;
+  thumbSrc: string;
+}
+
+export interface SplatCameraPreset {
+  position: Vec3;
+  lookAt: Vec3;
+  up: Vec3;
+}
+
+export interface NavigationFrame {
+  up?: Vec3;
+  forward?: Vec3;
+  autoAlign?: boolean;
+  floor?: {
+    enabled?: boolean;
+    autoDetect?: boolean;
+    height?: number;
+    quantile?: number;
+    eyeHeight?: number;
+    startOffset?: number;
+    lookDistance?: number;
+  };
+}
+
 export interface GaussianSceneData {
   name: string;
   description: string;
@@ -32,6 +60,29 @@ export type ViewerAsset =
       label: string;
       description: string;
       scene: GaussianSceneData;
+    }
+  | {
+      id: string;
+      kind: "splat-scene";
+      label: string;
+      description: string;
+      url: string;
+      format?: "splat" | "ksplat" | "ply";
+      previewImageUrl: string;
+      photos: ViewerPhoto[];
+      camera: SplatCameraPreset;
+      planCamera?: SplatCameraPreset;
+      navigationFrame?: NavigationFrame;
+      transform?: {
+        position?: Vec3;
+        rotation?: [number, number, number, number];
+        scale?: Vec3;
+      };
+      stats?: {
+        dataset: string;
+        gaussianCount: number;
+        finalEvalLoss: number;
+      };
     }
   | {
       id: string;

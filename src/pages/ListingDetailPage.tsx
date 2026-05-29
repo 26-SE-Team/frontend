@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { allListings, findListingById } from "../data/mockListings";
 import "./listingDetail.css";
@@ -6,6 +6,7 @@ import "./listingDetail.css";
 export function ListingDetailPage() {
   const navigate = useNavigate();
   const { listingId } = useParams();
+  const [galleryState, setGalleryState] = useState({ listingId: "", index: 0 });
 
   const listing = useMemo(
     () => findListingById(listingId) ?? allListings[0],
@@ -13,6 +14,11 @@ export function ListingDetailPage() {
   );
 
   const images = listing.imageUrls?.length ? listing.imageUrls : [listing.imageUrl];
+  const selectedImageIndex =
+    galleryState.listingId === listing.id
+      ? Math.min(galleryState.index, images.length - 1)
+      : 0;
+  const selectedImage = images[selectedImageIndex] ?? images[0];
 
   return (
     <main className="listing-detail">
@@ -27,8 +33,25 @@ export function ListingDetailPage() {
         </header>
 
         <section className="listing-detail__gallery" aria-label="매물 사진">
-          <img src={images[0]} alt={`${listing.type} 대표 사진`} />
-          <div className="listing-detail__gallery-count">1 / {images.length}</div>
+          <img src={selectedImage} alt={`${listing.type} 대표 사진`} />
+          <div className="listing-detail__gallery-count">
+            {selectedImageIndex + 1} / {images.length}
+          </div>
+          {images.length > 1 && (
+            <div className="listing-detail__thumbs" aria-label="사진 선택">
+              {images.map((image, index) => (
+                <button
+                  key={image}
+                  type="button"
+                  className={index === selectedImageIndex ? "is-active" : ""}
+                  onClick={() => setGalleryState({ listingId: listing.id, index })}
+                  aria-label={`${index + 1}번 사진 보기`}
+                >
+                  <img src={image} alt="" />
+                </button>
+              ))}
+            </div>
+          )}
         </section>
 
         <div className="listing-detail__content">

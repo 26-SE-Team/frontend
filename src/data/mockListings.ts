@@ -1,25 +1,22 @@
 import type { Listing } from "../types/listing";
+import { room0ViewerPhotos } from "./mockViewerAssets";
 
 export const recommendedListings: Listing[] = [
   {
     id: "rec-1",
-    imageUrl:
-      "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400&h=400&fit=crop",
-    imageUrls: [
-      "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=900&h=700&fit=crop",
-      "https://images.unsplash.com/photo-1560448204-603b3fc33ddc?w=900&h=700&fit=crop",
-    ],
+    imageUrl: room0ViewerPhotos[3].src,
+    imageUrls: room0ViewerPhotos.map((photo) => photo.src),
     price: "월세 500/55",
     type: "원룸",
     info: "3층, 관리비 5만",
-    location: "서초구 반포동",
-    station: "상도역 도보 5분",
-    size: "21.4m²",
+    location: "동작구 상도동",
+    station: "상도역 도보 6분 · Replica room0 3DGS demo",
+    size: "23.8m²",
     floor: "3층 / 5층",
     managementFee: "5만 원",
-    highlights: ["채광 좋음", "풀옵션", "3D 공간 제공"],
-    options: ["침대", "책상", "냉장고", "세탁기"],
-    viewerAssetId: "sangdo-studio",
+    highlights: ["실제 3DGS", "8장 프리뷰", "채광 좋음"],
+    options: ["소파", "테이블", "스탠드 조명", "블라인드"],
+    viewerAssetId: "room0-studio-preview",
   },
   {
     id: "rec-2",

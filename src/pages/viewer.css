@@ -126,6 +126,15 @@
   height: 100%;
 }
 
+.viewer3d--walk .viewer3d__stage canvas {
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.viewer3d--walk .viewer3d__stage canvas:active {
+  cursor: grabbing;
+}
+
 .viewer3d__hud {
   position: absolute;
   left: 1rem;
@@ -146,6 +155,10 @@
   justify-content: flex-start;
   gap: 0.5rem;
   flex-wrap: wrap;
+}
+
+.viewer-page__stage--walk .viewer3d__hud--bottom {
+  bottom: 1rem;
 }
 
 .viewer3d__hud p,
