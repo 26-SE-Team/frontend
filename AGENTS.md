@@ -45,6 +45,9 @@
 - 로컬 fixture는 실제 API 응답처럼 생긴 타입을 사용한다. 나중에 API로 바꿀 때 컴포넌트 변경을 최소화한다.
 - Kakao/Google 로그인, 지도, 3D renderer는 직접 컴포넌트에 묶지 말고 교체 가능한 경계로 둔다.
 - 3D 뷰어는 `glb`, `ply`, prototype Gaussian scene JSON을 로컬 파일로 열 수 있게 하고, 실제 `.splat/.ksplat` 3DGS는 전용 renderer adapter로 교체할 수 있게 설계한다.
+- 실제 3DGS demo는 `public/demo/room0`의 `.splat`과 webp 자산만 커밋한다. 원본 PLY, standalone viewer HTML, full PNG는 커밋하지 않는다.
+- 3DGS 축이 기울어진 경우 수동 up vector에만 의존하지 않는다. 보행 모드는 `.splat` point cloud에서 바닥 평면을 자동 감지하고, 감지한 floor normal을 이동/회전 기준축으로 써야 한다.
+- 숙소 3DGS 기본 모드는 로드뷰식 보행 경험을 우선한다. 바닥 자동 추정이 가능한 asset은 가상 이동 패드를 숨기고 바닥 클릭/탭 이동, 드래그/휠 회전을 제공한다. 실서비스에서는 휴대폰 자이로/중력 센서가 gravity hint가 되고, 프로토타입에서는 초기 카메라 up을 fallback hint로만 사용한다.
 - 강의자료 관점에서 `FR/NFR`, 우선순위, 검증 가능성, 역할 기반 접근을 문서에 남긴다.
 
 ## 보안과 로컬 파일

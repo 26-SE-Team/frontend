@@ -1,4 +1,32 @@
-import type { GaussianSceneData, GaussianSplat, ViewerAsset } from "../types/viewer";
+import type {
+  GaussianSceneData,
+  GaussianSplat,
+  ViewerAsset,
+  ViewerPhoto,
+} from "../types/viewer";
+
+const demoPath = (path: string) =>
+  `${import.meta.env.BASE_URL}${path.replace(/^\/+/, "")}`;
+
+const room0PhotoNames = [
+  "room0_hotel_preview_01_frame000000",
+  "room0_hotel_preview_02_frame000275",
+  "room0_hotel_preview_03_frame000550",
+  "room0_hotel_preview_04_frame000825",
+  "room0_hotel_preview_05_frame001125",
+  "room0_hotel_preview_06_frame001400",
+  "room0_hotel_preview_07_frame001675",
+  "room0_hotel_preview_08_frame001975",
+] as const;
+
+export const room0ViewerPhotos: ViewerPhoto[] = room0PhotoNames.map(
+  (name, index) => ({
+    id: `room0-photo-${index + 1}`,
+    label: `${String(index + 1).padStart(2, "0")} / Replica room0`,
+    src: demoPath(`demo/room0/photos/${name}.webp`),
+    thumbSrc: demoPath(`demo/room0/thumbs/${name}_thumb.webp`),
+  })
+);
 
 function createRoomSplats(): GaussianSplat[] {
   const splats: GaussianSplat[] = [];
@@ -103,3 +131,51 @@ export const defaultViewerAsset: ViewerAsset = {
   description: "프로토타입 Gaussian scene fixture",
   scene: sangdoStudioScene,
 };
+
+export const room0ViewerAsset: ViewerAsset = {
+  id: "room0-studio-preview",
+  kind: "splat-scene",
+  label: "Room0 원룸 3DGS",
+  description: "Replica room0 기반으로 학습한 실제 80K Gaussian Splat 원룸 데모",
+  url: demoPath("demo/room0/models/room0.splat"),
+  format: "splat",
+  previewImageUrl: demoPath("demo/room0/photos/room0_3dgs_preview.webp"),
+  photos: room0ViewerPhotos,
+  camera: {
+    position: [-1.15, -4.2, 2.65],
+    lookAt: [0, 0.65, 0],
+    up: [0, -0.42, 0.9],
+  },
+  planCamera: {
+    position: [0, 0.1, 8],
+    lookAt: [0, 0, 0],
+    up: [0, 1, 0],
+  },
+  navigationFrame: {
+    autoAlign: true,
+    floor: {
+      enabled: true,
+      autoDetect: true,
+      quantile: 0.05,
+      eyeHeight: 1.45,
+      startOffset: 1.8,
+      lookDistance: 3.2,
+    },
+  },
+  transform: {
+    position: [0, 0, 0],
+    rotation: [0, 0, 0, 1],
+    scale: [1, 1, 1],
+  },
+  stats: {
+    dataset: "Replica room0",
+    gaussianCount: 80000,
+    finalEvalLoss: 0.019625112414360046,
+  },
+};
+
+export const viewerAssets = [room0ViewerAsset, defaultViewerAsset];
+
+export function findViewerAssetById(id: string | undefined): ViewerAsset {
+  return viewerAssets.find((asset) => asset.id === id) ?? defaultViewerAsset;
+}
