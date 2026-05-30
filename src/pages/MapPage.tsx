@@ -33,10 +33,9 @@ export function MapPage() {
 
         <MapBottomSheet
           totalCount={totalCount}
+          listings={allListings}
           selectedListing={selectedListing}
-          onDetailClick={() => {
-            if (selectedListing) navigate(`/listing/${selectedListing.id}`);
-          }}
+          onListingClick={(listing) => navigate(`/listing/${listing.id}`)}
         />
 
         <BottomNav active="browse" />

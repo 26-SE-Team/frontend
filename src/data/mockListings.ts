@@ -6,7 +6,7 @@ export const recommendedListings: Listing[] = [
     id: "rec-1",
     imageUrl: room0ViewerPhotos[3].src,
     imageUrls: room0ViewerPhotos.map((photo) => photo.src),
-    price: "월세 500/55",
+    price: "월세 500/31",
     type: "원룸",
     info: "3층, 관리비 5만",
     location: "동작구 상도동",
