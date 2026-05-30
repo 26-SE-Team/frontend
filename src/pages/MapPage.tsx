@@ -1,19 +1,19 @@
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { BottomNav } from "../components/home/BottomNav";
 import { PropertyMap } from "../components/map/PropertyMap";
 import { MapFilterButton } from "../components/map/MapFilterButton";
 import { MapBottomSheet } from "../components/map/MapBottomSheet";
-import { mapClusters } from "../data/mockMapClusters";
-import type { MapCluster } from "../types/map";
+import { allListings } from "../data/mockListings";
+import type { Listing } from "../types/listing";
 import "./map.css";
 
 export function MapPage() {
-  const [selectedCluster, setSelectedCluster] = useState<MapCluster | null>(
-    null
-  );
+  const navigate = useNavigate();
+  const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
 
   const totalCount = useMemo(
-    () => mapClusters.reduce((sum, c) => sum + c.count, 0),
+    () => allListings.filter((listing) => listing.mapPosition).length,
     []
   );
 
@@ -22,8 +22,9 @@ export function MapPage() {
       <div className="map-page__frame">
         <div className="map-page__map-wrap">
           <PropertyMap
-            clusters={mapClusters}
-            onClusterClick={setSelectedCluster}
+            listings={allListings}
+            selectedListingId={selectedListing?.id ?? null}
+            onListingClick={setSelectedListing}
           />
           <div className="map-page__overlay">
             <MapFilterButton />
@@ -32,7 +33,10 @@ export function MapPage() {
 
         <MapBottomSheet
           totalCount={totalCount}
-          selectedClusterLabel={selectedCluster?.label ?? null}
+          selectedListing={selectedListing}
+          onDetailClick={() => {
+            if (selectedListing) navigate(`/listing/${selectedListing.id}`);
+          }}
         />
 
         <BottomNav active="browse" />

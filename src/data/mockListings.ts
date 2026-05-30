@@ -17,6 +17,11 @@ export const recommendedListings: Listing[] = [
     highlights: ["실제 3DGS", "8장 프리뷰", "채광 좋음"],
     options: ["소파", "테이블", "스탠드 조명", "블라인드"],
     viewerAssetId: "room0-studio-preview",
+    mapPosition: {
+      lat: 37.5031,
+      lng: 126.948,
+      label: "상도역 3DGS 원룸",
+    },
   },
   {
     id: "rec-2",
@@ -33,6 +38,11 @@ export const recommendedListings: Listing[] = [
     highlights: ["조용한 골목", "최근 리모델링", "남향"],
     options: ["옷장", "전자레인지", "인덕션"],
     viewerAssetId: "sangdo-studio",
+    mapPosition: {
+      lat: 37.5627,
+      lng: 126.9246,
+      label: "홍대입구역 원룸",
+    },
   },
   {
     id: "rec-3",
@@ -49,6 +59,11 @@ export const recommendedListings: Listing[] = [
     highlights: ["엘리베이터", "보안 출입", "넓은 수납"],
     options: ["에어컨", "세탁기", "붙박이장"],
     viewerAssetId: "sangdo-studio",
+    mapPosition: {
+      lat: 37.5008,
+      lng: 127.0369,
+      label: "역삼역 원룸",
+    },
   },
 ];
 
@@ -68,6 +83,11 @@ export const recentListings: Listing[] = [
     highlights: ["분리형 거실", "반려동물 협의", "채광 좋음"],
     options: ["소파", "식탁", "에어컨"],
     viewerAssetId: "sangdo-studio",
+    mapPosition: {
+      lat: 37.5446,
+      lng: 127.0559,
+      label: "성수역 투룸",
+    },
   },
   {
     id: "recent-2",
@@ -84,6 +104,11 @@ export const recentListings: Listing[] = [
     highlights: ["고층 전망", "보안 우수", "주차 가능"],
     options: ["빌트인 냉장고", "드럼세탁기", "인덕션"],
     viewerAssetId: "sangdo-studio",
+    mapPosition: {
+      lat: 37.5111,
+      lng: 127.086,
+      label: "잠실새내역 오피스텔",
+    },
   },
   {
     id: "recent-3",
@@ -100,6 +125,11 @@ export const recentListings: Listing[] = [
     highlights: ["저렴한 월세", "즉시 입주", "개별 난방"],
     options: ["냉장고", "세탁기", "가스레인지"],
     viewerAssetId: "sangdo-studio",
+    mapPosition: {
+      lat: 37.5347,
+      lng: 126.9946,
+      label: "이태원역 원룸",
+    },
   },
 ];
 

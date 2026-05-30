@@ -13,4 +13,9 @@ export interface Listing {
   highlights?: string[];
   options?: string[];
   viewerAssetId?: string;
+  mapPosition?: {
+    lat: number;
+    lng: number;
+    label?: string;
+  };
 }

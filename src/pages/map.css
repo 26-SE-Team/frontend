@@ -95,6 +95,64 @@
   color: #6b7280;
 }
 
+.map-sheet__listing {
+  margin-top: 0.875rem;
+  display: grid;
+  grid-template-columns: 3.25rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.75rem;
+  text-align: left;
+}
+
+.map-sheet__listing img {
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: 0.5rem;
+  object-fit: cover;
+  background: #f3f4f6;
+}
+
+.map-sheet__listing p,
+.map-sheet__listing strong,
+.map-sheet__listing span {
+  display: block;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.map-sheet__listing p {
+  color: #6b7280;
+  font-size: 0.75rem;
+  font-weight: 750;
+}
+
+.map-sheet__listing strong {
+  margin-top: 0.125rem;
+  color: #111827;
+  font-size: 0.9375rem;
+  font-weight: 900;
+}
+
+.map-sheet__listing span {
+  margin-top: 0.125rem;
+  color: #6b7280;
+  font-size: 0.75rem;
+}
+
+.map-sheet__listing button {
+  height: 2.25rem;
+  border: none;
+  border-radius: 9999px;
+  background: #7c3aed;
+  color: #ffffff;
+  padding: 0 0.875rem;
+  font-size: 0.8125rem;
+  font-weight: 850;
+  cursor: pointer;
+}
+
 .map-page__loading,
 .map-page__error {
   width: 100%;
