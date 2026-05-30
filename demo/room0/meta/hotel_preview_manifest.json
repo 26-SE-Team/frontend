@@ -1,0 +1,121 @@
+{
+  "dataset": "Replica room0",
+  "purpose": "hotel app room preview images",
+  "frames": [
+    "000000",
+    "000275",
+    "000550",
+    "000825",
+    "001125",
+    "001400",
+    "001675",
+    "001975"
+  ],
+  "items": [
+    {
+      "index": 1,
+      "frame": "000000",
+      "source": "/home/indory/replica_room0_3dgs/data/Replica/room0/results/frame000000.jpg",
+      "full_png": "/home/indory/replica_room0_3dgs/outputs/room0/hotel_preview/full_png/room0_hotel_preview_01_frame000000.png",
+      "app_webp": "/home/indory/replica_room0_3dgs/outputs/room0/hotel_preview/app_webp/room0_hotel_preview_01_frame000000.webp",
+      "app_jpg": "/home/indory/replica_room0_3dgs/outputs/room0/hotel_preview/app_webp/room0_hotel_preview_01_frame000000.jpg",
+      "thumb_webp": "/home/indory/replica_room0_3dgs/outputs/room0/hotel_preview/thumb_webp/room0_hotel_preview_01_frame000000_thumb.webp",
+      "size": [
+        1200,
+        680
+      ]
+    },
+    {
+      "index": 2,
+      "frame": "000275",
+      "source": "/home/indory/replica_room0_3dgs/data/Replica/room0/results/frame000275.jpg",
+      "full_png": "/home/indory/replica_room0_3dgs/outputs/room0/hotel_preview/full_png/room0_hotel_preview_02_frame000275.png",
+      "app_webp": "/home/indory/replica_room0_3dgs/outputs/room0/hotel_preview/app_webp/room0_hotel_preview_02_frame000275.webp",
+      "app_jpg": "/home/indory/replica_room0_3dgs/outputs/room0/hotel_preview/app_webp/room0_hotel_preview_02_frame000275.jpg",
+      "thumb_webp": "/home/indory/replica_room0_3dgs/outputs/room0/hotel_preview/thumb_webp/room0_hotel_preview_02_frame000275_thumb.webp",
+      "size": [
+        1200,
+        680
+      ]
+    },
+    {
+      "index": 3,
+      "frame": "000550",
+      "source": "/home/indory/replica_room0_3dgs/data/Replica/room0/results/frame000550.jpg",
+      "full_png": "/home/indory/replica_room0_3dgs/outputs/room0/hotel_preview/full_png/room0_hotel_preview_03_frame000550.png",
+      "app_webp": "/home/indory/replica_room0_3dgs/outputs/room0/hotel_preview/app_webp/room0_hotel_preview_03_frame000550.webp",
+      "app_jpg": "/home/indory/replica_room0_3dgs/outputs/room0/hotel_preview/app_webp/room0_hotel_preview_03_frame000550.jpg",
+      "thumb_webp": "/home/indory/replica_room0_3dgs/outputs/room0/hotel_preview/thumb_webp/room0_hotel_preview_03_frame000550_thumb.webp",
+      "size": [
+        1200,
+        680
+      ]
+    },
+    {
+      "index": 4,
+      "frame": "000825",
+      "source": "/home/indory/replica_room0_3dgs/data/Replica/room0/results/frame000825.jpg",
+      "full_png": "/home/indory/replica_room0_3dgs/outputs/room0/hotel_preview/full_png/room0_hotel_preview_04_frame000825.png",
+      "app_webp": "/home/indory/replica_room0_3dgs/outputs/room0/hotel_preview/app_webp/room0_hotel_preview_04_frame000825.webp",
+      "app_jpg": "/home/indory/replica_room0_3dgs/outputs/room0/hotel_preview/app_webp/room0_hotel_preview_04_frame000825.jpg",
+      "thumb_webp": "/home/indory/replica_room0_3dgs/outputs/room0/hotel_preview/thumb_webp/room0_hotel_preview_04_frame000825_thumb.webp",
+      "size": [
+        1200,
+        680
+      ]
+    },
+    {
+      "index": 5,
+      "frame": "001125",
+      "source": "/home/indory/replica_room0_3dgs/data/Replica/room0/results/frame001125.jpg",
+      "full_png": "/home/indory/replica_room0_3dgs/outputs/room0/hotel_preview/full_png/room0_hotel_preview_05_frame001125.png",
+      "app_webp": "/home/indory/replica_room0_3dgs/outputs/room0/hotel_preview/app_webp/room0_hotel_preview_05_frame001125.webp",
+      "app_jpg": "/home/indory/replica_room0_3dgs/outputs/room0/hotel_preview/app_webp/room0_hotel_preview_05_frame001125.jpg",
+      "thumb_webp": "/home/indory/replica_room0_3dgs/outputs/room0/hotel_preview/thumb_webp/room0_hotel_preview_05_frame001125_thumb.webp",
+      "size": [
+        1200,
+        680
+      ]
+    },
+    {
+      "index": 6,
+      "frame": "001400",
+      "source": "/home/indory/replica_room0_3dgs/data/Replica/room0/results/frame001400.jpg",
+      "full_png": "/home/indory/replica_room0_3dgs/outputs/room0/hotel_preview/full_png/room0_hotel_preview_06_frame001400.png",
+      "app_webp": "/home/indory/replica_room0_3dgs/outputs/room0/hotel_preview/app_webp/room0_hotel_preview_06_frame001400.webp",
+      "app_jpg": "/home/indory/replica_room0_3dgs/outputs/room0/hotel_preview/app_webp/room0_hotel_preview_06_frame001400.jpg",
+      "thumb_webp": "/home/indory/replica_room0_3dgs/outputs/room0/hotel_preview/thumb_webp/room0_hotel_preview_06_frame001400_thumb.webp",
+      "size": [
+        1200,
+        680
+      ]
+    },
+    {
+      "index": 7,
+      "frame": "001675",
+      "source": "/home/indory/replica_room0_3dgs/data/Replica/room0/results/frame001675.jpg",
+      "full_png": "/home/indory/replica_room0_3dgs/outputs/room0/hotel_preview/full_png/room0_hotel_preview_07_frame001675.png",
+      "app_webp": "/home/indory/replica_room0_3dgs/outputs/room0/hotel_preview/app_webp/room0_hotel_preview_07_frame001675.webp",
+      "app_jpg": "/home/indory/replica_room0_3dgs/outputs/room0/hotel_preview/app_webp/room0_hotel_preview_07_frame001675.jpg",
+      "thumb_webp": "/home/indory/replica_room0_3dgs/outputs/room0/hotel_preview/thumb_webp/room0_hotel_preview_07_frame001675_thumb.webp",
+      "size": [
+        1200,
+        680
+      ]
+    },
+    {
+      "index": 8,
+      "frame": "001975",
+      "source": "/home/indory/replica_room0_3dgs/data/Replica/room0/results/frame001975.jpg",
+      "full_png": "/home/indory/replica_room0_3dgs/outputs/room0/hotel_preview/full_png/room0_hotel_preview_08_frame001975.png",
+      "app_webp": "/home/indory/replica_room0_3dgs/outputs/room0/hotel_preview/app_webp/room0_hotel_preview_08_frame001975.webp",
+      "app_jpg": "/home/indory/replica_room0_3dgs/outputs/room0/hotel_preview/app_webp/room0_hotel_preview_08_frame001975.jpg",
+      "thumb_webp": "/home/indory/replica_room0_3dgs/outputs/room0/hotel_preview/thumb_webp/room0_hotel_preview_08_frame001975_thumb.webp",
+      "size": [
+        1200,
+        680
+      ]
+    }
+  ],
+  "contact_sheet": "/home/indory/replica_room0_3dgs/outputs/room0/hotel_preview/room0_hotel_preview_contact_sheet.png"
+}
