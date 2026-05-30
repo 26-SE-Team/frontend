@@ -27,6 +27,7 @@ src/local-data
 *.ply
 *.splat
 *.ksplat
+!public/demo/room0/models/room0.splat
 *.las
 *.laz
 *.obj
