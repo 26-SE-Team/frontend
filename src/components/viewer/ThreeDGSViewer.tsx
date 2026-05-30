@@ -22,6 +22,7 @@ import type {
 interface ThreeDGSViewerProps {
   asset: ViewerAsset;
   mode: ViewerMode;
+  onTogglePlanView?: () => void;
 }
 
 type ViewerStatus = "loading" | "ready" | "error";
@@ -574,7 +575,7 @@ function buildGaussianObject(sceneData: GaussianSceneData) {
 }
 
 export const ThreeDGSViewer = forwardRef<ThreeDGSViewerHandle, ThreeDGSViewerProps>(
-  function ThreeDGSViewer({ asset, mode }, ref) {
+  function ThreeDGSViewer({ asset, mode, onTogglePlanView }, ref) {
   const mountRef = useRef<HTMLDivElement | null>(null);
   const controlsRef = useRef<OrbitControls | null>(null);
   const gaussianViewerRef = useRef<GaussianSplats3D.Viewer | null>(null);
@@ -1272,9 +1273,20 @@ export const ThreeDGSViewer = forwardRef<ThreeDGSViewerHandle, ThreeDGSViewerPro
           </p>
           <h2>{asset.label}</h2>
         </div>
-        <button type="button" onClick={resetView}>
-          초기화
-        </button>
+        <div className="viewer3d__actions">
+          <button type="button" onClick={resetView}>
+            초기화
+          </button>
+          {onTogglePlanView && (
+            <button
+              type="button"
+              aria-pressed={mode === "plan"}
+              onClick={onTogglePlanView}
+            >
+              {mode === "plan" ? "평면뷰 해제" : "평면뷰"}
+            </button>
+          )}
+        </div>
       </div>
       <div className="viewer3d__hud viewer3d__hud--bottom">
         <span className={`viewer3d__status viewer3d__status--${status}`}>
@@ -1290,7 +1302,6 @@ export const ThreeDGSViewer = forwardRef<ThreeDGSViewerHandle, ThreeDGSViewerPro
         {floorStatus === "detecting" && <span>바닥 인식 중</span>}
         {floorStatus === "locked" && <span>바닥 보행</span>}
         {activeViewpoint && <span>{activeViewpoint.label}</span>}
-        {mode === "furniture" && <span>가구 배치 준비</span>}
       </div>
     </div>
   );

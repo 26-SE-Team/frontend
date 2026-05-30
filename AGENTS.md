@@ -5,7 +5,8 @@
 ## 프로젝트 맥락
 
 - 작업 레포: `SE/frontend`
-- 디자인 레퍼런스: `SE/frontend_refs`
+- 최신 디자인 레퍼런스: `SE/frontend_refs_v2`
+- 기존 디자인 레퍼런스: `SE/frontend_refs` (히스토리 확인용)
 - 강의자료/SRS/계획서: `SE` 루트
 - 3D 뷰어 참고 프로젝트: `SE/pj/3d-viewer`
 - 현재 앱은 대외적으로 API 기반처럼 설명하지만, 시연 구현은 로컬 fixture와 localStorage를 우선 사용한다.
@@ -17,7 +18,7 @@
 - 개발 서버: `npm run dev`
 - 빌드 검증: `npm run build`
 - 린트: `npm run lint`
-- 큰 UI 변경 후에는 로컬 브라우저에서 `/login`, `/home`, `/map`, `/chat`, `/mypage`, `/listing/new`, `/viewer`를 확인한다.
+- 큰 UI 변경 후에는 로컬 브라우저에서 `/login`, `/home`, `/map`, `/chat`, `/mypage`, `/stored`, `/certification`, `/my-listings`, `/listing/new`, `/viewer`를 확인한다.
 
 ## 커밋 메시지
 
@@ -31,7 +32,9 @@
 ## 디자인 원칙
 
 - 기존 모바일 앱 프레임을 유지한다: 최대 폭 430px, 흰 배경, 하단 탭, 굵은 검정 타이틀, 연회색 입력/카드, 보라색 CTA.
+- `frontend_refs_v2`가 우선 기준이다. 같은 화면 이름의 여러 레퍼런스가 있으면 같은 flow의 상태별 화면으로 보고 함께 반영한다.
 - 레퍼런스의 분위기를 따르되, 간격, 대비, 버튼 상태, 정보 위계를 정돈해 완성도를 높인다.
+- `mypage`에는 프로필/관심 매물/중개사 인증/내 매물/앱 버전처럼 계정 중심 기능을 둔다. 3D 모델 관리처럼 매물 상세나 등록에 가까운 기능은 마이페이지의 핵심 메뉴로 끌어오지 않는다.
 - 새로운 주요 화면은 `src/pages/*Page.tsx`와 같은 폴더의 `.css`를 기본으로 둔다. 홈/지도처럼 BEM에 가까운 className을 사용한다.
 - 기존 CSS Modules 화면을 수정할 때는 주변 파일 스타일을 따른다.
 - 설명성 문구를 과하게 넣기보다, 실제 조작 가능한 화면을 첫 화면에 둔다.

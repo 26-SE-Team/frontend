@@ -1,7 +1,7 @@
 .start-screen {
   --start-max-width: 430px;
-  --start-px: clamp(1.25rem, 5vw, 1.75rem);
-  --start-gap: clamp(1rem, 3vh, 1.5rem);
+  --start-px: 1.5rem;
+  --start-gap: 1.25rem;
 
   min-height: 100dvh;
   min-height: 100svh;
@@ -39,14 +39,14 @@
 }
 
 .start-logo svg {
-  width: clamp(1.5rem, 5vw, 2rem);
-  height: clamp(1.5rem, 5vw, 2rem);
+  width: 1.75rem;
+  height: 1.75rem;
 }
 
 .start-logo__text {
-  font-size: clamp(1.5rem, 5.5vw, 1.875rem);
+  font-size: 1.75rem;
   font-weight: 700;
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
   color: #c4c4c4;
 }
 
@@ -57,7 +57,7 @@
   align-items: center;
   justify-content: center;
   gap: var(--start-gap);
-  padding: clamp(1rem, 4vh, 2.5rem) 0;
+  padding: 1.75rem 0;
   min-height: 0;
 }
 
@@ -70,10 +70,10 @@
 .start-hero__title {
   margin: 0;
   text-align: center;
-  font-size: clamp(1.125rem, 4.2vw, 1.375rem);
+  font-size: 1.25rem;
   font-weight: 800;
   line-height: 1.45;
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
   color: #000000;
 }
 
@@ -83,7 +83,7 @@
   flex-direction: column;
   gap: 0.75rem;
   width: 100%;
-  padding-bottom: clamp(0.5rem, 2vh, 1rem);
+  padding-bottom: 0.75rem;
 }
 
 .start-error {
@@ -128,14 +128,14 @@
 
 .start-btn {
   width: 100%;
-  min-height: clamp(3.25rem, 14vw, 4rem);
+  min-height: 3.5rem;
   border-radius: 0.75rem;
   border: none;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.625rem;
-  font-size: clamp(1rem, 3.8vw, 1.125rem);
+  font-size: 1.0625rem;
   font-weight: 700;
   line-height: 1;
   cursor: pointer;

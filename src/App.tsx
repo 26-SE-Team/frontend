@@ -10,6 +10,9 @@ import { MyPage } from "./pages/MyPage";
 import { ListingDetailPage } from "./pages/ListingDetailPage";
 import { PropertyRegisterPage } from "./pages/PropertyRegisterPage";
 import { ViewerPage } from "./pages/ViewerPage";
+import { StoredPage } from "./pages/StoredPage";
+import { CertificationPage } from "./pages/CertificationPage";
+import { MyListingsPage } from "./pages/MyListingsPage";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 
 function App() {
@@ -26,6 +29,9 @@ function App() {
         <Route path="/browse" element={<Navigate to="/map" replace />} />
         <Route path="/chat" element={<ChatPage />} />
         <Route path="/mypage" element={<MyPage />} />
+        <Route path="/stored" element={<StoredPage />} />
+        <Route path="/certification" element={<CertificationPage />} />
+        <Route path="/my-listings" element={<MyListingsPage />} />
         <Route path="/listing/new" element={<PropertyRegisterPage />} />
         <Route path="/listing/:listingId" element={<ListingDetailPage />} />
         <Route path="/viewer" element={<ViewerPage />} />

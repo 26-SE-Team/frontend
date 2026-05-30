@@ -5,7 +5,7 @@ export const mockChatRooms: ChatRoom[] = [
     id: "chat-1",
     listingId: "rec-1",
     listingTitle: "상도역 원룸 3층",
-    listingPrice: "월세 500/55",
+    listingPrice: "월세 500/31",
     participantName: "상도 공인중개사",
     avatarUrl:
       "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=160&h=160&fit=crop",

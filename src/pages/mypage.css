@@ -27,199 +27,165 @@
 .mypage__header {
   flex-shrink: 0;
   padding:
-    max(1rem, env(safe-area-inset-top))
-    1.25rem
-    0.875rem;
+    max(3.875rem, env(safe-area-inset-top))
+    1.5rem
+    1rem;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.mypage__header h1 {
-  margin: 0;
-  color: #000000;
-  font-size: 1.75rem;
-  font-weight: 850;
-  letter-spacing: 0;
+  flex-direction: column;
+  gap: 2rem;
 }
 
 .mypage__header-actions {
+  align-self: flex-end;
   display: flex;
-  gap: 0.5rem;
+  gap: 1rem;
 }
 
 .mypage__header-actions button {
-  width: 2.25rem;
-  height: 2.25rem;
+  width: 2rem;
+  height: 2rem;
   border: none;
-  border-radius: 50%;
-  background: #f4f4f5;
+  background: transparent;
   color: #111111;
+  padding: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
 }
 
+.mypage__header h1,
+.mypage-section h2 {
+  margin: 0;
+  color: #000000;
+  font-weight: 900;
+  letter-spacing: 0;
+}
+
+.mypage__header h1 {
+  font-size: 1.375rem;
+}
+
 .mypage__content {
   flex: 1;
-  padding: 0 1.25rem 7.5rem;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0 1.5rem 7.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.875rem;
+}
+
+.mypage-section {
   display: flex;
   flex-direction: column;
   gap: 1rem;
 }
 
-.mypage-profile {
-  display: flex;
-  align-items: center;
-  gap: 0.875rem;
-  padding: 1rem;
-  border-radius: 1rem;
-  background: #f8f7fb;
-}
-
-.mypage-profile__avatar {
-  width: 3.5rem;
-  height: 3.5rem;
-  border-radius: 50%;
-  background: #7c3aed;
-  color: #ffffff;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.375rem;
-  font-weight: 850;
-}
-
-.mypage-profile div {
-  min-width: 0;
-  flex: 1;
-}
-
-.mypage-profile__name {
-  margin: 0;
-  color: #000000;
-  font-size: 1.0625rem;
-  font-weight: 850;
-}
-
-.mypage-profile__meta {
-  margin: 0.125rem 0 0;
-  color: #7a7a7a;
-  font-size: 0.8125rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.mypage-profile__badge {
-  flex-shrink: 0;
-  padding: 0.375rem 0.5rem;
-  border-radius: 9999px;
-  background: #ffffff;
-  color: #7c3aed;
-  font-size: 0.6875rem;
-  font-weight: 850;
-}
-
-.mypage-stats {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.5rem;
-}
-
-.mypage-stats div {
-  border: 1px solid #eeeeee;
-  border-radius: 0.875rem;
-  padding: 0.875rem 0.5rem;
-  text-align: center;
-}
-
-.mypage-stats strong {
-  display: block;
-  color: #000000;
+.mypage-section h2 {
   font-size: 1.25rem;
-  font-weight: 850;
-}
-
-.mypage-stats span {
-  display: block;
-  margin-top: 0.125rem;
-  color: #777777;
-  font-size: 0.75rem;
-  font-weight: 700;
 }
 
 .mypage-menu,
-.mypage-links {
-  display: flex;
-  flex-direction: column;
-  gap: 0.625rem;
+.mypage-version {
+  width: 100%;
+  border-radius: 0.375rem;
+  background: #f7f7f8;
 }
 
-.mypage-menu button,
-.mypage-links button,
-.mypage__logout {
-  width: 100%;
-  border: 1px solid #eeeeee;
-  background: #ffffff;
-  color: #111111;
-  cursor: pointer;
-  text-align: left;
+.mypage-menu {
+  display: flex;
+  flex-direction: column;
 }
 
 .mypage-menu button {
-  min-height: 4.625rem;
-  border-radius: 0.875rem;
-  padding: 0.875rem;
+  width: 100%;
+  min-height: 3.75rem;
+  border: none;
+  background: transparent;
+  color: #111111;
+  padding: 0 1.75rem;
   display: flex;
   align-items: center;
-  gap: 0.875rem;
+  justify-content: space-between;
+  text-align: left;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
 }
 
-.mypage-menu__icon {
-  width: 2.5rem;
-  height: 2.5rem;
-  border-radius: 0.75rem;
-  background: #f3efff;
-  color: #7c3aed;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+.mypage-menu button + button {
+  border-top: 1px solid rgba(17, 17, 17, 0.02);
+}
+
+.mypage-menu svg {
   flex-shrink: 0;
+  color: #c7cbd3;
 }
 
-.mypage-menu strong,
-.mypage-menu small {
-  display: block;
-}
-
-.mypage-menu strong {
+.mypage-version {
+  min-height: 4.25rem;
+  padding: 0 1.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  color: #111111;
   font-size: 0.9375rem;
-  font-weight: 850;
+  font-weight: 600;
+  box-sizing: border-box;
 }
 
-.mypage-menu small {
-  margin-top: 0.125rem;
-  color: #8a8a8a;
+.mypage-legal {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.mypage-legal button,
+.mypage-contract,
+.mypage__logout {
+  border: none;
+  background: transparent;
+  color: #8a8f9c;
+  padding: 0;
   font-size: 0.75rem;
-  line-height: 1.35;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
 }
 
-.mypage-links button {
-  min-height: 2.875rem;
-  border-radius: 0.75rem;
-  padding: 0 0.875rem;
-  font-size: 0.875rem;
-  font-weight: 700;
+.mypage-hours {
+  margin: -0.75rem 0 0;
+  color: #8a8f9c;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.65;
+}
+
+.mypage-contract {
+  margin-top: -0.75rem;
+}
+
+.mypage-support {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 2.5rem;
+}
+
+.mypage-support button {
+  height: 2.375rem;
+  border: none;
+  background: #f3f3f4;
+  color: #111111;
+  font-size: 0.9375rem;
+  font-weight: 800;
+  cursor: pointer;
 }
 
 .mypage__logout {
-  min-height: 3rem;
-  border-radius: 0.875rem;
-  text-align: center;
-  color: #6b7280;
-  font-weight: 800;
+  align-self: flex-start;
+  margin-top: -0.875rem;
 }
 
 @media (min-width: 768px) {

@@ -1,15 +1,14 @@
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   GoogleMap,
   Marker,
   useJsApiLoader,
 } from "@react-google-maps/api";
 import { publicEnv } from "../../config/publicEnv";
-import type { MapCluster } from "../../types/map";
-import { SANGDO_CENTER } from "../../data/mockMapClusters";
-import { createClusterIcon } from "../../utils/createClusterIcon";
+import type { Listing } from "../../types/listing";
 
 const MAP_CONTAINER_STYLE = { width: "100%", height: "100%" };
+const SEOUL_CENTER = { lat: 37.5368, lng: 126.9784 };
 
 const MAP_OPTIONS: google.maps.MapOptions = {
   disableDefaultUI: true,
@@ -22,12 +21,49 @@ const MAP_OPTIONS: google.maps.MapOptions = {
 };
 
 interface PropertyMapProps {
-  clusters: MapCluster[];
-  onClusterClick?: (cluster: MapCluster) => void;
+  listings: Listing[];
+  selectedListingId?: string | null;
+  onListingClick?: (listing: Listing) => void;
 }
 
-export function PropertyMap({ clusters, onClusterClick }: PropertyMapProps) {
+function createListingIcon(
+  listing: Listing,
+  isSelected: boolean
+): google.maps.Icon {
+  const label = listing.price.replace(/\s+/g, " ");
+  const width = Math.max(82, Math.min(118, label.length * 11 + 24));
+  const height = isSelected ? 44 : 38;
+  const color = listing.viewerAssetId === "room0-studio-preview"
+    ? "#7c3aed"
+    : "#2563eb";
+  const stroke = isSelected ? "#111827" : "#ffffff";
+  const badge = listing.viewerAssetId === "room0-studio-preview"
+    ? '<circle cx="16" cy="12" r="6" fill="#ffffff" fill-opacity="0.95"/><text x="16" y="12.6" text-anchor="middle" dominant-baseline="middle" fill="#7c3aed" font-size="7" font-weight="900" font-family="Pretendard, sans-serif">3D</text>'
+    : "";
+  const textX = listing.viewerAssetId === "room0-studio-preview" ? 31 : 14;
+
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+      <path d="M10 3H${width - 10}Q${width - 3} 3 ${width - 3} 10V24Q${width - 3} 31 ${width - 10} 31H${width / 2 + 6}L${width / 2} ${height - 3}L${width / 2 - 6} 31H10Q3 31 3 24V10Q3 3 10 3Z" fill="${color}" stroke="${stroke}" stroke-width="${isSelected ? 3 : 2}"/>
+      ${badge}
+      <text x="${textX}" y="18.2" fill="#ffffff" font-size="12" font-weight="850" font-family="Pretendard, sans-serif">${label}</text>
+    </svg>
+  `;
+
+  return {
+    url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg.trim())}`,
+    scaledSize: new google.maps.Size(width, height),
+    anchor: new google.maps.Point(width / 2, height - 3),
+  };
+}
+
+export function PropertyMap({
+  listings,
+  selectedListingId,
+  onListingClick,
+}: PropertyMapProps) {
   const apiKey = publicEnv.googleMapsApiKey;
+  const [map, setMap] = useState<google.maps.Map | null>(null);
 
   const { isLoaded, loadError } = useJsApiLoader({
     id: "stayview-google-map",
@@ -36,13 +72,29 @@ export function PropertyMap({ clusters, onClusterClick }: PropertyMapProps) {
     region: "KR",
   });
 
-  const center = useMemo(() => SANGDO_CENTER, []);
+  const mappedListings = useMemo(
+    () => listings.filter((listing) => listing.mapPosition),
+    [listings]
+  );
+
+  useEffect(() => {
+    if (!map || !isLoaded || mappedListings.length === 0) return;
+
+    const bounds = new google.maps.LatLngBounds();
+    mappedListings.forEach((listing) => {
+      const position = listing.mapPosition;
+      if (!position) return;
+      bounds.extend({ lat: position.lat, lng: position.lng });
+    });
+
+    map.fitBounds(bounds, 64);
+  }, [isLoaded, map, mappedListings]);
 
   const handleMarkerClick = useCallback(
-    (cluster: MapCluster) => () => {
-      onClusterClick?.(cluster);
+    (listing: Listing) => () => {
+      onListingClick?.(listing);
     },
-    [onClusterClick]
+    [onListingClick]
   );
 
   if (!apiKey) {
@@ -80,20 +132,27 @@ export function PropertyMap({ clusters, onClusterClick }: PropertyMapProps) {
   return (
     <GoogleMap
       mapContainerStyle={MAP_CONTAINER_STYLE}
-      center={center}
-      zoom={16}
+      center={SEOUL_CENTER}
+      zoom={11}
       options={MAP_OPTIONS}
+      onLoad={setMap}
+      onUnmount={() => setMap(null)}
     >
-      {clusters.map((cluster) => (
-        <Marker
-          key={cluster.id}
-          position={{ lat: cluster.lat, lng: cluster.lng }}
-          icon={createClusterIcon(cluster.count)}
-          title={cluster.label ?? `${cluster.count}개 매물`}
-          onClick={handleMarkerClick(cluster)}
-          zIndex={cluster.count}
-        />
-      ))}
+      {mappedListings.map((listing) => {
+        const position = listing.mapPosition;
+        if (!position) return null;
+
+        return (
+          <Marker
+            key={listing.id}
+            position={{ lat: position.lat, lng: position.lng }}
+            icon={createListingIcon(listing, listing.id === selectedListingId)}
+            title={position.label ?? `${listing.location} ${listing.type}`}
+            onClick={handleMarkerClick(listing)}
+            zIndex={listing.id === selectedListingId ? 10 : 1}
+          />
+        );
+      })}
     </GoogleMap>
   );
 }
