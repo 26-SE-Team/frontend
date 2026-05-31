@@ -98,10 +98,7 @@ export function ListingDetailPage() {
             aria-pressed={isFavorite}
             onClick={() => setFavoriteIds(toggleFavoriteListing(listing.id))}
           >
-            <HeartIcon />
-          </button>
-          <button type="button" aria-label="비대면 계약">
-            <ContractIcon />
+            <HeartIcon filled={isFavorite} />
           </button>
           <button type="button" onClick={() => navigate("/chat")}>
             채팅하기
@@ -185,19 +182,18 @@ function BackIcon() {
   );
 }
 
-function HeartIcon() {
+function HeartIcon({ filled }: { filled: boolean }) {
   return (
-    <svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="#ff5b70" strokeWidth="1.9" aria-hidden>
+    <svg
+      width="25"
+      height="25"
+      viewBox="0 0 24 24"
+      fill={filled ? "#ff5b70" : "none"}
+      stroke="#ff5b70"
+      strokeWidth="1.9"
+      aria-hidden
+    >
       <path d="M20.8 4.6a5.5 5.5 0 00-7.8 0L12 5.6l-1-1a5.5 5.5 0 00-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 000-7.8z" />
-    </svg>
-  );
-}
-
-function ContractIcon() {
-  return (
-    <svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" aria-hidden>
-      <path d="M7 10V8a5 5 0 0110 0v2" />
-      <rect x="5" y="10" width="14" height="10" rx="2" />
     </svg>
   );
 }

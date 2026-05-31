@@ -1,11 +1,22 @@
 interface MapFilterButtonProps {
+  active?: boolean;
+  label?: string;
   onClick?: () => void;
 }
 
-export function MapFilterButton({ onClick }: MapFilterButtonProps) {
+export function MapFilterButton({
+  active = false,
+  label = "거래 유형/가격",
+  onClick,
+}: MapFilterButtonProps) {
   return (
-    <button type="button" className="map-filter-btn" onClick={onClick}>
-      거래 유형/가격
+    <button
+      type="button"
+      className={`map-filter-btn${active ? " is-active" : ""}`}
+      onClick={onClick}
+      aria-pressed={active}
+    >
+      {label}
       <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden>
         <path
           d="M3 4.5L6 7.5L9 4.5"

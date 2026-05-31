@@ -3,6 +3,7 @@ import { useState } from "react";
 import { allListings } from "../data/mockListings";
 import {
   readFavoriteListingIds,
+  readDraftListingsForDisplay,
   removeFavoriteListing,
 } from "../services/prototypeStorage";
 import type { Listing } from "../types/listing";
@@ -11,8 +12,9 @@ import "./stored.css";
 export function StoredPage() {
   const navigate = useNavigate();
   const [favoriteIds, setFavoriteIds] = useState(() => readFavoriteListingIds());
+  const allCatalog = [...allListings, ...readDraftListingsForDisplay()];
   const storedListings = favoriteIds
-    .map((listingId) => allListings.find((listing) => listing.id === listingId))
+    .map((listingId) => allCatalog.find((listing) => listing.id === listingId))
     .filter((listing): listing is Listing => Boolean(listing));
 
   return (

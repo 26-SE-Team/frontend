@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { ChangeEvent, FormEvent } from "react";
+import type { FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import {
@@ -19,7 +19,7 @@ const defaultMimeTypeCandidates = [
 
 const guideItems = [
   "휴대폰 360°로 방 전체를 천천히 한 바퀴(최소 6초 이상) 촬영하세요.",
-  "카메라를 천천히 낮추며 문, 창문, 부엌/욕실 입구 순으로 지나가면 모델이 안정적으로 나옵니다.",
+  "카메라를 천천히 낮추며 문, 창문, 부엌/욕실 입구 순으로 지나가면 공간이 선명하게 기록됩니다.",
   "짧은 흔들림은 괜찮지만 카메라를 멈추지 말고 일정한 보폭으로 이동하세요.",
   "촬영 중에는 플래시를 끄고, 가능하면 자연광이 있는 구간을 골라주세요.",
 ];
@@ -30,7 +30,6 @@ export function PropertyRegisterPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
-  const [modelFileName, setModelFileName] = useState("");
   const [scanState, setScanState] = useState<ScanState>("idle");
   const [scanVideoFileName, setScanVideoFileName] = useState("");
   const [recordedPreviewUrl, setRecordedPreviewUrl] = useState<string>("");
@@ -38,7 +37,6 @@ export function PropertyRegisterPage() {
   const [scanSeconds, setScanSeconds] = useState(0);
   const [saved, setSaved] = useState(false);
   const cameraRef = useRef<HTMLVideoElement>(null);
-  const modelUploadInputRef = useRef<HTMLInputElement>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const chunksRef = useRef<BlobPart[]>([]);
@@ -49,6 +47,12 @@ export function PropertyRegisterPage() {
     latestCertification?.agentName.trim() || user?.nickname?.trim() || "중개인 회원";
   const brokerOfficeName = latestCertification?.officeName.trim() || "인증 사무소";
   const brokerRegistrationNumber = latestCertification?.agentNumber.trim();
+  const recordingButtonLabel =
+    scanState === "recording"
+      ? "녹화 중지"
+      : recordedPreviewUrl
+        ? "다시 촬영"
+        : "촬영 시작";
 
   const toggleOption = (option: string) => {
     setSelectedOptions((current) =>
@@ -87,10 +91,10 @@ export function PropertyRegisterPage() {
   const startScanProcessing = useCallback((videoFileName: string) => {
     setScanState("processing");
     setScanVideoFileName(videoFileName);
-    setScanMessage("3D 공간 모델을 생성하고 있습니다.");
+    setScanMessage("공간 보기를 준비하고 있습니다.");
     window.setTimeout(() => {
       setScanState("ready");
-      setScanMessage("3D 스캔 모델 생성 완료. 매물 등록 후 바로 공간 보기에서 확인할 수 있어요.");
+      setScanMessage("공간 보기가 준비되었습니다. 매물 등록 후 바로 확인할 수 있어요.");
     }, 1200);
   }, []);
 
@@ -100,7 +104,6 @@ export function PropertyRegisterPage() {
 
     setScanMessage("");
     releasePreview();
-    setModelFileName("");
     setScanVideoFileName("");
     setScanSeconds(0);
 
@@ -166,7 +169,6 @@ export function PropertyRegisterPage() {
         const nextUrl = URL.createObjectURL(blob);
         previewUrlRef.current = nextUrl;
         setRecordedPreviewUrl(nextUrl);
-        setModelFileName("camera-capture");
         stopStream();
         startScanProcessing(safeName);
       };
@@ -213,10 +215,9 @@ export function PropertyRegisterPage() {
     }
 
     const formData = new FormData(event.currentTarget);
-    const hasSource = Boolean(scanVideoFileName || modelFileName);
-    if (!hasSource) {
+    if (!scanVideoFileName) {
       setScanState("idle");
-      setScanMessage("매물 3D를 등록하려면 동영상을 촬영해 주세요.");
+      setScanMessage("공간 보기를 등록하려면 동영상을 촬영해 주세요.");
       return;
     }
 
@@ -226,38 +227,21 @@ export function PropertyRegisterPage() {
       size: String(formData.get("size") ?? ""),
       availableDate: String(formData.get("availableDate") ?? ""),
       options: selectedOptions,
-      modelFileName: modelFileName || undefined,
-      scanSource: scanVideoFileName ? "camera" : "upload",
+      modelFileName: "generated-from-room-video.splat",
+      scanSource: "camera",
       scanVideoFileName: scanVideoFileName || undefined,
       scanStatus: scanState === "ready" ? "ready" : "idle",
       brokerName,
       brokerOfficeName,
       brokerRegistrationNumber,
-      viewerAssetId:
-        modelFileName === "camera-capture" || !!scanVideoFileName
-          ? generatedViewerAssetId
-          : undefined,
+      viewerAssetId: generatedViewerAssetId,
     });
 
-    if (modelUploadInputRef.current) {
-      modelUploadInputRef.current.value = "";
-    }
     releasePreview();
     stopStream();
     setSaved(true);
     setScanState("idle");
-    setScanMessage("촬영 기반 매물이 등록되었습니다.");
-  };
-
-  const handleModelFileChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    setModelFileName(file.name);
-    setScanVideoFileName("");
-    setScanState("ready");
-    setScanMessage("3D 모델 파일이 등록되었습니다. (카메라 녹화는 권장)");
-    setRecordedPreviewUrl("");
+    setScanMessage("매물이 등록되었습니다.");
   };
 
   useEffect(() => {
@@ -297,7 +281,7 @@ export function PropertyRegisterPage() {
           <TextField id="availableDate" label="입주 가능일" defaultValue="즉시" />
 
           <section className="property-register__scan">
-            <h2>휴대폰 영상으로 3D 스캔 등록</h2>
+            <h2>공간 촬영</h2>
             <ol className="property-register__scan-guide">
               {guideItems.map((guide) => (
                 <li key={guide}>{guide}</li>
@@ -315,13 +299,8 @@ export function PropertyRegisterPage() {
             </label>
             <div className="property-register__scan-actions">
               <button type="button" onClick={scanState === "recording" ? stopRecordingAndLeaveCamera : startRecording}>
-                {scanState === "recording" ? "녹화 중지" : "촬영 시작"}
+                {recordingButtonLabel}
               </button>
-              {recordedPreviewUrl && (
-                <button type="button" onClick={stopRecordingAndLeaveCamera}>
-                  다시 촬영
-                </button>
-              )}
             </div>
             {recordedPreviewUrl && (
               <video
@@ -348,20 +327,6 @@ export function PropertyRegisterPage() {
               ))}
             </div>
           </section>
-
-          <label className="property-register__upload">
-            <input
-              ref={modelUploadInputRef}
-              type="file"
-              accept="image/*,.json,.glb,.gltf,.ply,.splat,.ksplat"
-              onChange={handleModelFileChange}
-            />
-            <span>
-              <CubeIcon />
-              <strong>대체 입력: 모델 파일 업로드(권장 안함)</strong>
-              {modelFileName && <small>{modelFileName}</small>}
-            </span>
-          </label>
 
           {saved && (
             <p className="property-register__saved" role="status">
@@ -409,16 +374,6 @@ function BackIcon() {
   return (
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
       <path d="M15 18l-6-6 6-6" />
-    </svg>
-  );
-}
-
-function CubeIcon() {
-  return (
-    <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden>
-      <path d="M21 16V8l-9-5-9 5v8l9 5 9-5z" />
-      <path d="M3.3 7.5L12 12l8.7-4.5" />
-      <path d="M12 22V12" />
     </svg>
   );
 }
