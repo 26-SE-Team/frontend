@@ -38,6 +38,8 @@ src/local-data
 # Deploy tool state
 .vercel
 .netlify
+.tmp-*
+*.bak
 
 # Editor directories and files
 .vscode/*
