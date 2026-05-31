@@ -42,7 +42,7 @@ function App() {
         <Route
           path="/my-listings"
           element={
-            <RoleProtectedRoute mode="broker">
+            <RoleProtectedRoute mode="broker" requireCertifiedBroker>
               <MyListingsPage />
             </RoleProtectedRoute>
           }

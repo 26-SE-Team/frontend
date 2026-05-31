@@ -4,6 +4,8 @@ import { resetPrototypeFallbackStorage } from "./prototypeStorage";
 import {
   authStorage,
   createPrototypeSession,
+  isCertifiedBroker,
+  setBrokerCertificationStatus,
   type AuthTokens,
   type AuthUser,
 } from "./authService";
@@ -58,5 +60,15 @@ describe("authStorage prototype session", () => {
     assert.equal(authStorage.getAccessToken(), null);
     assert.equal(authStorage.getRefreshToken(), null);
     assert.equal(authStorage.getUser(), null);
+  });
+
+  it("approves broker certification in the local session", () => {
+    createPrototypeSession("kakao");
+
+    const updatedUser = setBrokerCertificationStatus("approved");
+
+    assert.equal(updatedUser?.brokerCertificationStatus, "approved");
+    assert.equal(updatedUser?.isBrokerCertified, true);
+    assert.equal(isCertifiedBroker(authStorage.getUser()), true);
   });
 });
