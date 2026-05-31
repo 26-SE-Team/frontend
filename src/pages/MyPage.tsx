@@ -93,16 +93,21 @@ export function MyPage() {
               <span>문의하기</span>
               <ChevronIcon />
             </button>
+
+            <button
+              type="button"
+              className="mypage-menu__logout"
+              onClick={handleLogout}
+            >
+              <span>로그아웃</span>
+              <ChevronIcon />
+            </button>
           </section>
 
           <section className="mypage-version">
             <span>앱 버전</span>
             <strong>0.0.1 beta</strong>
           </section>
-
-          <button type="button" className="mypage__logout" onClick={handleLogout}>
-            로그아웃
-          </button>
         </div>
 
         <BottomNav active="mypage" />
