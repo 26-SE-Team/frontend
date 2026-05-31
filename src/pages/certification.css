@@ -1,6 +1,6 @@
 .cert-page {
-  min-height: 100dvh;
-  min-height: 100svh;
+  height: 100dvh;
+  height: 100svh;
   background: #ffffff;
   display: flex;
   justify-content: center;
@@ -17,8 +17,11 @@
 .cert-page__frame {
   width: 100%;
   max-width: 430px;
-  min-height: inherit;
+  height: inherit;
   background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .cert-page__header {
@@ -58,7 +61,10 @@
 }
 
 .cert-form {
-  padding: 0 1.625rem 2rem;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0 1.625rem max(2rem, env(safe-area-inset-bottom));
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
@@ -145,7 +151,7 @@
   }
 
   .cert-page__frame {
-    min-height: min(100dvh - 4rem, 52rem);
+    height: min(100dvh - 4rem, 52rem);
     border-radius: 1.5rem;
     overflow: hidden;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);

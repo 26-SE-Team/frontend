@@ -1,6 +1,6 @@
 .listing-detail {
-  min-height: 100dvh;
-  min-height: 100svh;
+  height: 100dvh;
+  height: 100svh;
   background: #ffffff;
   display: flex;
   justify-content: center;
@@ -17,11 +17,12 @@
 .listing-detail__frame {
   width: 100%;
   max-width: 430px;
-  min-height: inherit;
+  height: inherit;
   background: #ffffff;
   position: relative;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .listing-detail__topbar {
@@ -210,12 +211,12 @@
 }
 
 .listing-detail__actionbar {
-  position: fixed;
+  position: absolute;
   bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
+  left: 0;
+  right: 0;
   width: 100%;
-  max-width: 430px;
+  max-width: none;
   padding: 0.75rem 1.5rem;
   padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
   background: #f4f4f5;
@@ -254,7 +255,7 @@
   }
 
   .listing-detail__frame {
-    min-height: min(100dvh - 4rem, 52rem);
+    height: min(100dvh - 4rem, 52rem);
     border-radius: 1.5rem;
     overflow: hidden;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);

@@ -1,13 +1,16 @@
 {
   "name": "my-app",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.0.1-beta.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "node --import tsx src/test/runAllTests.ts",
+    "test:unit": "node --import tsx src/test/runUnitTests.ts",
+    "test:user": "node --import tsx src/test/runUserTests.ts"
   },
   "dependencies": {
     "@mkkellogg/gaussian-splats-3d": "^0.4.7",
@@ -32,6 +35,7 @@
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.6.0",
+    "tsx": "^4.22.3",
     "typescript": "~6.0.2",
     "typescript-eslint": "^8.59.2",
     "vite": "^8.0.12"

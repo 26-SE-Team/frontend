@@ -1,6 +1,6 @@
 .map-page {
-  min-height: 100dvh;
-  min-height: 100svh;
+  height: 100dvh;
+  height: 100svh;
   background: #ffffff;
   display: flex;
   justify-content: center;
@@ -17,9 +17,7 @@
 .map-page__frame {
   width: 100%;
   max-width: 430px;
-  height: 100dvh;
-  height: 100svh;
-  min-height: inherit;
+  height: inherit;
   display: flex;
   flex-direction: column;
   position: relative;
@@ -71,7 +69,7 @@
   box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08);
   padding: 0.5rem 1.5rem 0.75rem;
   margin-bottom: 4.5rem;
-  max-height: 19rem;
+  max-height: min(42svh, 19rem);
   display: flex;
   flex-direction: column;
   min-height: 0;
@@ -234,7 +232,7 @@
 }
 
 .map-page .home-nav {
-  position: fixed;
+  position: absolute;
   bottom: 0;
 }
 
@@ -246,7 +244,6 @@
   }
 
   .map-page__frame {
-    min-height: min(100dvh - 4rem, 52rem);
     height: min(100dvh - 4rem, 52rem);
     border-radius: 1.5rem;
     overflow: hidden;

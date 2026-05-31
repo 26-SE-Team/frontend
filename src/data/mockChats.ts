@@ -21,7 +21,7 @@ export const mockChatRooms: ChatRoom[] = [
       {
         id: "m-2",
         sender: "me",
-        text: "3D 보기에서 본 방이 실제 호실과 같은 구조인가요?",
+        text: "현장과 같은 구조인지 확인해도 될까요?",
         sentAt: "14:10",
       },
       {

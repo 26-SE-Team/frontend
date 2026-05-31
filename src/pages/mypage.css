@@ -1,6 +1,6 @@
 .mypage {
-  min-height: 100dvh;
-  min-height: 100svh;
+  height: 100dvh;
+  height: 100svh;
   background: #ffffff;
   display: flex;
   justify-content: center;
@@ -17,7 +17,7 @@
 .mypage__frame {
   width: 100%;
   max-width: 430px;
-  min-height: inherit;
+  height: inherit;
   background: #ffffff;
   display: flex;
   flex-direction: column;
@@ -196,7 +196,7 @@
   }
 
   .mypage__frame {
-    min-height: min(100dvh - 4rem, 52rem);
+    height: min(100dvh - 4rem, 52rem);
     border-radius: 1.5rem;
     overflow: hidden;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);

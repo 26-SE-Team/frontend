@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
+import { saveCertificationDraft } from "../services/prototypeStorage";
 import "./certification.css";
 
 export function CertificationPage() {
@@ -10,6 +11,13 @@ export function CertificationPage() {
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    saveCertificationDraft({
+      agentName: String(formData.get("agent-name") ?? ""),
+      agentNumber: String(formData.get("agent-number") ?? ""),
+      officeName: String(formData.get("office-name") ?? ""),
+      fileName: fileName || undefined,
+    });
     setSubmitted(true);
   };
 
@@ -50,7 +58,7 @@ export function CertificationPage() {
 
           {submitted && (
             <p className="cert-form__status" role="status">
-              인증 요청이 임시 저장되었습니다.
+              인증 요청이 접수되었습니다.
             </p>
           )}
 

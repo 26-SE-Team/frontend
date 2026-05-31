@@ -33,20 +33,13 @@ function createListingIcon(
   const label = listing.price.replace(/\s+/g, " ");
   const width = Math.max(82, Math.min(118, label.length * 11 + 24));
   const height = isSelected ? 44 : 38;
-  const color = listing.viewerAssetId === "room0-studio-preview"
-    ? "#7c3aed"
-    : "#2563eb";
+  const color = "#2563eb";
   const stroke = isSelected ? "#111827" : "#ffffff";
-  const badge = listing.viewerAssetId === "room0-studio-preview"
-    ? '<circle cx="16" cy="12" r="6" fill="#ffffff" fill-opacity="0.95"/><text x="16" y="12.6" text-anchor="middle" dominant-baseline="middle" fill="#7c3aed" font-size="7" font-weight="900" font-family="Pretendard, sans-serif">3D</text>'
-    : "";
-  const textX = listing.viewerAssetId === "room0-studio-preview" ? 31 : 14;
 
   const svg = `
     <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
       <path d="M10 3H${width - 10}Q${width - 3} 3 ${width - 3} 10V24Q${width - 3} 31 ${width - 10} 31H${width / 2 + 6}L${width / 2} ${height - 3}L${width / 2 - 6} 31H10Q3 31 3 24V10Q3 3 10 3Z" fill="${color}" stroke="${stroke}" stroke-width="${isSelected ? 3 : 2}"/>
-      ${badge}
-      <text x="${textX}" y="18.2" fill="#ffffff" font-size="12" font-weight="850" font-family="Pretendard, sans-serif">${label}</text>
+      <text x="14" y="18.2" fill="#ffffff" font-size="12" font-weight="850" font-family="Pretendard, sans-serif">${label}</text>
     </svg>
   `;
 
@@ -57,6 +50,47 @@ function createListingIcon(
   };
 }
 
+function createClusterIcon(count: number, isSelected: boolean): google.maps.Icon {
+  const size = 44;
+  const color = isSelected ? "#1e293b" : "#2563eb";
+  const border = isSelected ? "#0f172a" : "#dbeafe";
+
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+      <circle cx="${size / 2}" cy="${size / 2}" r="18" fill="${color}" stroke="${border}" stroke-width="3"/>
+      <text x="${size / 2}" y="27" fill="#ffffff" font-size="14" font-weight="850" font-family="Pretendard, sans-serif" text-anchor="middle">${count}</text>
+    </svg>
+  `;
+
+  return {
+    url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg.trim())}`,
+    scaledSize: new google.maps.Size(size, size),
+    anchor: new google.maps.Point(size / 2, size / 2),
+  };
+}
+
+type ClusterPoint = {
+  id: string;
+  lat: number;
+  lng: number;
+  listingCount: number;
+  isCluster: boolean;
+  listing?: Listing;
+  listings: Listing[];
+};
+
+function getMapClusterStep(zoom: number): number {
+  if (zoom >= 14) return 0;
+  if (zoom >= 12) return 0.02;
+  if (zoom >= 11) return 0.05;
+  return 0.08;
+}
+
+function roundToGrid(value: number, step: number): number {
+  const index = Math.round(value / step);
+  return index * step;
+}
+
 export function PropertyMap({
   listings,
   selectedListingId,
@@ -64,6 +98,7 @@ export function PropertyMap({
 }: PropertyMapProps) {
   const apiKey = publicEnv.googleMapsApiKey;
   const [map, setMap] = useState<google.maps.Map | null>(null);
+  const [zoomLevel, setZoomLevel] = useState(11);
 
   const { isLoaded, loadError } = useJsApiLoader({
     id: "stayview-google-map",
@@ -76,6 +111,70 @@ export function PropertyMap({
     () => listings.filter((listing) => listing.mapPosition),
     [listings]
   );
+
+  const mapPoints = useMemo(() => {
+    if (mappedListings.length === 0) return [];
+
+    const clusterStep = getMapClusterStep(zoomLevel);
+
+    if (clusterStep === 0) {
+      return mappedListings.map<ClusterPoint>((listing) => ({
+        id: listing.id,
+        lat: listing.mapPosition!.lat,
+        lng: listing.mapPosition!.lng,
+        listingCount: 1,
+        isCluster: false,
+        listing,
+        listings: [listing],
+      }));
+    }
+
+    const grouped = new Map<string, Listing[]>();
+
+    for (const listing of mappedListings) {
+      const position = listing.mapPosition;
+      if (!position) continue;
+
+      const bucketLat = roundToGrid(position.lat, clusterStep);
+      const bucketLng = roundToGrid(position.lng, clusterStep);
+      const key = `${bucketLat.toFixed(3)},${bucketLng.toFixed(3)}`;
+
+      const bucket = grouped.get(key);
+      if (bucket) {
+        bucket.push(listing);
+      } else {
+        grouped.set(key, [listing]);
+      }
+    }
+
+    return [...grouped.entries()].map(([key, clusterListings]) => {
+      const [latText, lngText] = key.split(",");
+      const lat = Number(latText);
+      const lng = Number(lngText);
+
+      if (clusterListings.length === 1) {
+        const listing = clusterListings[0];
+        return {
+          id: listing.id,
+          lat,
+          lng,
+          listingCount: 1,
+          isCluster: false,
+          listing,
+          listings: clusterListings,
+        };
+      }
+
+      return {
+        id: key,
+        lat,
+        lng,
+        listingCount: clusterListings.length,
+        isCluster: true,
+        listings: clusterListings,
+      };
+    });
+  }, [mappedListings, zoomLevel]);
 
   useEffect(() => {
     if (!map || !isLoaded || mappedListings.length === 0) return;
@@ -90,20 +189,39 @@ export function PropertyMap({
     map.fitBounds(bounds, 64);
   }, [isLoaded, map, mappedListings]);
 
-  const handleMarkerClick = useCallback(
-    (listing: Listing) => () => {
-      onListingClick?.(listing);
+  const handleMapLoad = useCallback((nextMap: google.maps.Map) => {
+    setMap(nextMap);
+    setZoomLevel(nextMap.getZoom() ?? 11);
+  }, []);
+
+  const handleMapIdle = useCallback(() => {
+    if (!map) return;
+    setZoomLevel(map.getZoom() ?? 11);
+  }, [map]);
+
+  const handlePointClick = useCallback(
+    (point: ClusterPoint) => () => {
+      if (point.isCluster && point.listings.length > 1) {
+        if (!map) return;
+        map.setCenter({ lat: point.lat, lng: point.lng });
+        const nextZoom = Math.min((map.getZoom() ?? 14) + 2, 18);
+        map.setZoom(nextZoom);
+        return;
+      }
+
+      if (point.listing) {
+        onListingClick?.(point.listing);
+      }
     },
-    [onListingClick]
+    [map, onListingClick]
   );
 
   if (!apiKey) {
     return (
       <div className="map-page__error">
-        <p className="map-page__error-title">지도 API 키가 필요합니다</p>
+        <p className="map-page__error-title">지도를 불러올 수 없습니다</p>
         <p className="map-page__error-desc">
-          GitHub Secrets 또는 로컬 <code>.env.local</code>에{" "}
-          <code>VITE_GOOGLE_MAPS_API_KEY</code>를 설정해주세요.
+          잠시 후 다시 시도해주세요.
         </p>
       </div>
     );
@@ -114,7 +232,7 @@ export function PropertyMap({
       <div className="map-page__error">
         <p className="map-page__error-title">지도를 불러올 수 없습니다</p>
         <p className="map-page__error-desc">
-          API 키와 Maps JavaScript API 설정을 확인해주세요.
+          잠시 후 다시 시도해주세요.
         </p>
       </div>
     );
@@ -130,25 +248,47 @@ export function PropertyMap({
   }
 
   return (
-    <GoogleMap
+      <GoogleMap
       mapContainerStyle={MAP_CONTAINER_STYLE}
       center={SEOUL_CENTER}
       zoom={11}
       options={MAP_OPTIONS}
-      onLoad={setMap}
+      onLoad={handleMapLoad}
+      onIdle={handleMapIdle}
       onUnmount={() => setMap(null)}
     >
-      {mappedListings.map((listing) => {
+      {mapPoints.map((point) => {
+        const listing = point.listing;
+        if (point.isCluster) {
+          const isSelected =
+            selectedListingId &&
+            point.listings.some((candidate) => candidate.id === selectedListingId);
+
+          return (
+            <Marker
+              key={point.id}
+              position={{ lat: point.lat, lng: point.lng }}
+              icon={createClusterIcon(point.listingCount, Boolean(isSelected))}
+              title={`${point.listingCount}건`}
+              onClick={handlePointClick(point)}
+              zIndex={isSelected ? 10 : 1}
+            />
+          );
+        }
+
+        if (!listing?.mapPosition) return null;
         const position = listing.mapPosition;
-        if (!position) return null;
 
         return (
           <Marker
-            key={listing.id}
-            position={{ lat: position.lat, lng: position.lng }}
-            icon={createListingIcon(listing, listing.id === selectedListingId)}
+            key={point.id}
+            position={{ lat: point.lat, lng: point.lng }}
+            icon={createListingIcon(
+              listing,
+              listing.id === selectedListingId
+            )}
             title={position.label ?? `${listing.location} ${listing.type}`}
-            onClick={handleMarkerClick(listing)}
+            onClick={handlePointClick(point)}
             zIndex={listing.id === selectedListingId ? 10 : 1}
           />
         );

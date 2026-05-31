@@ -1,6 +1,9 @@
 import type { Listing } from "../types/listing";
 import { room0ViewerPhotos } from "./mockViewerAssets";
 
+const publicPath = (path: string) =>
+  `${import.meta.env?.BASE_URL ?? "/"}${path.replace(/^\/+/, "")}`;
+
 export const recommendedListings: Listing[] = [
   {
     id: "rec-1",
@@ -10,17 +13,17 @@ export const recommendedListings: Listing[] = [
     type: "원룸",
     info: "3층, 관리비 5만",
     location: "동작구 상도동",
-    station: "상도역 도보 6분 · Replica room0 3DGS demo",
+    station: "상도역 도보 6분",
     size: "23.8m²",
     floor: "3층 / 5층",
     managementFee: "5만 원",
-    highlights: ["실제 3DGS", "8장 프리뷰", "채광 좋음"],
+    highlights: ["햇살 좋은 방", "깔끔한 구조", "채광 좋음"],
     options: ["소파", "테이블", "스탠드 조명", "블라인드"],
     viewerAssetId: "room0-studio-preview",
     mapPosition: {
       lat: 37.5031,
       lng: 126.948,
-      label: "상도역 3DGS 원룸",
+      label: "상도역 원룸",
     },
   },
   {
@@ -46,8 +49,7 @@ export const recommendedListings: Listing[] = [
   },
   {
     id: "rec-3",
-    imageUrl:
-      "https://images.unsplash.com/photo-1560448204-e02f11c45751?w=400&h=400&fit=crop",
+    imageUrl: publicPath("listings/studio-apartment-8142976.jpg"),
     price: "월세 500/55",
     type: "원룸",
     info: "3층, 관리비 5만",

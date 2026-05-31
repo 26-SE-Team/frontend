@@ -52,7 +52,7 @@ export function ViewerPage() {
           id: `local-${Date.now()}`,
           kind: "gaussian-scene",
           label: file.name,
-          description: "사용자가 선택한 로컬 Gaussian scene JSON",
+          description: "선택한 Gaussian scene JSON",
           scene,
         });
         return;
@@ -70,7 +70,7 @@ export function ViewerPage() {
           id: `local-${Date.now()}`,
           kind: "model-file",
           label: file.name,
-          description: "사용자가 선택한 로컬 3D 모델",
+          description: "선택한 3D 모델",
           format: extension as "glb" | "gltf" | "ply",
           url,
         });
@@ -89,7 +89,7 @@ export function ViewerPage() {
           id: `local-${Date.now()}`,
           kind: "splat-scene",
           label: file.name,
-          description: "사용자가 선택한 로컬 Gaussian Splat scene",
+          description: "선택한 Gaussian Splat scene",
           url,
           format: extension as "splat" | "ksplat",
           previewImageUrl: "",
@@ -105,7 +105,7 @@ export function ViewerPage() {
 
       setFileError("지원하는 파일은 .json, .glb, .gltf, .ply, .splat, .ksplat입니다.");
     } catch {
-      setFileError("파일 형식이 viewer 계약과 맞지 않습니다.");
+      setFileError("파일 형식을 확인해주세요.");
     } finally {
       event.target.value = "";
     }
@@ -120,7 +120,7 @@ export function ViewerPage() {
           </button>
           <div>
             <p>{listing?.location ?? "StayView"}</p>
-            <h1>{listing ? `${listing.price} 3D` : "3D 보기"}</h1>
+            <h1>{listing ? listing.price : "공간 보기"}</h1>
           </div>
           <div className="viewer-page__header-actions">
             {listing && (
@@ -145,7 +145,7 @@ export function ViewerPage() {
           </div>
         </header>
 
-        <section className="viewer-page__stage" aria-label="3D 뷰어">
+        <section className="viewer-page__stage" aria-label="공간 뷰어">
           <ThreeDGSViewer
             asset={asset}
             mode={mode}
