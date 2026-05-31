@@ -40,8 +40,8 @@ describe("authStorage prototype session", () => {
     const user = createPrototypeSession("kakao");
 
     assert.equal(user.provider, "kakao");
-    assert.equal(user.accountMode, "broker");
-    assert.equal(user.brokerCertificationStatus, "required");
+    assert.equal(user.accountMode, "tenant");
+    assert.equal(user.brokerCertificationStatus, "not-required");
     assert.equal(authStorage.getUser()?.isBrokerCertified, false);
     assert.match(authStorage.getAccessToken() ?? "", /prototype-kakao/);
     assert.equal(authStorage.getUser()?.provider, user.provider);
@@ -62,7 +62,7 @@ describe("authStorage prototype session", () => {
     assert.equal(authStorage.getUser(), null);
   });
 
-  it("stores email registration sessions with the selected account mode", () => {
+  it("stores email registration sessions as tenant-first users", () => {
     authStorage.setSession(
       {
         accessToken: "registered-access",
@@ -72,22 +72,23 @@ describe("authStorage prototype session", () => {
         email: "agent@example.com",
         nickname: "가입자",
         provider: "email",
-        accountMode: "broker",
-        brokerCertificationStatus: "required",
+        accountMode: "tenant",
+        brokerCertificationStatus: "not-required",
         isBrokerCertified: false,
       }
     );
 
     assert.equal(authStorage.getUser()?.provider, "email");
-    assert.equal(authStorage.getUser()?.accountMode, "broker");
-    assert.equal(authStorage.getUser()?.brokerCertificationStatus, "required");
+    assert.equal(authStorage.getUser()?.accountMode, "tenant");
+    assert.equal(authStorage.getUser()?.brokerCertificationStatus, "not-required");
   });
 
   it("approves broker certification in the local session", () => {
-    createPrototypeSession("kakao");
+    createPrototypeSession("google");
 
     const updatedUser = setBrokerCertificationStatus("approved");
 
+    assert.equal(updatedUser?.accountMode, "broker");
     assert.equal(updatedUser?.brokerCertificationStatus, "approved");
     assert.equal(updatedUser?.isBrokerCertified, true);
     assert.equal(isCertifiedBroker(authStorage.getUser()), true);

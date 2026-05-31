@@ -38,71 +38,6 @@
   gap: 0.875rem;
 }
 
-.accountType {
-  margin: 0;
-  border: none;
-  padding: 0;
-}
-
-.accountType legend {
-  margin-bottom: 0.625rem;
-  color: #111111;
-  font-size: 0.875rem;
-  font-weight: 850;
-}
-
-.accountTypeOptions {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.625rem;
-}
-
-.accountTypeOption {
-  cursor: pointer;
-}
-
-.accountTypeOption input {
-  position: absolute;
-  opacity: 0;
-  pointer-events: none;
-}
-
-.accountTypeOption > span {
-  min-height: 4.25rem;
-  border: 1px solid #eeeeee;
-  border-radius: 0.875rem;
-  background: #ffffff;
-  padding: 0.75rem 0.875rem;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 0.25rem;
-  box-sizing: border-box;
-}
-
-.accountTypeOption strong {
-  color: #111111;
-  font-size: 0.9375rem;
-  font-weight: 900;
-}
-
-.accountTypeOption small {
-  color: #777777;
-  font-size: 0.75rem;
-  font-weight: 700;
-  line-height: 1.35;
-}
-
-.accountTypeOption input:checked + span {
-  border-color: #7c3aed;
-  background: #f4efff;
-}
-
-.accountTypeOption input:focus-visible + span {
-  outline: 2px solid #7c3aed;
-  outline-offset: 2px;
-}
-
 .strengthBar {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -187,6 +122,67 @@
   display: flex;
   align-items: center;
   gap: 0.3125rem;
+}
+
+.brokerPromptOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  background: rgba(17, 24, 39, 0.38);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 1rem;
+  box-sizing: border-box;
+}
+
+.brokerPrompt {
+  width: 100%;
+  max-width: 398px;
+  border-radius: 1.25rem;
+  background: #ffffff;
+  padding: 1.25rem;
+  box-shadow: 0 1.25rem 3rem rgba(15, 23, 42, 0.22);
+  box-sizing: border-box;
+}
+
+.brokerPrompt h2 {
+  margin: 0;
+  color: #111111;
+  font-size: 1.25rem;
+  font-weight: 900;
+  letter-spacing: 0;
+}
+
+.brokerPrompt p {
+  margin: 0.5rem 0 1rem;
+  color: #606a78;
+  font-size: 0.875rem;
+  font-weight: 700;
+  line-height: 1.55;
+}
+
+.brokerPromptActions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.brokerPromptActions button {
+  width: 100%;
+  min-height: 2.875rem;
+  border: none;
+  border-radius: 0.875rem;
+  background: #f3f4f6;
+  color: #111111;
+  font-size: 0.9375rem;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.brokerPromptActions .brokerPromptPrimary {
+  background: #7c3aed;
+  color: #ffffff;
 }
 
 .alertError,

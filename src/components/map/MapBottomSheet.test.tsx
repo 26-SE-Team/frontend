@@ -35,4 +35,16 @@ describe("MapBottomSheet", () => {
 
     assert.match(html, /map-sheet__listing is-active/);
   });
+
+  it("exposes the sheet handle as a height drag control", () => {
+    const html = renderToStaticMarkup(
+      React.createElement(MapBottomSheet, {
+        totalCount: allListings.length,
+        listings: allListings,
+      })
+    );
+
+    assert.match(html, /role="slider"/);
+    assert.match(html, /aria-label="매물 목록 높이"/);
+  });
 });

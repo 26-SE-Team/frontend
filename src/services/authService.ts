@@ -34,7 +34,8 @@ const USER_KEY = "stayview_user";
 const API_BASE = publicEnv.apiBaseUrl;
 
 function resolveAccountMode(provider: AuthProvider): AccountMode {
-  return provider === "kakao" ? "broker" : "tenant";
+  void provider;
+  return "tenant";
 }
 
 function resolveDefaultBrokerCertificationStatus(
@@ -133,11 +134,11 @@ export function createPrototypeSession(provider: AuthProvider): AuthUser {
   const user: AuthUser = {
     id: `prototype-${provider}`,
     email: `${provider}@stayview.local`,
-    nickname: provider === "kakao" ? "중개인 회원" : "임차인 회원",
+    nickname: provider === "kakao" ? "카카오 회원" : "Google 회원",
     provider,
     accountMode,
-    brokerCertificationStatus:
-      accountMode === "broker" ? "required" : "not-required",
+    brokerCertificationStatus: "not-required",
+    isBrokerCertified: false,
   };
 
   applyAuthSession(
@@ -303,6 +304,7 @@ export function setBrokerCertificationStatus(
   status: Extract<BrokerCertificationStatus, "approved" | "pending" | "rejected">
 ): AuthUser | null {
   return updateCurrentAuthUser({
+    accountMode: status === "approved" ? "broker" : "tenant",
     brokerCertificationStatus: status,
     isBrokerCertified: status === "approved",
   });

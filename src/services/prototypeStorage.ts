@@ -1,4 +1,5 @@
 import { mockChatRooms } from "../data/mockChats";
+import { room0ViewerPhotos } from "../data/mockViewerAssets";
 import type { Listing } from "../types/listing";
 import type { ChatRoom } from "../types/chat";
 
@@ -49,7 +50,10 @@ const publicRoot = (path: string) =>
 
 const defaultScanViewerAssetId = "room0-studio-preview";
 
-const draftPreviewImageUrl = publicRoot("demo/room0/photos/room0_3dgs_preview.webp");
+const generatedRoomImageUrls = room0ViewerPhotos.map((photo) => photo.src);
+const generatedRoomCoverImageUrl =
+  generatedRoomImageUrls[3] ??
+  publicRoot("demo/room0/photos/room0_3dgs_preview.webp");
 
 const mapFallbacks: Array<{
   keywords: string[];
@@ -94,8 +98,8 @@ function resolveDraftMapPosition(address: string): Listing["mapPosition"] {
 export function mapDraftToListing(draft: PrototypeListingDraft): Listing {
   return {
     id: draft.id,
-    imageUrl: draftPreviewImageUrl,
-    imageUrls: [draftPreviewImageUrl],
+    imageUrl: generatedRoomCoverImageUrl,
+    imageUrls: generatedRoomImageUrls,
     price: draft.price || "가격 미입력",
     type: "원룸",
     info: `${draft.size || "면적 미입력"} · ${draft.availableDate || "입주일 미입력"}`,
@@ -104,7 +108,7 @@ export function mapDraftToListing(draft: PrototypeListingDraft): Listing {
     size: draft.size || undefined,
     floor: "현재층 / 전체층",
     managementFee: "관리비 협의",
-    highlights: ["휴대폰 촬영 기반 3D 스캔", ...(draft.options.length ? draft.options : ["옵션 미등록"])],
+    highlights: ["공간 보기 등록 완료", ...(draft.options.length ? draft.options : ["옵션 미등록"])],
     options: draft.options,
     brokerName: draft.brokerName,
     brokerOfficeName: draft.brokerOfficeName,

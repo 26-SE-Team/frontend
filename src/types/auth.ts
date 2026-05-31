@@ -9,7 +9,6 @@ export interface RegisterFormData {
   [key: string]: string | boolean
   name: string
   email: string
-  accountMode: string
   password: string
   confirmPassword: string
   agreeToTerms: boolean
