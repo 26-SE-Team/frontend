@@ -7,14 +7,16 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
+  pages: write
+  id-token: write
 
 concurrency:
-  group: gh-pages
+  group: pages
   cancel-in-progress: true
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -25,6 +27,9 @@ jobs:
         with:
           node-version: 24
           cache: npm
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
 
       - name: Install dependencies
         run: npm ci
@@ -40,23 +45,18 @@ jobs:
       - name: Add SPA fallback
         run: cp dist/index.html dist/404.html
 
-      - name: Publish dist to gh-pages
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git fetch origin gh-pages:refs/remotes/origin/gh-pages || true
-          if git show-ref --verify --quiet refs/remotes/origin/gh-pages; then
-            git worktree add -B gh-pages ../gh-pages-worktree origin/gh-pages
-          else
-            git worktree add --detach ../gh-pages-worktree HEAD
-            cd ../gh-pages-worktree
-            git switch --orphan gh-pages
-            cd -
-          fi
-          find ../gh-pages-worktree -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
-          cp -R dist/. ../gh-pages-worktree/
-          cd ../gh-pages-worktree
-          touch .nojekyll
-          git add -A
-          git commit -m "deploy: update GitHub Pages" || exit 0
-          git push origin gh-pages
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
