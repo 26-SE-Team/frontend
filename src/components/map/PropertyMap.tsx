@@ -51,14 +51,14 @@ function createListingIcon(
 }
 
 function createClusterIcon(count: number, isSelected: boolean): google.maps.Icon {
-  const size = 44;
+  const size = count >= 10 ? 52 : 46;
   const color = isSelected ? "#1e293b" : "#2563eb";
   const border = isSelected ? "#0f172a" : "#dbeafe";
 
   const svg = `
     <svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
       <circle cx="${size / 2}" cy="${size / 2}" r="18" fill="${color}" stroke="${border}" stroke-width="3"/>
-      <text x="${size / 2}" y="27" fill="#ffffff" font-size="14" font-weight="850" font-family="Pretendard, sans-serif" text-anchor="middle">${count}</text>
+      <text x="${size / 2}" y="${Math.max(24, Math.floor(size * 0.58))}" fill="#ffffff" font-size="${count >= 10 ? 16 : 14}" font-weight="900" font-family="Pretendard, sans-serif" text-anchor="middle">${count}</text>
     </svg>
   `;
 
@@ -80,10 +80,11 @@ type ClusterPoint = {
 };
 
 function getMapClusterStep(zoom: number): number {
-  if (zoom >= 14) return 0;
-  if (zoom >= 12) return 0.02;
+  if (zoom >= 16) return 0;
+  if (zoom >= 14) return 0.01;
+  if (zoom >= 12) return 0.03;
   if (zoom >= 11) return 0.05;
-  return 0.08;
+  return 0.12;
 }
 
 function roundToGrid(value: number, step: number): number {
