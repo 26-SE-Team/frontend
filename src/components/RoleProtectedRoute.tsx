@@ -81,7 +81,7 @@ export function RoleProtectedRoute({
   if (requireCertifiedBroker && !isCertifiedBroker(user)) {
     return (
       <Navigate
-        to="/certification"
+        to="/mypage"
         replace
         state={{ from: location.pathname }}
       />

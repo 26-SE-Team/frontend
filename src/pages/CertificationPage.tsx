@@ -3,7 +3,7 @@ import type { FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { saveCertificationDraft } from "../services/prototypeStorage";
 import { useAuth } from "../contexts/AuthContext";
-import { setBrokerCertificationApproved } from "../services/authService";
+import { setBrokerCertificationStatus } from "../services/authService";
 import "./certification.css";
 
 export function CertificationPage() {
@@ -21,7 +21,7 @@ export function CertificationPage() {
       officeName: String(formData.get("office-name") ?? ""),
       fileName: fileName || undefined,
     });
-    const updatedUser = setBrokerCertificationApproved("approved");
+    const updatedUser = setBrokerCertificationStatus("pending");
     if (updatedUser) setUser(updatedUser);
     setSubmitted(true);
   };
@@ -63,12 +63,12 @@ export function CertificationPage() {
 
           {submitted && (
             <p className="cert-form__status" role="status">
-              인증이 완료되었습니다.
+              인증 정보가 접수되었습니다.
             </p>
           )}
 
           <button className="cert-form__submit" type="submit">
-            인증 완료하기
+            인증 정보 제출하기
           </button>
         </form>
       </div>

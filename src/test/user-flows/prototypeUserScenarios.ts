@@ -66,10 +66,11 @@ export const prototypeUserScenarios: PrototypeUserScenario[] = [
     stage: "regression",
     actor: "broker",
     route: "/mypage",
-    task: "마이페이지에서 중개인 인증, 매물 등록, 내 매물 흐름에 접근한다.",
+    task: "마이페이지에서 중개인 상태, 매물 등록, 내 매물 흐름을 확인한다.",
     oracle: [
       "중개인 계정에 맞는 메뉴만 보인다.",
-      "중개인 인증, 매물 등록, 내 매물 화면으로 이동할 수 있다.",
+      "인증 상태는 별도 메뉴가 아니라 상태 카드에 표시된다.",
+      "매물 등록, 내 매물 화면으로 이동할 수 있다.",
     ],
   },
 ];
