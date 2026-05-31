@@ -1,9 +1,14 @@
 interface SearchBarProps {
   value: string;
   onChange: (value: string) => void;
+  placeholder?: string;
 }
 
-export function SearchBar({ value, onChange }: SearchBarProps) {
+export function SearchBar({
+  value,
+  onChange,
+  placeholder = "검색",
+}: SearchBarProps) {
   return (
     <label className="home-search" aria-label="매물 검색">
       <svg
@@ -25,7 +30,7 @@ export function SearchBar({ value, onChange }: SearchBarProps) {
       <input
         type="search"
         className="home-search__input"
-        placeholder="검색"
+        placeholder={placeholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         enterKeyHint="search"

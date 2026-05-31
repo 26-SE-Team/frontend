@@ -3,6 +3,13 @@ import { publicEnv } from "../config/publicEnv";
 import { getPrototypeStorage } from "./prototypeStorage";
 
 export type AuthProvider = "kakao" | "google";
+export type AccountMode = "broker" | "tenant";
+
+export type BrokerCertificationStatus =
+  | "not-required"
+  | "pending"
+  | "approved"
+  | "rejected";
 
 export interface AuthTokens {
   accessToken: string;
@@ -14,6 +21,9 @@ export interface AuthUser {
   email?: string;
   nickname?: string;
   provider: AuthProvider;
+  accountMode: AccountMode;
+  brokerCertificationStatus?: BrokerCertificationStatus;
+  isBrokerCertified?: boolean;
 }
 
 const ACCESS_TOKEN_KEY = "stayview_access_token";
@@ -21,6 +31,48 @@ const REFRESH_TOKEN_KEY = "stayview_refresh_token";
 const USER_KEY = "stayview_user";
 
 const API_BASE = publicEnv.apiBaseUrl;
+
+function resolveAccountMode(provider: AuthProvider): AccountMode {
+  return provider === "kakao" ? "broker" : "tenant";
+}
+
+function resolveDefaultBrokerCertificationStatus(
+  accountMode: AccountMode,
+  isBrokerCertified = false
+): BrokerCertificationStatus {
+  if (accountMode !== "broker") return "not-required";
+  if (isBrokerCertified) return "approved";
+  return "pending";
+}
+
+function normalizeAuthUser(
+  user: Partial<AuthUser> & { provider?: AuthProvider }
+): AuthUser | null {
+  if (!user.id && !user.nickname) return null;
+
+  const provider = user.provider ?? "google";
+  const accountMode = user.accountMode ?? resolveAccountMode(provider);
+  const approved =
+    user.brokerCertificationStatus === "approved" || Boolean(user.isBrokerCertified);
+  const certificationStatus =
+    user.brokerCertificationStatus ??
+    resolveDefaultBrokerCertificationStatus(accountMode, approved);
+
+  return {
+    id: user.id ?? `fallback-${Date.now()}`,
+    provider,
+    accountMode,
+    email: user.email,
+    nickname: user.nickname,
+    isBrokerCertified: approved,
+    brokerCertificationStatus: certificationStatus,
+  };
+}
+
+function applyAuthSession(tokens?: AuthTokens | null, user?: AuthUser | null) {
+  if (!tokens) return;
+  authStorage.setSession(tokens, user);
+}
 
 async function parseErrorMessage(response: Response): Promise<string> {
   try {
@@ -44,7 +96,7 @@ export const authStorage = {
     const raw = getPrototypeStorage().getItem(USER_KEY);
     if (!raw) return null;
     try {
-      return JSON.parse(raw) as AuthUser;
+      return normalizeAuthUser(JSON.parse(raw) as AuthUser);
     } catch {
       return null;
     }
@@ -76,14 +128,18 @@ export function getApiBaseUrl(): string {
 }
 
 export function createPrototypeSession(provider: AuthProvider): AuthUser {
+  const accountMode = resolveAccountMode(provider);
   const user: AuthUser = {
     id: `prototype-${provider}`,
     email: `${provider}@stayview.local`,
-    nickname: provider === "kakao" ? "카카오 이용자" : "Google 이용자",
+    nickname: provider === "kakao" ? "중개인 회원" : "임차인 회원",
     provider,
+    accountMode,
+    brokerCertificationStatus:
+      accountMode === "broker" ? "pending" : "not-required",
   };
 
-  authStorage.setSession(
+  applyAuthSession(
     {
       accessToken: `prototype-${provider}-${Date.now()}`,
       refreshToken: `prototype-refresh-${provider}`,
@@ -206,10 +262,49 @@ export async function fetchCurrentUser(): Promise<AuthUser | null> {
       return null;
     }
 
-    return (await response.json()) as AuthUser;
+    return normalizeAuthUser((await response.json()) as AuthUser);
   } catch {
     return storedUser;
   }
+}
+
+export function isBrokerUser(user: AuthUser | null): user is AuthUser {
+  return user?.accountMode === "broker";
+}
+
+export function isCertifiedBroker(user: AuthUser | null): boolean {
+  return (
+    isBrokerUser(user) &&
+    (user.isBrokerCertified ||
+      user.brokerCertificationStatus === "approved")
+  );
+}
+
+export function updateCurrentAuthUser(
+  patch: Partial<AuthUser>
+): AuthUser | null {
+  const storedUser = authStorage.getUser();
+  if (!storedUser) return null;
+
+  const merged = normalizeAuthUser({
+    ...storedUser,
+    ...patch,
+  });
+  const tokens: AuthTokens = {
+    accessToken: authStorage.getAccessToken() || `prototype-${Date.now()}`,
+    refreshToken: authStorage.getRefreshToken() || undefined,
+  };
+  applyAuthSession(tokens, merged);
+  return merged;
+}
+
+export function setBrokerCertificationApproved(
+  status: Extract<BrokerCertificationStatus, "approved" | "pending" | "rejected">
+): AuthUser | null {
+  return updateCurrentAuthUser({
+    brokerCertificationStatus: status,
+    isBrokerCertified: status === "approved",
+  });
 }
 
 export function logout(): void {
@@ -236,19 +331,24 @@ export function parseCallbackTokens(
   const refreshToken =
     params.get("refreshToken") || params.get("refresh_token") || undefined;
 
-  const user: AuthUser | undefined =
+  const user: (Partial<AuthUser> & { provider?: AuthProvider }) | undefined =
     params.get("userId") || params.get("email") || params.get("nickname")
       ? {
           id: params.get("userId") ?? "",
           email: params.get("email") ?? undefined,
           nickname: params.get("nickname") ?? undefined,
           provider: (params.get("provider") as AuthProvider) ?? "kakao",
+          accountMode: params.get("accountMode") as AccountMode | undefined,
+          brokerCertificationStatus: params.get("brokerCertificationStatus") as
+            | BrokerCertificationStatus
+            | undefined,
+          isBrokerCertified: params.get("isBrokerCertified") === "true",
         }
       : undefined;
 
   return {
     tokens: { accessToken, refreshToken },
-    user,
+    user: user ? normalizeAuthUser(user) ?? undefined : undefined,
   };
 }
 
@@ -317,5 +417,8 @@ export function googleProfileToUser(profile: GoogleProfile): AuthUser {
     email: profile.email,
     nickname: profile.name,
     provider: "google",
+    accountMode: "tenant",
+    brokerCertificationStatus: "not-required",
+    isBrokerCertified: false,
   };
 }

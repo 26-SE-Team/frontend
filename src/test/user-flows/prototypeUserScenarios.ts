@@ -54,11 +54,11 @@ export const prototypeUserScenarios: PrototypeUserScenario[] = [
     stage: "functional",
     actor: "broker",
     route: "/listing/new",
-    task: "중개사가 로컬 프로토타입에서 매물을 임시 등록한다.",
+    task: "중개인이 신규 매물을 등록한다.",
     oracle: [
       "주소, 가격, 면적, 입주 가능일을 편집할 수 있다.",
       "옵션 선택이 유지된다.",
-      "제출 후 로컬 임시 저장 안내가 나온다.",
+      "제출 후 등록 완료 안내가 나온다.",
     ],
   },
   {
@@ -66,10 +66,10 @@ export const prototypeUserScenarios: PrototypeUserScenario[] = [
     stage: "regression",
     actor: "broker",
     route: "/mypage",
-    task: "마이페이지에서 관심 매물, 중개사 인증, 내 매물 흐름에 접근한다.",
+    task: "마이페이지에서 중개인 인증, 매물 등록, 내 매물 흐름에 접근한다.",
     oracle: [
-      "계정 중심 메뉴만 보인다.",
-      "관심 매물, 중개사 인증, 내 매물 화면으로 이동할 수 있다.",
+      "중개인 계정에 맞는 메뉴만 보인다.",
+      "중개인 인증, 매물 등록, 내 매물 화면으로 이동할 수 있다.",
     ],
   },
 ];

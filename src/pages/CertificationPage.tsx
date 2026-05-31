@@ -2,10 +2,13 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { saveCertificationDraft } from "../services/prototypeStorage";
+import { useAuth } from "../contexts/AuthContext";
+import { setBrokerCertificationApproved } from "../services/authService";
 import "./certification.css";
 
 export function CertificationPage() {
   const navigate = useNavigate();
+  const { setUser } = useAuth();
   const [fileName, setFileName] = useState("");
   const [submitted, setSubmitted] = useState(false);
 
@@ -18,6 +21,8 @@ export function CertificationPage() {
       officeName: String(formData.get("office-name") ?? ""),
       fileName: fileName || undefined,
     });
+    const updatedUser = setBrokerCertificationApproved("approved");
+    if (updatedUser) setUser(updatedUser);
     setSubmitted(true);
   };
 
@@ -28,9 +33,9 @@ export function CertificationPage() {
           <button type="button" onClick={() => navigate(-1)} aria-label="뒤로가기">
             <BackIcon />
           </button>
-          <h1>중개사 인증</h1>
+          <h1>중개인 인증</h1>
           <p>
-            중개사 인증 완료 후
+            인증을 완료하면
             <br />
             매물 등록 기능을 사용할 수 있습니다.
           </p>
@@ -58,12 +63,12 @@ export function CertificationPage() {
 
           {submitted && (
             <p className="cert-form__status" role="status">
-              인증 요청이 접수되었습니다.
+              인증이 완료되었습니다.
             </p>
           )}
 
           <button className="cert-form__submit" type="submit">
-            인증 요청하기
+            인증 완료하기
           </button>
         </form>
       </div>

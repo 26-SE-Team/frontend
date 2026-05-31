@@ -77,7 +77,7 @@ export function PropertyRegisterPage() {
   const startScanProcessing = useCallback((videoFileName: string) => {
     setScanState("processing");
     setScanVideoFileName(videoFileName);
-    setScanMessage("3D 공간 모델 생성 중입니다. (데모 파이프라인)");
+    setScanMessage("3D 공간 모델을 생성하고 있습니다.");
     window.setTimeout(() => {
       setScanState("ready");
       setScanMessage("3D 스캔 모델 생성 완료. 매물 등록 후 바로 공간 보기에서 확인할 수 있어요.");

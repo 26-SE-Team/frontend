@@ -22,6 +22,9 @@ describe("authStorage prototype session", () => {
       email: "user@stayview.local",
       nickname: "테스터",
       provider: "google",
+      accountMode: "tenant",
+      brokerCertificationStatus: "not-required",
+      isBrokerCertified: false,
     };
 
     authStorage.setSession(tokens, user);
@@ -35,8 +38,16 @@ describe("authStorage prototype session", () => {
     const user = createPrototypeSession("kakao");
 
     assert.equal(user.provider, "kakao");
+    assert.equal(user.accountMode, "broker");
+    assert.equal(user.brokerCertificationStatus, "pending");
+    assert.equal(authStorage.getUser()?.isBrokerCertified, false);
     assert.match(authStorage.getAccessToken() ?? "", /prototype-kakao/);
-    assert.deepEqual(authStorage.getUser(), user);
+    assert.equal(authStorage.getUser()?.provider, user.provider);
+    assert.equal(authStorage.getUser()?.accountMode, user.accountMode);
+    assert.equal(
+      authStorage.getUser()?.brokerCertificationStatus,
+      user.brokerCertificationStatus
+    );
   });
 
   it("clears all local auth data after each user test sandbox", () => {

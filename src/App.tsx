@@ -14,6 +14,7 @@ import { StoredPage } from "./pages/StoredPage";
 import { CertificationPage } from "./pages/CertificationPage";
 import { MyListingsPage } from "./pages/MyListingsPage";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import { RoleProtectedRoute } from "./components/RoleProtectedRoute";
 
 function App() {
   return (
@@ -30,9 +31,30 @@ function App() {
         <Route path="/chat" element={<ChatPage />} />
         <Route path="/mypage" element={<MyPage />} />
         <Route path="/stored" element={<StoredPage />} />
-        <Route path="/certification" element={<CertificationPage />} />
-        <Route path="/my-listings" element={<MyListingsPage />} />
-        <Route path="/listing/new" element={<PropertyRegisterPage />} />
+        <Route
+          path="/certification"
+          element={
+            <RoleProtectedRoute mode="broker">
+              <CertificationPage />
+            </RoleProtectedRoute>
+          }
+        />
+        <Route
+          path="/my-listings"
+          element={
+            <RoleProtectedRoute mode="broker">
+              <MyListingsPage />
+            </RoleProtectedRoute>
+          }
+        />
+        <Route
+          path="/listing/new"
+          element={
+            <RoleProtectedRoute mode="broker" requireCertifiedBroker>
+              <PropertyRegisterPage />
+            </RoleProtectedRoute>
+          }
+        />
         <Route path="/listing/:listingId" element={<ListingDetailPage />} />
         <Route path="/viewer" element={<ViewerPage />} />
       </Route>
