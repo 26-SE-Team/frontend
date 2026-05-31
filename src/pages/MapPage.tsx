@@ -16,9 +16,9 @@ import {
 import type { Listing } from "../types/listing";
 import {
   defaultMapListingFilters,
+  mapFilterLimits,
   matchesMapListingFilters,
   type MapListingFilters,
-  type MapPriceRange,
   type MapTradeType,
 } from "../utils/mapListingFilters";
 import "./map.css";
@@ -49,7 +49,10 @@ export function MapPage() {
     [filteredListings]
   );
   const hasActiveFilter =
-    filters.tradeType !== "all" || filters.priceRange !== "all";
+    filters.tradeType !== "all" ||
+    filters.depositMax !== defaultMapListingFilters.depositMax ||
+    filters.monthlyRentMax !== defaultMapListingFilters.monthlyRentMax ||
+    filters.managementFeeMax !== defaultMapListingFilters.managementFeeMax;
 
   useEffect(() => {
     if (
@@ -61,11 +64,7 @@ export function MapPage() {
   }, [filteredListings, selectedListing]);
 
   const handleTradeTypeChange = (tradeType: MapTradeType) => {
-    setFilters({ tradeType, priceRange: "all" });
-  };
-
-  const handlePriceRangeChange = (priceRange: MapPriceRange) => {
-    setFilters((current) => ({ ...current, priceRange }));
+    setFilters((current) => ({ ...current, tradeType }));
   };
 
   const handleFavoriteToggle = (listingId: string) => {
@@ -92,7 +91,9 @@ export function MapPage() {
             <MapFilterPanel
               filters={filters}
               onTradeTypeChange={handleTradeTypeChange}
-              onPriceRangeChange={handlePriceRangeChange}
+              onFilterChange={(patch) =>
+                setFilters((current) => ({ ...current, ...patch }))
+              }
               onReset={() => setFilters(defaultMapListingFilters)}
               onClose={() => setIsFilterOpen(false)}
             />
@@ -122,24 +123,10 @@ const tradeOptions: Array<{ value: MapTradeType; label: string }> = [
   { value: "jeonse", label: "전세" },
 ];
 
-const priceOptions: Array<{
-  value: MapPriceRange;
-  label: string;
-  tradeType?: MapTradeType;
-}> = [
-  { value: "all", label: "전체" },
-  { value: "monthly-under-50", label: "50 이하", tradeType: "monthly" },
-  { value: "monthly-50-70", label: "50-70", tradeType: "monthly" },
-  { value: "monthly-over-70", label: "70 초과", tradeType: "monthly" },
-  { value: "jeonse-under-20000", label: "20000 이하", tradeType: "jeonse" },
-  { value: "jeonse-20000-30000", label: "20000-30000", tradeType: "jeonse" },
-  { value: "jeonse-over-30000", label: "30000 초과", tradeType: "jeonse" },
-];
-
 interface MapFilterPanelProps {
   filters: MapListingFilters;
   onTradeTypeChange: (tradeType: MapTradeType) => void;
-  onPriceRangeChange: (priceRange: MapPriceRange) => void;
+  onFilterChange: (patch: Partial<MapListingFilters>) => void;
   onReset: () => void;
   onClose: () => void;
 }
@@ -147,14 +134,10 @@ interface MapFilterPanelProps {
 function MapFilterPanel({
   filters,
   onTradeTypeChange,
-  onPriceRangeChange,
+  onFilterChange,
   onReset,
   onClose,
 }: MapFilterPanelProps) {
-  const visiblePriceOptions = priceOptions.filter(
-    (option) => !option.tradeType || filters.tradeType === "all" || option.tradeType === filters.tradeType
-  );
-
   return (
     <section className="map-filter-panel" aria-label="지도 필터">
       <div className="map-filter-panel__header">
@@ -180,21 +163,37 @@ function MapFilterPanel({
         </div>
       </div>
 
-      <div className="map-filter-panel__group">
-        <span>가격</span>
-        <div>
-          {visiblePriceOptions.map((option) => (
-            <button
-              type="button"
-              key={option.value}
-              className={filters.priceRange === option.value ? "is-active" : ""}
-              onClick={() => onPriceRangeChange(option.value)}
-            >
-              {option.label}
-            </button>
-          ))}
-        </div>
-      </div>
+      <RangeFilter
+        id="map-deposit-filter"
+        label="보증금"
+        value={filters.depositMax}
+        max={mapFilterLimits.depositMax}
+        step={500}
+        displayValue={formatDepositLabel(filters.depositMax)}
+        onChange={(depositMax) => onFilterChange({ depositMax })}
+      />
+
+      {filters.tradeType !== "jeonse" && (
+        <RangeFilter
+          id="map-monthly-filter"
+          label="월세"
+          value={filters.monthlyRentMax}
+          max={mapFilterLimits.monthlyRentMax}
+          step={5}
+          displayValue={formatMonthlyLabel(filters.monthlyRentMax)}
+          onChange={(monthlyRentMax) => onFilterChange({ monthlyRentMax })}
+        />
+      )}
+
+      <RangeFilter
+        id="map-maintenance-filter"
+        label="관리비"
+        value={filters.managementFeeMax}
+        max={mapFilterLimits.managementFeeMax}
+        step={1}
+        displayValue={formatManagementFeeLabel(filters.managementFeeMax)}
+        onChange={(managementFeeMax) => onFilterChange({ managementFeeMax })}
+      />
 
       <button
         type="button"
@@ -207,19 +206,75 @@ function MapFilterPanel({
   );
 }
 
+interface RangeFilterProps {
+  id: string;
+  label: string;
+  value: number;
+  max: number;
+  step: number;
+  displayValue: string;
+  onChange: (value: number) => void;
+}
+
+function RangeFilter({
+  id,
+  label,
+  value,
+  max,
+  step,
+  displayValue,
+  onChange,
+}: RangeFilterProps) {
+  return (
+    <label className="map-filter-panel__range" htmlFor={id}>
+      <span>
+        <strong>{label}</strong>
+        <em>{displayValue}</em>
+      </span>
+      <input
+        id={id}
+        type="range"
+        min="0"
+        max={max}
+        step={step}
+        value={value}
+        onChange={(event) => onChange(Number(event.target.value))}
+      />
+    </label>
+  );
+}
+
 function getFilterButtonLabel(filters: MapListingFilters): string {
-  if (filters.tradeType === "all" && filters.priceRange === "all") {
+  if (
+    filters.tradeType === "all" &&
+    filters.depositMax === defaultMapListingFilters.depositMax &&
+    filters.monthlyRentMax === defaultMapListingFilters.monthlyRentMax &&
+    filters.managementFeeMax === defaultMapListingFilters.managementFeeMax
+  ) {
     return "거래 유형/가격";
   }
 
   const tradeLabel =
     tradeOptions.find((option) => option.value === filters.tradeType)?.label ??
     "전체";
-  const priceLabel =
-    priceOptions.find((option) => option.value === filters.priceRange)?.label ??
-    "전체";
 
-  if (filters.priceRange === "all") return tradeLabel;
-  if (filters.tradeType === "all") return priceLabel;
-  return `${tradeLabel} ${priceLabel}`;
+  return filters.tradeType === "all" ? "조건 적용됨" : `${tradeLabel} 조건`;
+}
+
+function formatDepositLabel(value: number): string {
+  if (value >= mapFilterLimits.depositMax) return "전체";
+  if (value >= 10000) {
+    const eok = Math.floor(value / 10000);
+    const rest = value % 10000;
+    return rest > 0 ? `${eok}억 ${rest}만 이하` : `${eok}억 이하`;
+  }
+  return `${value}만 이하`;
+}
+
+function formatMonthlyLabel(value: number): string {
+  return value >= mapFilterLimits.monthlyRentMax ? "전체" : `${value}만 이하`;
+}
+
+function formatManagementFeeLabel(value: number): string {
+  return value >= mapFilterLimits.managementFeeMax ? "전체" : `${value}만 이하`;
 }

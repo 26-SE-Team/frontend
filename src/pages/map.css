@@ -84,6 +84,8 @@
   display: flex;
   flex-direction: column;
   gap: 0.875rem;
+  max-height: min(70svh, 31rem);
+  overflow-y: auto;
 }
 
 .map-filter-panel__header {
@@ -147,6 +149,38 @@
 .map-filter-panel__group button.is-active {
   background: #111827;
   color: #ffffff;
+}
+
+.map-filter-panel__range {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.map-filter-panel__range > span {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.map-filter-panel__range strong {
+  color: #606a78;
+  font-size: 0.8125rem;
+  font-weight: 800;
+}
+
+.map-filter-panel__range em {
+  color: #111111;
+  font-size: 0.875rem;
+  font-style: normal;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.map-filter-panel__range input {
+  width: 100%;
+  accent-color: #6f4df6;
 }
 
 .map-filter-panel__reset {
