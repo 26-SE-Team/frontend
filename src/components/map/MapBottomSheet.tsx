@@ -1,3 +1,4 @@
+import React from "react";
 import type { Listing } from "../../types/listing";
 
 interface MapBottomSheetProps {
@@ -13,7 +14,10 @@ export function MapBottomSheet({
   selectedListing,
   onListingClick,
 }: MapBottomSheetProps) {
-  const mappedListings = listings.filter((listing) => listing.mapPosition);
+  const mappedListings = React.useMemo(
+    () => listings.filter((listing) => listing.mapPosition),
+    [listings]
+  );
 
   return (
     <div className="map-sheet">

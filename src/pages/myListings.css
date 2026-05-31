@@ -1,6 +1,6 @@
 .my-listings-page {
-  min-height: 100dvh;
-  min-height: 100svh;
+  height: 100dvh;
+  height: 100svh;
   background: #ffffff;
   display: flex;
   justify-content: center;
@@ -17,10 +17,11 @@
 .my-listings-page__frame {
   width: 100%;
   max-width: 430px;
-  min-height: inherit;
+  height: inherit;
   background: #ffffff;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .my-listings-page__header {
@@ -52,6 +53,9 @@
 }
 
 .my-listings-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
   padding: 0.75rem 2.125rem 2rem;
   display: flex;
   flex-direction: column;
@@ -122,7 +126,7 @@
   }
 
   .my-listings-page__frame {
-    min-height: min(100dvh - 4rem, 52rem);
+    height: min(100dvh - 4rem, 52rem);
     border-radius: 1.5rem;
     overflow: hidden;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);

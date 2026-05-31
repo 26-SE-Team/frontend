@@ -12,7 +12,7 @@ export function PlaceholderPage({ title, navActive }: PlaceholderPageProps) {
       <div className="home__frame">
         <div className="home__content" style={{ justifyContent: "center", alignItems: "center" }}>
           <p style={{ fontSize: "1.125rem", fontWeight: 700, color: "#6b7280" }}>
-            {title} (준비 중)
+            {title} 기능은 준비 중입니다
           </p>
         </div>
         <BottomNav active={navActive} />

@@ -1,10 +1,19 @@
 import { Link, useNavigate } from "react-router-dom";
-import { recommendedListings } from "../data/mockListings";
+import { useState } from "react";
+import { allListings } from "../data/mockListings";
+import {
+  readFavoriteListingIds,
+  removeFavoriteListing,
+} from "../services/prototypeStorage";
+import type { Listing } from "../types/listing";
 import "./stored.css";
 
 export function StoredPage() {
   const navigate = useNavigate();
-  const storedListings = recommendedListings;
+  const [favoriteIds, setFavoriteIds] = useState(() => readFavoriteListingIds());
+  const storedListings = favoriteIds
+    .map((listingId) => allListings.find((listing) => listing.id === listingId))
+    .filter((listing): listing is Listing => Boolean(listing));
 
   return (
     <main className="stored-page">
@@ -27,11 +36,20 @@ export function StoredPage() {
                   <span>{listing.info}</span>
                 </span>
               </Link>
-              <button type="button" aria-label="관심 해제">
+              <button
+                type="button"
+                aria-label="관심 해제"
+                onClick={() =>
+                  setFavoriteIds(removeFavoriteListing(listing.id))
+                }
+              >
                 <HeartIcon />
               </button>
             </article>
           ))}
+          {storedListings.length === 0 && (
+            <p className="stored-list__empty">저장한 관심 매물이 없습니다.</p>
+          )}
         </section>
       </div>
     </main>

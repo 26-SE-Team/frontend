@@ -1,17 +1,18 @@
 const clean = (value: string | undefined): string => value?.trim() ?? "";
+const viteEnv = import.meta.env ?? {};
 
 export const publicEnv = {
   apiBaseUrl:
-    clean(import.meta.env.VITE_API_BASE_URL).replace(/\/$/, "") ||
+    clean(viteEnv.VITE_API_BASE_URL).replace(/\/$/, "") ||
     "http://localhost:8080",
-  googleClientId: clean(import.meta.env.VITE_GOOGLE_CLIENT_ID),
-  googleMapsApiKey: clean(import.meta.env.VITE_GOOGLE_MAPS_API_KEY),
-  useGoogleSdk: import.meta.env.VITE_USE_GOOGLE_SDK !== "false",
-  useBackendAuth: import.meta.env.VITE_USE_BACKEND_AUTH === "true",
-  kakaoJsKey: clean(import.meta.env.VITE_KAKAO_JS_KEY),
-  kakaoRedirectUri: clean(import.meta.env.VITE_KAKAO_REDIRECT_URI),
+  googleClientId: clean(viteEnv.VITE_GOOGLE_CLIENT_ID),
+  googleMapsApiKey: clean(viteEnv.VITE_GOOGLE_MAPS_API_KEY),
+  useGoogleSdk: viteEnv.VITE_USE_GOOGLE_SDK !== "false",
+  useBackendAuth: viteEnv.VITE_USE_BACKEND_AUTH === "true",
+  kakaoJsKey: clean(viteEnv.VITE_KAKAO_JS_KEY),
+  kakaoRedirectUri: clean(viteEnv.VITE_KAKAO_REDIRECT_URI),
   routerBasename:
-    import.meta.env.BASE_URL === "/"
+    viteEnv.BASE_URL === "/"
       ? undefined
-      : import.meta.env.BASE_URL.replace(/\/$/, ""),
+      : viteEnv.BASE_URL?.replace(/\/$/, ""),
 };

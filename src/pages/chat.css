@@ -1,6 +1,6 @@
 .chat-page {
-  min-height: 100dvh;
-  min-height: 100svh;
+  height: 100dvh;
+  height: 100svh;
   background: #ffffff;
   display: flex;
   justify-content: center;
@@ -17,7 +17,7 @@
 .chat-page__frame {
   width: 100%;
   max-width: 430px;
-  min-height: inherit;
+  height: inherit;
   background: #ffffff;
   display: flex;
   flex-direction: column;
@@ -137,16 +137,16 @@
 
 .chat-room__header {
   flex-shrink: 0;
-  min-height: 10.75rem;
+  min-height: 5.25rem;
   padding:
-    max(1.25rem, env(safe-area-inset-top))
+    max(0.875rem, env(safe-area-inset-top))
     1.25rem
-    1.5rem;
+    0.875rem;
   background: #f4f5f7;
   display: grid;
   grid-template-columns: 2rem minmax(0, 1fr);
-  gap: 2rem;
-  align-items: start;
+  gap: 0.875rem;
+  align-items: center;
 }
 
 .chat-room__header button {
@@ -165,17 +165,20 @@
 .chat-room__header h1 {
   margin: 0;
   color: #1f2937;
-  font-size: 1.5rem;
+  font-size: 1.125rem;
   font-weight: 900;
   letter-spacing: 0;
 }
 
 .chat-room__header p {
-  margin: 1rem 0 0;
-  color: #374151;
-  font-size: 0.9375rem;
+  margin: 0.25rem 0 0;
+  color: #6b7280;
+  font-size: 0.75rem;
   font-weight: 600;
-  line-height: 1.55;
+  line-height: 1.35;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .chat-room {
@@ -285,7 +288,7 @@
   }
 
   .chat-page__frame {
-    min-height: min(100dvh - 4rem, 52rem);
+    height: min(100dvh - 4rem, 52rem);
     border-radius: 1.5rem;
     overflow: hidden;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);

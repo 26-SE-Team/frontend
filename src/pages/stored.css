@@ -1,6 +1,6 @@
 .stored-page {
-  min-height: 100dvh;
-  min-height: 100svh;
+  height: 100dvh;
+  height: 100svh;
   background: #ffffff;
   display: flex;
   justify-content: center;
@@ -17,8 +17,11 @@
 .stored-page__frame {
   width: 100%;
   max-width: 430px;
-  min-height: inherit;
+  height: inherit;
   background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .stored-page__header {
@@ -50,6 +53,9 @@
 }
 
 .stored-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
   padding: 0.75rem 2.125rem 2rem;
   display: flex;
   flex-direction: column;
@@ -61,6 +67,14 @@
   grid-template-columns: minmax(0, 1fr) 2.5rem;
   gap: 1rem;
   align-items: center;
+}
+
+.stored-list__empty {
+  margin: 2rem 0 0;
+  color: #9ca3af;
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-align: center;
 }
 
 .stored-list__link {
@@ -128,7 +142,7 @@
   }
 
   .stored-page__frame {
-    min-height: min(100dvh - 4rem, 52rem);
+    height: min(100dvh - 4rem, 52rem);
     border-radius: 1.5rem;
     overflow: hidden;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);

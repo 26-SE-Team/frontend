@@ -3,11 +3,14 @@ import type { FormEvent } from "react";
 import { BottomNav } from "../components/home/BottomNav";
 import { SearchBar } from "../components/home/SearchBar";
 import { StayViewLogo } from "../components/start/StayViewLogo";
-import { mockChatRooms } from "../data/mockChats";
+import {
+  appendPrototypeChatMessage,
+  readPrototypeChatRooms,
+} from "../services/prototypeStorage";
 import "./chat.css";
 
 export function ChatPage() {
-  const [rooms, setRooms] = useState(mockChatRooms);
+  const [rooms, setRooms] = useState(() => readPrototypeChatRooms());
   const [activeRoomId, setActiveRoomId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [draft, setDraft] = useState("");
@@ -33,26 +36,7 @@ export function ChatPage() {
     const text = draft.trim();
     if (!text || !activeRoom) return;
 
-    setRooms((currentRooms) =>
-      currentRooms.map((room) =>
-        room.id === activeRoom.id
-          ? {
-              ...room,
-              lastMessage: text,
-              unreadCount: 0,
-              messages: [
-                ...room.messages,
-                {
-                  id: `local-${Date.now()}`,
-                  sender: "me",
-                  text,
-                  sentAt: "방금",
-                },
-              ],
-            }
-          : room
-      )
-    );
+    setRooms(() => appendPrototypeChatMessage(activeRoom.id, text));
     setDraft("");
   };
 
@@ -71,13 +55,7 @@ export function ChatPage() {
               </button>
               <div>
                 <h1>{activeRoom.listingPrice}</h1>
-                <p>
-                  서울 {activeRoom.listingTitle}
-                  <br />
-                  원룸
-                  <br />
-                  3층, 관리비 5만
-                </p>
+                <p>서울 {activeRoom.listingTitle} · 원룸 · 3층, 관리비 5만</p>
               </div>
             </header>
 

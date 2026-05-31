@@ -55,8 +55,8 @@ export function MyPage() {
           <section className="mypage-section" aria-labelledby="version-title">
             <h2 id="version-title">현재 앱 버전</h2>
             <div className="mypage-version">
-              <span>5.20.1</span>
-              <span>최신 버전입니다.</span>
+              <span>0.0.1 beta</span>
+              <span>실시간 동기화로 최신 정보가 반영됩니다.</span>
             </div>
           </section>
 

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
+import { savePrototypeListingDraft } from "../services/prototypeStorage";
 import "./propertyRegister.css";
 
 const optionItems = ["주차", "반려동물"];
@@ -21,6 +22,15 @@ export function PropertyRegisterPage() {
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    savePrototypeListingDraft({
+      address: String(formData.get("address") ?? ""),
+      price: String(formData.get("price") ?? ""),
+      size: String(formData.get("size") ?? ""),
+      availableDate: String(formData.get("availableDate") ?? ""),
+      options: selectedOptions,
+      modelFileName: modelFileName || undefined,
+    });
     setSaved(true);
   };
 
@@ -66,14 +76,14 @@ export function PropertyRegisterPage() {
             />
             <span>
               <CubeIcon />
-              <strong>3D 모델 생성 / 이미지 등록</strong>
+              <strong>공간 모델 / 매물 이미지 등록</strong>
               {modelFileName && <small>{modelFileName}</small>}
             </span>
           </label>
 
           {saved && (
             <p className="property-register__saved" role="status">
-              매물이 로컬 프로토타입에 임시 저장되었습니다.
+              매물 등록이 완료되었습니다.
             </p>
           )}
 

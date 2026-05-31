@@ -1,5 +1,6 @@
 import { initKakao, getKakaoRedirectUri } from "../lib/kakao";
 import { publicEnv } from "../config/publicEnv";
+import { getPrototypeStorage } from "./prototypeStorage";
 
 export type AuthProvider = "kakao" | "google";
 
@@ -32,15 +33,15 @@ async function parseErrorMessage(response: Response): Promise<string> {
 
 export const authStorage = {
   getAccessToken(): string | null {
-    return localStorage.getItem(ACCESS_TOKEN_KEY);
+    return getPrototypeStorage().getItem(ACCESS_TOKEN_KEY);
   },
 
   getRefreshToken(): string | null {
-    return localStorage.getItem(REFRESH_TOKEN_KEY);
+    return getPrototypeStorage().getItem(REFRESH_TOKEN_KEY);
   },
 
   getUser(): AuthUser | null {
-    const raw = localStorage.getItem(USER_KEY);
+    const raw = getPrototypeStorage().getItem(USER_KEY);
     if (!raw) return null;
     try {
       return JSON.parse(raw) as AuthUser;
@@ -50,21 +51,23 @@ export const authStorage = {
   },
 
   setSession(tokens: AuthTokens, user?: AuthUser | null) {
-    localStorage.setItem(ACCESS_TOKEN_KEY, tokens.accessToken);
+    const storage = getPrototypeStorage();
+    storage.setItem(ACCESS_TOKEN_KEY, tokens.accessToken);
     if (tokens.refreshToken) {
-      localStorage.setItem(REFRESH_TOKEN_KEY, tokens.refreshToken);
+      storage.setItem(REFRESH_TOKEN_KEY, tokens.refreshToken);
     } else {
-      localStorage.removeItem(REFRESH_TOKEN_KEY);
+      storage.removeItem(REFRESH_TOKEN_KEY);
     }
     if (user) {
-      localStorage.setItem(USER_KEY, JSON.stringify(user));
+      storage.setItem(USER_KEY, JSON.stringify(user));
     }
   },
 
   clear() {
-    localStorage.removeItem(ACCESS_TOKEN_KEY);
-    localStorage.removeItem(REFRESH_TOKEN_KEY);
-    localStorage.removeItem(USER_KEY);
+    const storage = getPrototypeStorage();
+    storage.removeItem(ACCESS_TOKEN_KEY);
+    storage.removeItem(REFRESH_TOKEN_KEY);
+    storage.removeItem(USER_KEY);
   },
 };
 
@@ -76,7 +79,7 @@ export function createPrototypeSession(provider: AuthProvider): AuthUser {
   const user: AuthUser = {
     id: `prototype-${provider}`,
     email: `${provider}@stayview.local`,
-    nickname: provider === "kakao" ? "카카오 시연 사용자" : "Google 시연 사용자",
+    nickname: provider === "kakao" ? "카카오 이용자" : "Google 이용자",
     provider,
   };
 

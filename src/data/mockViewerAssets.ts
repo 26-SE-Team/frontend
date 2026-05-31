@@ -5,8 +5,16 @@ import type {
   ViewerPhoto,
 } from "../types/viewer";
 
-const demoPath = (path: string) =>
-  `${import.meta.env.BASE_URL}${path.replace(/^\/+/, "")}`;
+export function toPublicDemoPath(
+  path: string,
+  baseUrl = import.meta.env?.BASE_URL ?? "/"
+) {
+  const normalizedBaseUrl = baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`;
+
+  return `${normalizedBaseUrl}${path.replace(/^\/+/, "")}`;
+}
+
+const demoPath = (path: string) => toPublicDemoPath(path);
 
 const room0PhotoNames = [
   "room0_hotel_preview_01_frame000000",
@@ -22,7 +30,7 @@ const room0PhotoNames = [
 export const room0ViewerPhotos: ViewerPhoto[] = room0PhotoNames.map(
   (name, index) => ({
     id: `room0-photo-${index + 1}`,
-    label: `${String(index + 1).padStart(2, "0")} / Replica room0`,
+    label: `${String(index + 1).padStart(2, "0")} / 실내 사진`,
     src: demoPath(`demo/room0/photos/${name}.webp`),
     thumbSrc: demoPath(`demo/room0/thumbs/${name}_thumb.webp`),
   })
@@ -96,8 +104,8 @@ function createRoomSplats(): GaussianSplat[] {
 }
 
 const sangdoStudioScene: GaussianSceneData = {
-  name: "상도역 원룸 Prototype Scene",
-  description: "로컬 fixture로 구성한 3DGS 형태의 시연용 공간 데이터",
+  name: "상도역 원룸 가상공간",
+  description: "실내 공간 보기 데이터",
   splats: createRoomSplats(),
   viewpoints: [
     {
@@ -127,16 +135,16 @@ const sangdoStudioScene: GaussianSceneData = {
 export const defaultViewerAsset: ViewerAsset = {
   id: "sangdo-studio",
   kind: "gaussian-scene",
-  label: "상도역 원룸 3D",
-  description: "프로토타입 Gaussian scene fixture",
+  label: "상도역 원룸",
+  description: "실내 공간 보기",
   scene: sangdoStudioScene,
 };
 
 export const room0ViewerAsset: ViewerAsset = {
   id: "room0-studio-preview",
   kind: "splat-scene",
-  label: "Room0 원룸 3DGS",
-  description: "Replica room0 기반으로 학습한 실제 80K Gaussian Splat 원룸 데모",
+  label: "상도역 원룸",
+  description: "상도역 원룸 실내 공간",
   url: demoPath("demo/room0/models/room0.splat"),
   format: "splat",
   previewImageUrl: demoPath("demo/room0/photos/room0_3dgs_preview.webp"),
@@ -168,7 +176,7 @@ export const room0ViewerAsset: ViewerAsset = {
     scale: [1, 1, 1],
   },
   stats: {
-    dataset: "Replica room0",
+    dataset: "room0",
     gaussianCount: 80000,
     finalEvalLoss: 0.019625112414360046,
   },

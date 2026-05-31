@@ -1,6 +1,10 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { allListings, findListingById } from "../data/mockListings";
+import {
+  readFavoriteListingIds,
+  toggleFavoriteListing,
+} from "../services/prototypeStorage";
 import "./listingDetail.css";
 
 export function ListingDetailPage() {
@@ -11,10 +15,12 @@ export function ListingDetailPage() {
     () => findListingById(listingId) ?? allListings[0],
     [listingId]
   );
+  const [favoriteIds, setFavoriteIds] = useState(() => readFavoriteListingIds());
 
   const images = listing.imageUrls?.length ? listing.imageUrls : [listing.imageUrl];
   const selectedImage = images[0] ?? listing.imageUrl;
   const optionItems = listing.options ?? ["옷장", "냉장고", "싱크대", "전자레인지"];
+  const isFavorite = favoriteIds.includes(listing.id);
 
   const scrollTo = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -65,7 +71,7 @@ export function ListingDetailPage() {
               옵션
             </button>
             <button type="button" onClick={() => scrollTo("viewer-info")}>
-              3D/가구배치
+              공간보기
             </button>
             <button type="button" onClick={() => scrollTo("analysis-info")}>
               AI 분석
@@ -82,10 +88,11 @@ export function ListingDetailPage() {
           </section>
 
           <section className="listing-detail__section" id="viewer-info">
-            <h2>3D / 가구배치</h2>
+            <h2>공간 보기</h2>
             <button
               type="button"
               className="listing-detail__viewer"
+              aria-label="공간 보기"
               onClick={() => navigate(`/viewer?listing=${listing.id}`)}
             >
               <img src={selectedImage} alt="" />
@@ -99,7 +106,12 @@ export function ListingDetailPage() {
         </div>
 
         <div className="listing-detail__actionbar">
-          <button type="button" aria-label="관심 매물 저장">
+          <button
+            type="button"
+            aria-label={isFavorite ? "관심 매물 해제" : "관심 매물 저장"}
+            aria-pressed={isFavorite}
+            onClick={() => setFavoriteIds(toggleFavoriteListing(listing.id))}
+          >
             <HeartIcon />
           </button>
           <button type="button" aria-label="비대면 계약">
