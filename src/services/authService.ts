@@ -7,6 +7,7 @@ export type AccountMode = "broker" | "tenant";
 
 export type BrokerCertificationStatus =
   | "not-required"
+  | "required"
   | "pending"
   | "approved"
   | "rejected";
@@ -42,7 +43,7 @@ function resolveDefaultBrokerCertificationStatus(
 ): BrokerCertificationStatus {
   if (accountMode !== "broker") return "not-required";
   if (isBrokerCertified) return "approved";
-  return "pending";
+  return "required";
 }
 
 function normalizeAuthUser(
@@ -136,7 +137,7 @@ export function createPrototypeSession(provider: AuthProvider): AuthUser {
     provider,
     accountMode,
     brokerCertificationStatus:
-      accountMode === "broker" ? "pending" : "not-required",
+      accountMode === "broker" ? "required" : "not-required",
   };
 
   applyAuthSession(
@@ -298,7 +299,7 @@ export function updateCurrentAuthUser(
   return merged;
 }
 
-export function setBrokerCertificationApproved(
+export function setBrokerCertificationStatus(
   status: Extract<BrokerCertificationStatus, "approved" | "pending" | "rejected">
 ): AuthUser | null {
   return updateCurrentAuthUser({
@@ -306,6 +307,8 @@ export function setBrokerCertificationApproved(
     isBrokerCertified: status === "approved",
   });
 }
+
+export const setBrokerCertificationApproved = setBrokerCertificationStatus;
 
 export function logout(): void {
   authStorage.clear();

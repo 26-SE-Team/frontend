@@ -39,7 +39,7 @@ describe("authStorage prototype session", () => {
 
     assert.equal(user.provider, "kakao");
     assert.equal(user.accountMode, "broker");
-    assert.equal(user.brokerCertificationStatus, "pending");
+    assert.equal(user.brokerCertificationStatus, "required");
     assert.equal(authStorage.getUser()?.isBrokerCertified, false);
     assert.match(authStorage.getAccessToken() ?? "", /prototype-kakao/);
     assert.equal(authStorage.getUser()?.provider, user.provider);

@@ -6,11 +6,15 @@ import {
   readFavoriteListingIds,
   toggleFavoriteListing,
 } from "../services/prototypeStorage";
+import { useAuth } from "../contexts/AuthContext";
+import { isBrokerUser } from "../services/authService";
 import "./listingDetail.css";
 
 export function ListingDetailPage() {
   const navigate = useNavigate();
   const { listingId } = useParams();
+  const { user } = useAuth();
+  const isBroker = isBrokerUser(user);
 
   const listing = useMemo(() => {
     const allCatalog = [...allListings, ...readDraftListingsForDisplay()];
@@ -86,14 +90,16 @@ export function ListingDetailPage() {
         </div>
 
         <div className="listing-detail__actionbar">
-          <button
-            type="button"
-            aria-label={isFavorite ? "관심 매물 해제" : "관심 매물 저장"}
-            aria-pressed={isFavorite}
-            onClick={() => setFavoriteIds(toggleFavoriteListing(listing.id))}
-          >
-            <HeartIcon />
-          </button>
+          {!isBroker && (
+            <button
+              type="button"
+              aria-label={isFavorite ? "관심 매물 해제" : "관심 매물 저장"}
+              aria-pressed={isFavorite}
+              onClick={() => setFavoriteIds(toggleFavoriteListing(listing.id))}
+            >
+              <HeartIcon />
+            </button>
+          )}
           <button type="button" aria-label="비대면 계약">
             <ContractIcon />
           </button>

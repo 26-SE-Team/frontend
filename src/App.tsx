@@ -30,7 +30,14 @@ function App() {
         <Route path="/browse" element={<Navigate to="/map" replace />} />
         <Route path="/chat" element={<ChatPage />} />
         <Route path="/mypage" element={<MyPage />} />
-        <Route path="/stored" element={<StoredPage />} />
+        <Route
+          path="/stored"
+          element={
+            <RoleProtectedRoute mode="tenant">
+              <StoredPage />
+            </RoleProtectedRoute>
+          }
+        />
         <Route
           path="/certification"
           element={

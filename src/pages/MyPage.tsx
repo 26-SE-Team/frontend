@@ -3,10 +3,17 @@ import { useNavigate } from "react-router-dom";
 import { BottomNav } from "../components/home/BottomNav";
 import { useAuth } from "../contexts/AuthContext";
 import {
+  type BrokerCertificationStatus,
   isBrokerUser,
   isCertifiedBroker,
 } from "../services/authService";
 import "./mypage.css";
+
+interface CertificationStatusView {
+  title: string;
+  description: string;
+  ctaLabel?: string;
+}
 
 export function MyPage() {
   const navigate = useNavigate();
@@ -14,6 +21,10 @@ export function MyPage() {
 
   const isBroker = useMemo(() => isBrokerUser(user), [user]);
   const isCertified = useMemo(() => isCertifiedBroker(user), [user]);
+  const certificationStatus = user?.brokerCertificationStatus ?? "not-required";
+  const certificationView = isBroker
+    ? getCertificationStatusView(certificationStatus)
+    : null;
   const displayName = user?.nickname?.trim() || "홍길동";
   const roleLabel = isBroker ? "중개인 계정" : "임차인 계정";
 
@@ -42,12 +53,15 @@ export function MyPage() {
         </header>
 
         <div className="mypage__content">
-          {isBroker && !isCertified && (
+          {certificationView && !isCertified && (
             <section className="mypage-cert-warning" role="status" aria-live="polite">
-              <p>중개인 인증이 필요해요. 인증을 완료하면 매물 등록을 시작할 수 있습니다.</p>
-              <button type="button" onClick={() => navigate("/certification")}>
-                인증하기
-              </button>
+              <h2>{certificationView.title}</h2>
+              <p>{certificationView.description}</p>
+              {certificationView.ctaLabel && (
+                <button type="button" onClick={() => navigate("/certification")}>
+                  {certificationView.ctaLabel}
+                </button>
+              )}
             </section>
           )}
 
@@ -82,17 +96,15 @@ export function MyPage() {
           </section>
 
           <section className="mypage-menu mypage-menu--spaced" aria-label="서비스 메뉴">
-            {isBroker && (
-              <button type="button" onClick={() => navigate("/certification")}>
-                <span>{isCertified ? "인증 정보" : "중개인 인증"}</span>
-                <ChevronIcon />
-              </button>
-            )}
-
             <button type="button">
               <span>문의하기</span>
               <ChevronIcon />
             </button>
+
+            <div className="mypage-menu__static">
+              <span>앱 버전</span>
+              <strong>0.0.1 beta</strong>
+            </div>
 
             <button
               type="button"
@@ -103,17 +115,40 @@ export function MyPage() {
               <ChevronIcon />
             </button>
           </section>
-
-          <section className="mypage-version">
-            <span>앱 버전</span>
-            <strong>0.0.1 beta</strong>
-          </section>
         </div>
 
         <BottomNav active="mypage" />
       </div>
     </main>
   );
+}
+
+function getCertificationStatusView(
+  status: BrokerCertificationStatus
+): CertificationStatusView | null {
+  switch (status) {
+    case "approved":
+    case "not-required":
+      return null;
+    case "pending":
+      return {
+        title: "중개인 인증이 진행 중이에요",
+        description: "제출한 정보를 확인하고 있습니다. 승인되면 매물 등록 기능이 열립니다.",
+      };
+    case "rejected":
+      return {
+        title: "인증 정보를 다시 확인해 주세요",
+        description: "입력한 정보나 첨부 서류를 확인한 뒤 다시 제출해 주세요.",
+        ctaLabel: "다시 제출하기",
+      };
+    case "required":
+    default:
+      return {
+        title: "중개인 인증이 필요해요",
+        description: "중개인 인증을 완료하면 매물 등록과 내 매물 관리를 사용할 수 있습니다.",
+        ctaLabel: "정보 입력하기",
+      };
+  }
 }
 
 function BellIcon() {
