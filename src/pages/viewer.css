@@ -188,10 +188,6 @@
   background: rgba(239, 68, 68, 0.24);
 }
 
-.viewer3d__status--recording {
-  background: rgba(239, 68, 68, 0.88);
-}
-
 .viewer-page__error {
   position: absolute;
   left: 1rem;

@@ -27,7 +27,6 @@ interface ThreeDGSViewerProps {
 
 type ViewerStatus = "loading" | "ready" | "error";
 type FloorStatus = "off" | "detecting" | "locked";
-type RecordingStatus = "idle" | "recording" | "error";
 
 export type ViewerMoveCommand =
   | "forward"
@@ -583,110 +582,10 @@ export const ThreeDGSViewer = forwardRef<ThreeDGSViewerHandle, ThreeDGSViewerPro
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
   const floorStateRef = useRef<FloorState | null>(null);
   const groundedLookDirectionRef = useRef<THREE.Vector3 | null>(null);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const recordingStreamRef = useRef<MediaStream | null>(null);
-  const recordingChunksRef = useRef<BlobPart[]>([]);
   const [status, setStatus] = useState<ViewerStatus>("loading");
   const [floorStatus, setFloorStatus] = useState<FloorStatus>("off");
-  const [recordingStatus, setRecordingStatus] =
-    useState<RecordingStatus>("idle");
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [, setActiveViewpoint] = useState<Viewpoint | null>(null);
-
-  const stopRecordingStream = useCallback(() => {
-    recordingStreamRef.current?.getTracks().forEach((track) => track.stop());
-    recordingStreamRef.current = null;
-  }, []);
-
-  const stopRecording = useCallback(() => {
-    const recorder = mediaRecorderRef.current;
-    if (!recorder || recorder.state === "inactive") return;
-
-    recorder.stop();
-  }, []);
-
-  const startRecording = useCallback(() => {
-    const canvas = mountRef.current?.querySelector("canvas");
-    if (
-      !canvas ||
-      typeof canvas.captureStream !== "function" ||
-      typeof MediaRecorder === "undefined"
-    ) {
-      setRecordingStatus("error");
-      return;
-    }
-
-    const stream = canvas.captureStream(30);
-    const mimeType = [
-      "video/webm;codecs=vp9",
-      "video/webm;codecs=vp8",
-      "video/webm",
-    ].find((candidate) => MediaRecorder.isTypeSupported(candidate));
-    const recorder = new MediaRecorder(
-      stream,
-      mimeType ? { mimeType } : undefined
-    );
-
-    recordingChunksRef.current = [];
-    recordingStreamRef.current = stream;
-    mediaRecorderRef.current = recorder;
-
-    recorder.ondataavailable = (event) => {
-      if (event.data.size > 0) {
-        recordingChunksRef.current.push(event.data);
-      }
-    };
-    recorder.onerror = () => {
-      stopRecordingStream();
-      mediaRecorderRef.current = null;
-      setRecordingStatus("error");
-    };
-    recorder.onstop = () => {
-      const chunks = recordingChunksRef.current;
-      recordingChunksRef.current = [];
-      stopRecordingStream();
-      mediaRecorderRef.current = null;
-      setRecordingStatus("idle");
-
-      if (chunks.length === 0) return;
-
-      const blob = new Blob(chunks, { type: mimeType || "video/webm" });
-      const url = URL.createObjectURL(blob);
-      const anchor = document.createElement("a");
-      const safeLabel = asset.label
-        .toLowerCase()
-        .replace(/[^a-z0-9-]+/g, "-")
-        .replace(/^-+|-+$/g, "");
-
-      anchor.href = url;
-      anchor.download = `${safeLabel || "stayview-3d"}-${Date.now()}.webm`;
-      anchor.click();
-      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
-    };
-
-    recorder.start(250);
-    setRecordingStatus("recording");
-  }, [asset.label, stopRecordingStream]);
-
-  const toggleRecording = useCallback(() => {
-    if (recordingStatus === "recording") {
-      stopRecording();
-      return;
-    }
-
-    startRecording();
-  }, [recordingStatus, startRecording, stopRecording]);
-
-  useEffect(
-    () => () => {
-      if (mediaRecorderRef.current?.state === "recording") {
-        mediaRecorderRef.current.onstop = null;
-        mediaRecorderRef.current.stop();
-      }
-      stopRecordingStream();
-    },
-    [stopRecordingStream]
-  );
 
   useEffect(() => {
     const mount = mountRef.current;
@@ -1359,8 +1258,7 @@ export const ThreeDGSViewer = forwardRef<ThreeDGSViewerHandle, ThreeDGSViewerPro
   );
 
   const isGroundedWalk = floorStatus === "locked";
-  const shouldShowStatus =
-    status === "loading" || status === "error" || recordingStatus !== "idle";
+  const shouldShowStatus = status === "loading" || status === "error";
 
   return (
     <div className={`viewer3d${isGroundedWalk ? " viewer3d--walk" : ""}`}>
@@ -1369,13 +1267,6 @@ export const ThreeDGSViewer = forwardRef<ThreeDGSViewerHandle, ThreeDGSViewerPro
         <div className="viewer3d__actions">
           <button type="button" onClick={resetView}>
             초기화
-          </button>
-          <button
-            type="button"
-            aria-pressed={recordingStatus === "recording"}
-            onClick={toggleRecording}
-          >
-            {recordingStatus === "recording" ? "중지" : "녹화"}
           </button>
           {onTogglePlanView && (
             <button
@@ -1398,16 +1289,6 @@ export const ThreeDGSViewer = forwardRef<ThreeDGSViewerHandle, ThreeDGSViewerPro
           {status === "error" && (
             <span className="viewer3d__status viewer3d__status--error">
               공간을 불러오지 못했습니다
-            </span>
-          )}
-          {recordingStatus === "recording" && (
-            <span className="viewer3d__status viewer3d__status--recording">
-              녹화 중
-            </span>
-          )}
-          {recordingStatus === "error" && (
-            <span className="viewer3d__status viewer3d__status--error">
-              녹화를 지원하지 않는 브라우저입니다
             </span>
           )}
         </div>
