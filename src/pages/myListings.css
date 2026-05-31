@@ -62,6 +62,13 @@
   gap: 1.5rem;
 }
 
+.my-listings-list__empty {
+  margin: 0;
+  color: #606a78;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
 .my-listings-list__item {
   min-width: 0;
   color: inherit;

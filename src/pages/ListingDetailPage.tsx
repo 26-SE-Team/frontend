@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { allListings, findListingById } from "../data/mockListings";
+import { allListings } from "../data/mockListings";
+import { readDraftListingsForDisplay } from "../services/prototypeStorage";
 import {
   readFavoriteListingIds,
   toggleFavoriteListing,
@@ -11,10 +12,11 @@ export function ListingDetailPage() {
   const navigate = useNavigate();
   const { listingId } = useParams();
 
-  const listing = useMemo(
-    () => findListingById(listingId) ?? allListings[0],
-    [listingId]
-  );
+  const listing = useMemo(() => {
+    const allCatalog = [...allListings, ...readDraftListingsForDisplay()];
+    const local = allCatalog.find((item) => item.id === listingId);
+    return local ?? allCatalog[0];
+  }, [listingId]);
   const [favoriteIds, setFavoriteIds] = useState(() => readFavoriteListingIds());
 
   const images = listing.imageUrls?.length ? listing.imageUrls : [listing.imageUrl];
