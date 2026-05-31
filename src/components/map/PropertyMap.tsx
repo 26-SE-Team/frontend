@@ -6,6 +6,7 @@ import {
 } from "@react-google-maps/api";
 import { publicEnv } from "../../config/publicEnv";
 import type { Listing } from "../../types/listing";
+import { formatMapPrice } from "../../utils/formatMapPrice";
 
 const MAP_CONTAINER_STYLE = { width: "100%", height: "100%" };
 const SEOUL_CENTER = { lat: 37.5368, lng: 126.9784 };
@@ -30,7 +31,7 @@ function createListingIcon(
   listing: Listing,
   isSelected: boolean
 ): google.maps.Icon {
-  const label = listing.price.replace(/\s+/g, " ");
+  const label = formatMapPrice(listing.price);
   const width = Math.max(82, Math.min(118, label.length * 11 + 24));
   const height = isSelected ? 44 : 38;
   const color = "#2563eb";
@@ -249,7 +250,7 @@ export function PropertyMap({
   }
 
   return (
-      <GoogleMap
+    <GoogleMap
       mapContainerStyle={MAP_CONTAINER_STYLE}
       center={SEOUL_CENTER}
       zoom={11}

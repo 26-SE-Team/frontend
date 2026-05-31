@@ -87,7 +87,7 @@
 .mypage-cert-warning,
 .mypage-menu {
   width: 100%;
-  border-radius: 0.375rem;
+  border-radius: 0.875rem;
   background: #f7f7f8;
 }
 
@@ -199,7 +199,7 @@
 .mypage-listings__card,
 .mypage-listings__empty {
   border: none;
-  border-radius: 0.5rem;
+  border-radius: 0.875rem;
   background: #f7f7f8;
   color: #111111;
   cursor: pointer;
@@ -219,7 +219,7 @@
 .mypage-listings__card img {
   width: 5.5rem;
   height: 5.5rem;
-  border-radius: 0.45rem;
+  border-radius: 0.75rem;
   object-fit: cover;
   flex-shrink: 0;
   background: #e8e8ec;

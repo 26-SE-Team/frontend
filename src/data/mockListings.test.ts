@@ -26,6 +26,27 @@ describe("mockListings fixture", () => {
     assert.match(room0Listing?.mapPosition?.label ?? "", /상도역 원룸/);
   });
 
+  it("keeps at least three sample listings clustered in Dongjak-gu", () => {
+    const dongjakListings = allListings.filter((listing) =>
+      listing.location?.includes("동작구")
+    );
+
+    assert.ok(dongjakListings.length >= 3);
+    assert.equal(
+      dongjakListings.every((listing) => {
+        const position = listing.mapPosition;
+        return Boolean(
+          position &&
+          position.lat >= 37.49 &&
+          position.lat <= 37.52 &&
+          position.lng >= 126.94 &&
+          position.lng <= 126.97
+        );
+      }),
+      true
+    );
+  });
+
   it("returns undefined for unknown ids instead of falling through silently", () => {
     assert.equal(findListingById("missing-listing"), undefined);
   });
