@@ -44,7 +44,7 @@ export function PropertyRegisterPage() {
   const previewUrlRef = useRef<string | null>(null);
   const latestCertification = readLatestCertificationDraft();
   const brokerName =
-    latestCertification?.agentName.trim() || user?.nickname?.trim() || "중개인 회원";
+    latestCertification?.agentName.trim() || user?.nickname?.trim() || "인증 회원";
   const brokerOfficeName = latestCertification?.officeName.trim() || "인증 사무소";
   const brokerRegistrationNumber = latestCertification?.agentNumber.trim();
   const recordingButtonLabel =

@@ -192,26 +192,29 @@
 
 .map-sheet {
   flex-shrink: 0;
+  height: min(42svh, 19rem);
   background: #ffffff;
   border-radius: 1.125rem 1.125rem 0 0;
   box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08);
   padding: 0.5rem 1.5rem 0.75rem;
   margin-bottom: 4.5rem;
-  max-height: min(42svh, 19rem);
   display: flex;
   flex-direction: column;
   min-height: 0;
-  transition:
-    max-height 180ms ease,
-    padding 180ms ease;
+  overflow: hidden;
+  transition: height 180ms ease;
 }
 
 .map-sheet--collapsed {
-  max-height: 5.5rem;
+  height: 5.5rem;
 }
 
 .map-sheet--collapsed .map-sheet__list {
   display: none;
+}
+
+.map-sheet.is-dragging {
+  transition: none;
 }
 
 .map-sheet__handle-button {
@@ -225,6 +228,10 @@
   justify-content: center;
   touch-action: none;
   cursor: grab;
+}
+
+.map-sheet.is-dragging .map-sheet__handle-button {
+  cursor: grabbing;
 }
 
 .map-sheet__handle {

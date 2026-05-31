@@ -3,7 +3,8 @@ import type { ChangeEvent } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { ThreeDGSViewer } from "../components/viewer/ThreeDGSViewer";
 import { defaultViewerAsset, findViewerAssetById } from "../data/mockViewerAssets";
-import { findListingById } from "../data/mockListings";
+import { allListings } from "../data/mockListings";
+import { readDraftListingsForDisplay } from "../services/prototypeStorage";
 import { loadSceneFromFile } from "../utils/sceneLoader";
 import type { ViewerAsset, ViewerMode } from "../types/viewer";
 import "./viewer.css";
@@ -20,7 +21,10 @@ export function ViewerPage() {
   const objectUrlRef = useRef<string | null>(null);
   const listingId = searchParams.get("listing") ?? undefined;
 
-  const listing = useMemo(() => findListingById(listingId), [listingId]);
+  const listing = useMemo(() => {
+    const catalog = [...allListings, ...readDraftListingsForDisplay()];
+    return catalog.find((item) => item.id === listingId);
+  }, [listingId]);
   const routeAsset = useMemo(
     () => (listing ? findViewerAssetById(listing.viewerAssetId) : defaultViewerAsset),
     [listing]

@@ -6,7 +6,6 @@ import {
 } from "@react-google-maps/api";
 import { publicEnv } from "../../config/publicEnv";
 import type { Listing } from "../../types/listing";
-import { formatMapPrice } from "../../utils/formatMapPrice";
 
 const MAP_CONTAINER_STYLE = { width: "100%", height: "100%" };
 const SEOUL_CENTER = { lat: 37.5368, lng: 126.9784 };
@@ -25,30 +24,6 @@ interface PropertyMapProps {
   listings: Listing[];
   selectedListingId?: string | null;
   onListingClick?: (listing: Listing) => void;
-}
-
-function createListingIcon(
-  listing: Listing,
-  isSelected: boolean
-): google.maps.Icon {
-  const label = formatMapPrice(listing.price);
-  const width = Math.max(82, Math.min(118, label.length * 11 + 24));
-  const height = isSelected ? 44 : 38;
-  const color = "#2563eb";
-  const stroke = isSelected ? "#111827" : "#ffffff";
-
-  const svg = `
-    <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
-      <path d="M10 3H${width - 10}Q${width - 3} 3 ${width - 3} 10V24Q${width - 3} 31 ${width - 10} 31H${width / 2 + 6}L${width / 2} ${height - 3}L${width / 2 - 6} 31H10Q3 31 3 24V10Q3 3 10 3Z" fill="${color}" stroke="${stroke}" stroke-width="${isSelected ? 3 : 2}"/>
-      <text x="14" y="18.2" fill="#ffffff" font-size="12" font-weight="850" font-family="Pretendard, sans-serif">${label}</text>
-    </svg>
-  `;
-
-  return {
-    url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg.trim())}`,
-    scaledSize: new google.maps.Size(width, height),
-    anchor: new google.maps.Point(width / 2, height - 3),
-  };
 }
 
 function createClusterIcon(count: number, isSelected: boolean): google.maps.Icon {
@@ -81,10 +56,10 @@ type ClusterPoint = {
 };
 
 function getMapClusterStep(zoom: number): number {
-  if (zoom >= 16) return 0;
-  if (zoom >= 14) return 0.01;
-  if (zoom >= 12) return 0.03;
-  if (zoom >= 11) return 0.05;
+  if (zoom >= 17) return 0.0015;
+  if (zoom >= 15) return 0.003;
+  if (zoom >= 13) return 0.012;
+  if (zoom >= 11) return 0.04;
   return 0.12;
 }
 
@@ -139,7 +114,7 @@ export function PropertyMap({
 
       const bucketLat = roundToGrid(position.lat, clusterStep);
       const bucketLng = roundToGrid(position.lng, clusterStep);
-      const key = `${bucketLat.toFixed(3)},${bucketLng.toFixed(3)}`;
+      const key = `${bucketLat.toFixed(5)},${bucketLng.toFixed(5)}`;
 
       const bucket = grouped.get(key);
       if (bucket) {
@@ -280,18 +255,16 @@ export function PropertyMap({
 
         if (!listing?.mapPosition) return null;
         const position = listing.mapPosition;
+        const isSelected = listing.id === selectedListingId;
 
         return (
           <Marker
             key={point.id}
             position={{ lat: point.lat, lng: point.lng }}
-            icon={createListingIcon(
-              listing,
-              listing.id === selectedListingId
-            )}
+            icon={createClusterIcon(point.listingCount, isSelected)}
             title={position.label ?? `${listing.location} ${listing.type}`}
             onClick={handlePointClick(point)}
-            zIndex={listing.id === selectedListingId ? 10 : 1}
+            zIndex={isSelected ? 10 : 1}
           />
         );
       })}

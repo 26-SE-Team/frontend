@@ -41,8 +41,10 @@ export function useSocialLogin() {
         user = {
           id: "",
           provider,
-          accountMode: provider === "kakao" ? "broker" : "tenant",
-          nickname: provider === "kakao" ? "중개인 회원" : "임차인 회원",
+          accountMode: "tenant",
+          brokerCertificationStatus: "not-required",
+          isBrokerCertified: false,
+          nickname: provider === "kakao" ? "카카오 회원" : "Google 회원",
         };
       }
 

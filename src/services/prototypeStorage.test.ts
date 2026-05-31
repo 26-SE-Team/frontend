@@ -4,6 +4,7 @@ import {
   appendPrototypeChatMessage,
   createMemoryStorage,
   readCertificationDrafts,
+  readDraftListingsForDisplay,
   readFavoriteListingIds,
   readPrototypeListingDrafts,
   removeFavoriteListing,
@@ -66,5 +67,34 @@ describe("prototypeStorage", () => {
     assert.equal(readPrototypeListingDrafts(storage)[0]?.id, "draft-1780131600000");
     assert.equal(readPrototypeListingDrafts(storage)[0]?.brokerName, "김중개");
     assert.equal(readCertificationDrafts(storage)[0]?.officeName, "테스트부동산");
+  });
+
+  it("maps generated listing drafts to the same photos and 3D viewer asset", () => {
+    const storage = createMemoryStorage();
+
+    const draft = savePrototypeListingDraft(
+      {
+        address: "서울 동작구 상도동",
+        price: "월세 500/31",
+        size: "23m²",
+        availableDate: "즉시",
+        options: ["주차"],
+        modelFileName: "generated-from-room-video.splat",
+        scanSource: "camera",
+        scanVideoFileName: "room-scan.webm",
+        scanStatus: "ready",
+        viewerAssetId: "room0-studio-preview",
+      },
+      storage,
+      () => new Date("2026-05-30T09:02:00.000Z")
+    );
+
+    const listing = readDraftListingsForDisplay(storage).find(
+      (item) => item.id === draft.id
+    );
+
+    assert.equal(listing?.viewerAssetId, "room0-studio-preview");
+    assert.ok((listing?.imageUrls?.length ?? 0) > 1);
+    assert.match(listing?.imageUrl ?? "", /room0_hotel_preview_/);
   });
 });

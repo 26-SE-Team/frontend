@@ -1,18 +1,21 @@
-import React, { useMemo } from 'react'
+import React, { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { AuthLayout } from '../components/AuthLayout'
 import { Input } from '../components/Input'
 import { useAuth } from '../contexts/AuthContext'
 import { useForm } from '../hooks/useForm'
 import { useSocialLogin } from '../hooks/useSocialLogin'
-import { authStorage, type AccountMode, type AuthUser } from '../services/authService'
+import {
+  authStorage,
+  updateCurrentAuthUser,
+  type AuthUser,
+} from '../services/authService'
 import type { RegisterFormData } from '../types/auth'
 import styles from './AuthPage.module.css'
 
 const initialValues: RegisterFormData = {
   name: '',
   email: '',
-  accountMode: 'tenant',
   password: '',
   confirmPassword: '',
   agreeToTerms: false,
@@ -31,10 +34,6 @@ function validate(values: RegisterFormData): Record<string, string> {
     errors.email = '이메일을 입력해주세요.'
   } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email)) {
     errors.email = '올바른 이메일 형식이 아닙니다.'
-  }
-
-  if (values.accountMode !== 'tenant' && values.accountMode !== 'broker') {
-    errors.accountMode = '가입 유형을 선택해주세요.'
   }
 
   if (!values.password) {
@@ -79,6 +78,7 @@ export const RegisterPage: React.FC = () => {
   const navigate = useNavigate()
   const { setUser } = useAuth()
   const { loginWithKakao, loginWithGoogle, loading } = useSocialLogin()
+  const [registeredUser, setRegisteredUser] = useState<AuthUser | null>(null)
 
   const {
     values,
@@ -96,16 +96,14 @@ export const RegisterPage: React.FC = () => {
     validate,
     onSubmit: async (submittedValues) => {
       await new Promise((res) => setTimeout(res, 1400))
-      const accountMode = submittedValues.accountMode as AccountMode
       const now = Date.now()
       const user: AuthUser = {
         id: `registered-${now}`,
         email: submittedValues.email,
         nickname: submittedValues.name,
         provider: 'email',
-        accountMode,
-        brokerCertificationStatus:
-          accountMode === 'broker' ? 'required' : 'not-required',
+        accountMode: 'tenant',
+        brokerCertificationStatus: 'not-required',
         isBrokerCertified: false,
       }
 
@@ -117,7 +115,7 @@ export const RegisterPage: React.FC = () => {
         user
       )
       setUser(user)
-      navigate(accountMode === 'broker' ? '/mypage' : '/home', { replace: true })
+      setRegisteredUser(user)
     },
   })
 
@@ -125,6 +123,28 @@ export const RegisterPage: React.FC = () => {
     () => getPasswordStrength(values.password),
     [values.password]
   )
+
+  const startBrokerCertification = (destination: '/certification' | '/mypage') => {
+    const nextUser = updateCurrentAuthUser({
+      accountMode: 'tenant',
+      brokerCertificationStatus: 'required',
+      isBrokerCertified: false,
+    })
+
+    if (nextUser) setUser(nextUser)
+    navigate(destination, { replace: true })
+  }
+
+  const continueAsUser = () => {
+    const nextUser = updateCurrentAuthUser({
+      accountMode: 'tenant',
+      brokerCertificationStatus: 'not-required',
+      isBrokerCertified: false,
+    })
+
+    if (nextUser) setUser(nextUser)
+    navigate('/home', { replace: true })
+  }
 
   return (
     <AuthLayout>
@@ -156,45 +176,6 @@ export const RegisterPage: React.FC = () => {
             icon={<EmailIcon />}
             {...getFieldProps('email')}
           />
-
-          <fieldset className={styles.accountType}>
-            <legend>어떤 계정으로 가입하시나요?</legend>
-            <div className={styles.accountTypeOptions}>
-              <label className={styles.accountTypeOption}>
-                <input
-                  type="radio"
-                  name="accountMode"
-                  value="tenant"
-                  checked={values.accountMode === 'tenant'}
-                  onChange={handleChange}
-                  onBlur={handleBlur}
-                />
-                <span>
-                  <strong>임차인</strong>
-                  <small>매물 탐색과 상담을 이용해요</small>
-                </span>
-              </label>
-              <label className={styles.accountTypeOption}>
-                <input
-                  type="radio"
-                  name="accountMode"
-                  value="broker"
-                  checked={values.accountMode === 'broker'}
-                  onChange={handleChange}
-                  onBlur={handleBlur}
-                />
-                <span>
-                  <strong>중개인</strong>
-                  <small>인증 후 매물을 등록해요</small>
-                </span>
-              </label>
-            </div>
-            {touched.accountMode && errors.accountMode && (
-              <p className={styles.fieldError}>
-                <AlertIcon /> {errors.accountMode}
-              </p>
-            )}
-          </fieldset>
 
           {/* Password with strength indicator */}
           <div>
@@ -275,7 +256,7 @@ export const RegisterPage: React.FC = () => {
         {submitSuccess && (
           <div className={styles.alertSuccess} role="status">
             <SuccessIcon />
-            회원가입 완료! 로그인 페이지로 이동합니다.
+            회원가입이 완료되었습니다.
           </div>
         )}
 
@@ -308,6 +289,40 @@ export const RegisterPage: React.FC = () => {
           </button>
         </div>
       </form>
+
+      {registeredUser && (
+        <section
+          className={styles.brokerPromptOverlay}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="broker-prompt-title"
+        >
+          <div className={styles.brokerPrompt}>
+            <h2 id="broker-prompt-title">중개인이신가요?</h2>
+            <p>
+              중개인 인증을 완료하면 매물 등록과 매물 관리 기능을 사용할 수 있어요.
+            </p>
+            <div className={styles.brokerPromptActions}>
+              <button
+                type="button"
+                className={styles.brokerPromptPrimary}
+                onClick={() => startBrokerCertification('/certification')}
+              >
+                바로 인증하기
+              </button>
+              <button
+                type="button"
+                onClick={() => startBrokerCertification('/mypage')}
+              >
+                나중에 하기
+              </button>
+              <button type="button" onClick={continueAsUser}>
+                아니요
+              </button>
+            </div>
+          </div>
+        </section>
+      )}
     </AuthLayout>
   )
 }

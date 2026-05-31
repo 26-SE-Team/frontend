@@ -1,10 +1,9 @@
 import { useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { BottomNav } from "../components/home/BottomNav";
 import { useAuth } from "../contexts/AuthContext";
 import {
   type BrokerCertificationStatus,
-  isBrokerUser,
   isCertifiedBroker,
 } from "../services/authService";
 import { readDraftListingsForDisplay } from "../services/prototypeStorage";
@@ -19,20 +18,27 @@ interface CertificationStatusView {
 
 export function MyPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, logout } = useAuth();
 
-  const isBroker = useMemo(() => isBrokerUser(user), [user]);
   const isCertified = useMemo(() => isCertifiedBroker(user), [user]);
   const certificationStatus = user?.brokerCertificationStatus ?? "not-required";
-  const certificationView = isBroker
-    ? getCertificationStatusView(certificationStatus)
-    : null;
+  const redirectedFromBrokerFeature = Boolean(
+    (location.state as { from?: string } | null)?.from
+  );
+  const effectiveCertificationStatus =
+    certificationStatus === "not-required" && redirectedFromBrokerFeature
+      ? "required"
+      : certificationStatus;
+  const certificationView =
+    effectiveCertificationStatus !== "not-required"
+      ? getCertificationStatusView(effectiveCertificationStatus)
+      : null;
   const brokerListings = useMemo(
-    () => (isBroker && isCertified ? readDraftListingsForDisplay() : []),
-    [isBroker, isCertified]
+    () => (isCertified ? readDraftListingsForDisplay() : []),
+    [isCertified]
   );
   const displayName = user?.nickname?.trim() || "홍길동";
-  const roleLabel = isBroker ? "중개인 계정" : "임차인 계정";
 
   const handleLogout = () => {
     logout();
@@ -45,7 +51,7 @@ export function MyPage() {
         <header className="mypage__header">
           <h1>
             {displayName}
-            <small>{roleLabel}</small>
+            <small>내 정보</small>
           </h1>
 
           <div className="mypage__header-actions">
@@ -71,7 +77,7 @@ export function MyPage() {
             </section>
           )}
 
-          {isBroker && isCertified && (
+          {isCertified && (
             <BrokerListingsOverview
               listings={brokerListings}
               onRegister={() => navigate("/listing/new")}
@@ -81,23 +87,16 @@ export function MyPage() {
           )}
 
           <section className="mypage-menu" aria-label="내 계정 메뉴">
-            {isBroker ? (
+            <>
               <button type="button" onClick={() => navigate("/stored")}>
                 <span>관심 매물</span>
                 <ChevronIcon />
               </button>
-            ) : (
-              <>
-                <button type="button" onClick={() => navigate("/stored")}>
-                  <span>관심 매물</span>
-                  <ChevronIcon />
-                </button>
-                <button type="button" onClick={() => navigate("/chat")}>
-                  <span>채팅</span>
-                  <ChevronIcon />
-                </button>
-              </>
-            )}
+              <button type="button" onClick={() => navigate("/chat")}>
+                <span>채팅</span>
+                <ChevronIcon />
+              </button>
+            </>
           </section>
 
           <section className="mypage-menu mypage-menu--spaced" aria-label="서비스 메뉴">
@@ -144,7 +143,10 @@ function BrokerListingsOverview({
   return (
     <section className="mypage-listings" aria-labelledby="mypage-listings-title">
       <div className="mypage-listings__header">
-        <h2 id="mypage-listings-title">내가 올린 매물</h2>
+        <div className="mypage-listings__title">
+          <span>중개인 인증 완료</span>
+          <h2 id="mypage-listings-title">내가 올린 매물</h2>
+        </div>
         <div className="mypage-listings__actions">
           {listings.length > 0 && (
             <button

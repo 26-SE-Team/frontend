@@ -45,7 +45,7 @@ export function StoredPage() {
                   setFavoriteIds(removeFavoriteListing(listing.id))
                 }
               >
-                <HeartIcon />
+                해제
               </button>
             </article>
           ))}
@@ -62,14 +62,6 @@ function BackIcon() {
   return (
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
       <path d="M15 18l-6-6 6-6" />
-    </svg>
-  );
-}
-
-function HeartIcon() {
-  return (
-    <svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="#ff5b70" strokeWidth="1.9" aria-hidden>
-      <path d="M20.8 4.6a5.5 5.5 0 00-7.8 0L12 5.6l-1-1a5.5 5.5 0 00-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 000-7.8z" />
     </svg>
   );
 }

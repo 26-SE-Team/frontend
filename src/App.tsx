@@ -33,11 +33,7 @@ function App() {
         <Route path="/stored" element={<StoredPage />} />
         <Route
           path="/certification"
-          element={
-            <RoleProtectedRoute mode="broker">
-              <CertificationPage />
-            </RoleProtectedRoute>
-          }
+          element={<CertificationPage />}
         />
         <Route
           path="/my-listings"
