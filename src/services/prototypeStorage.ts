@@ -1,4 +1,5 @@
 import { mockChatRooms } from "../data/mockChats";
+import type { Listing } from "../types/listing";
 import type { ChatRoom } from "../types/chat";
 
 export interface StorageLike {
@@ -16,6 +17,11 @@ export interface PrototypeListingDraft {
   availableDate: string;
   options: string[];
   modelFileName?: string;
+  scanSource?: "camera" | "upload";
+  scanVideoFileName?: string;
+  scanStatus?: "idle" | "ready" | "processing" | "failed";
+  viewerAssetId?: string;
+  mapPosition?: Listing["mapPosition"];
   createdAt: string;
 }
 
@@ -34,6 +40,80 @@ export const prototypeStorageKeys = {
   listingDrafts: "stayview_listing_drafts",
   certificationDrafts: "stayview_certification_drafts",
 } as const;
+
+const publicRoot = (path: string) =>
+  `${import.meta.env?.BASE_URL ?? "/"}${path.replace(/^\/+/, "")}`;
+
+const defaultScanViewerAssetId = "room0-studio-preview";
+
+const draftPreviewImageUrl = publicRoot("demo/room0/photos/room0_3dgs_preview.webp");
+
+const mapFallbacks: Array<{
+  keywords: string[];
+  lat: number;
+  lng: number;
+  label: string;
+}> = [
+  { keywords: ["상도", "동작"], lat: 37.5031, lng: 126.948, label: "상도역" },
+  { keywords: ["연남", "홍대"], lat: 37.5627, lng: 126.9246, label: "홍대입구역" },
+  { keywords: ["역삼", "강남"], lat: 37.5008, lng: 127.0369, label: "역삼역" },
+  { keywords: ["성수", "성동"], lat: 37.5446, lng: 127.0559, label: "성수역" },
+  { keywords: ["잠실", "송파"], lat: 37.5111, lng: 127.086, label: "잠실새내역" },
+  { keywords: ["이태원", "용산"], lat: 37.5347, lng: 126.9946, label: "이태원역" },
+];
+
+function hashString(value: string) {
+  return [...value].reduce(
+    (acc, char) => (acc * 31 + char.codePointAt(0)!) % 100000,
+    1
+  );
+}
+
+function resolveDraftMapPosition(address: string): Listing["mapPosition"] {
+  const normalized = address.replace(/\s/g, "");
+  const fallback = mapFallbacks.find((entry) =>
+    entry.keywords.some((keyword) => normalized.includes(keyword))
+  );
+
+  const baseLat = fallback?.lat ?? 37.5275;
+  const baseLng = fallback?.lng ?? 126.964;
+  const hash = hashString(address);
+  const latOffset = (hash % 500 - 250) / 10000;
+  const lngOffset = ((hash * 7) % 500 - 250) / 10000;
+
+  return {
+    lat: Number((baseLat + latOffset).toFixed(6)),
+    lng: Number((baseLng + lngOffset).toFixed(6)),
+    label: fallback?.label ?? "서울 전역",
+  };
+}
+
+export function mapDraftToListing(draft: PrototypeListingDraft): Listing {
+  return {
+    id: draft.id,
+    imageUrl: draftPreviewImageUrl,
+    imageUrls: [draftPreviewImageUrl],
+    price: draft.price || "가격 미입력",
+    type: "원룸",
+    info: `${draft.size || "면적 미입력"} · ${draft.availableDate || "입주일 미입력"}`,
+    location: draft.address || "입력 필요",
+    station: "주소 기반 자동 매칭",
+    size: draft.size || undefined,
+    floor: "현재층 / 전체층",
+    managementFee: "관리비 협의",
+    highlights: ["휴대폰 촬영 기반 3D 스캔", ...(draft.options.length ? draft.options : ["옵션 미등록"])],
+    options: draft.options,
+    viewerAssetId: draft.viewerAssetId ?? defaultScanViewerAssetId,
+    mapPosition: draft.mapPosition ?? resolveDraftMapPosition(draft.address),
+  };
+}
+
+export function readDraftListingsForDisplay(
+  storage: StorageLike = getPrototypeStorage()
+): Listing[] {
+  const drafts = readPrototypeListingDrafts(storage);
+  return drafts.map(mapDraftToListing);
+}
 
 const fallbackStorage = createMemoryStorage();
 const defaultFavoriteListingIds = ["rec-1"];

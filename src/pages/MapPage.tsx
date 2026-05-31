@@ -5,15 +5,20 @@ import { PropertyMap } from "../components/map/PropertyMap";
 import { MapFilterButton } from "../components/map/MapFilterButton";
 import { MapBottomSheet } from "../components/map/MapBottomSheet";
 import { allListings } from "../data/mockListings";
+import { readDraftListingsForDisplay } from "../services/prototypeStorage";
 import type { Listing } from "../types/listing";
 import "./map.css";
 
 export function MapPage() {
   const navigate = useNavigate();
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
+  const combinedListings = useMemo(
+    () => [...allListings, ...readDraftListingsForDisplay()],
+    []
+  );
 
   const totalCount = useMemo(
-    () => allListings.filter((listing) => listing.mapPosition).length,
+    () => combinedListings.filter((listing) => listing.mapPosition).length,
     []
   );
 
@@ -22,7 +27,7 @@ export function MapPage() {
       <div className="map-page__frame">
         <div className="map-page__map-wrap">
           <PropertyMap
-            listings={allListings}
+            listings={combinedListings}
             selectedListingId={selectedListing?.id ?? null}
             onListingClick={setSelectedListing}
           />
@@ -33,7 +38,7 @@ export function MapPage() {
 
         <MapBottomSheet
           totalCount={totalCount}
-          listings={allListings}
+          listings={combinedListings}
           selectedListing={selectedListing}
           onListingClick={(listing) => navigate(`/listing/${listing.id}`)}
         />

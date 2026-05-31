@@ -1,22 +1,11 @@
 import { Link, useNavigate } from "react-router-dom";
-import { recommendedListings } from "../data/mockListings";
-import { readPrototypeListingDrafts } from "../services/prototypeStorage";
+import { readDraftListingsForDisplay } from "../services/prototypeStorage";
 import type { Listing } from "../types/listing";
 import "./myListings.css";
 
 export function MyListingsPage() {
   const navigate = useNavigate();
-  const draftListings: Listing[] = readPrototypeListingDrafts().map((draft) => ({
-    id: draft.id,
-    imageUrl: recommendedListings[0].imageUrl,
-    price: draft.price || "가격 미입력",
-    type: "원룸",
-    info: `${draft.size || "면적 미입력"} · ${draft.availableDate || "입주일 미입력"}`,
-    location: draft.address,
-    options: draft.options,
-    viewerAssetId: "sangdo-studio",
-  }));
-  const myListings = [...draftListings, recommendedListings[0]];
+  const myListings: Listing[] = readDraftListingsForDisplay();
 
   return (
     <main className="my-listings-page">
@@ -29,16 +18,20 @@ export function MyListingsPage() {
         </header>
 
         <section className="my-listings-list" aria-label="내가 올린 매물 목록">
-          {myListings.map((listing) => (
-            <Link to={`/listing/${listing.id}`} className="my-listings-list__item" key={listing.id}>
-              <img src={listing.imageUrl} alt={`${listing.type} 매물`} />
-              <span>
-                <strong>{listing.price}</strong>
-                <span>{listing.type}</span>
-                <span>{listing.info}</span>
-              </span>
-            </Link>
-          ))}
+          {myListings.length === 0 ? (
+            <p className="my-listings-list__empty">아직 등록한 매물이 없습니다.</p>
+          ) : (
+            myListings.map((listing) => (
+              <Link to={`/listing/${listing.id}`} className="my-listings-list__item" key={listing.id}>
+                <img src={listing.imageUrl} alt={`${listing.type} 매물`} />
+                <span>
+                  <strong>{listing.price}</strong>
+                  <span>{listing.type}</span>
+                  <span>{listing.info}</span>
+                </span>
+              </Link>
+            ))
+          )}
         </section>
 
         <button

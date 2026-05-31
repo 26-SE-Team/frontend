@@ -37,6 +37,26 @@
   gap: 0.875rem;
 }
 
+.home__header-top {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.home__register-chip {
+  height: 2.15rem;
+  padding: 0 0.875rem;
+  border: none;
+  border-radius: 999px;
+  background: #111827;
+  color: #ffffff;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
 .home .start-logo {
   gap: 0.5rem;
 }
@@ -218,28 +238,6 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-.home__register-btn {
-  width: 100%;
-  height: 3.25rem;
-  margin-top: 0.25rem;
-  border: 1px solid #e0e0e0;
-  border-radius: 0.75rem;
-  background: #ffffff;
-  font-size: 1rem;
-  font-weight: 700;
-  color: #000000;
-  cursor: pointer;
-  transition: background 150ms ease;
-}
-
-.home__register-btn:hover {
-  background: #fafafa;
-}
-
-.home__register-btn:active {
-  background: #f0f0f0;
 }
 
 .home-nav {

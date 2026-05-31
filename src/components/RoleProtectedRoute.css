@@ -1,0 +1,81 @@
+.role-gate {
+  height: 100dvh;
+  height: 100svh;
+  background: #ffffff;
+  display: flex;
+  justify-content: center;
+  font-family:
+    "Pretendard",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Apple SD Gothic Neo",
+    "Noto Sans KR",
+    system-ui,
+    sans-serif;
+}
+
+.role-gate__frame {
+  width: 100%;
+  max-width: 430px;
+  min-height: inherit;
+  padding: max(3rem, env(safe-area-inset-top)) 1.5rem 2rem;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+}
+
+.role-gate__panel {
+  width: 100%;
+  padding: 1.5rem;
+  border-radius: 0.75rem;
+  background: #f7f7f8;
+  box-sizing: border-box;
+}
+
+.role-gate__eyebrow {
+  margin: 0 0 0.75rem;
+  color: #6f4df6;
+  font-size: 0.8125rem;
+  font-weight: 900;
+}
+
+.role-gate__panel h1 {
+  margin: 0;
+  color: #111111;
+  font-size: 1.375rem;
+  font-weight: 900;
+  line-height: 1.35;
+  letter-spacing: 0;
+}
+
+.role-gate__panel p:not(.role-gate__eyebrow) {
+  margin: 0.75rem 0 0;
+  color: #606a78;
+  font-size: 0.875rem;
+  font-weight: 650;
+  line-height: 1.55;
+}
+
+.role-gate__actions {
+  margin-top: 1.5rem;
+  display: flex;
+  gap: 0.625rem;
+}
+
+.role-gate__actions button {
+  min-height: 2.625rem;
+  flex: 1;
+  border: none;
+  border-radius: 999px;
+  background: #111827;
+  color: #ffffff;
+  font-size: 0.875rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.role-gate__actions button + button {
+  background: #ffffff;
+  color: #111827;
+  border: 1px solid rgba(17, 24, 39, 0.12);
+}

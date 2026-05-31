@@ -10,6 +10,8 @@ export const prototypeTestUser: AuthUser = {
   email: "tester@stayview.local",
   nickname: "홍길동",
   provider: "google",
+  accountMode: "tenant",
+  brokerCertificationStatus: "not-required",
 };
 
 export function seedPrototypeSession(user: AuthUser = prototypeTestUser) {

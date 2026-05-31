@@ -52,7 +52,7 @@ export function LoginPage() {
             className="start-btn start-btn--kakao"
           >
             <KakaoIcon />
-            {loading === "kakao" ? "연결 중..." : "카카오로 시작하기"}
+            {loading === "kakao" ? "연결 중..." : "중개인으로 시작하기 (카카오)"}
           </button>
 
           <button
@@ -62,7 +62,7 @@ export function LoginPage() {
             className="start-btn start-btn--google"
           >
             <GoogleIcon />
-            {loading === "google" ? "연결 중..." : "Google로 시작하기"}
+            {loading === "google" ? "연결 중..." : "임차인으로 시작하기 (Google)"}
           </button>
         </section>
 
