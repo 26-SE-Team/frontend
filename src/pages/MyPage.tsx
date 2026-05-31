@@ -68,16 +68,20 @@ export function MyPage() {
           <section className="mypage-menu" aria-label="내 계정 메뉴">
             {isBroker ? (
               <>
+                <button type="button" onClick={() => navigate("/stored")}>
+                  <span>관심 매물</span>
+                  <ChevronIcon />
+                </button>
+                <button type="button" onClick={() => navigate("/chat")}>
+                  <span>상담 채팅</span>
+                  <ChevronIcon />
+                </button>
                 <button type="button" onClick={() => navigate("/listing/new")}>
                   <span>매물 등록</span>
                   <ChevronIcon />
                 </button>
                 <button type="button" onClick={() => navigate("/my-listings")}>
                   <span>내가 올린 매물</span>
-                  <ChevronIcon />
-                </button>
-                <button type="button" onClick={() => navigate("/chat")}>
-                  <span>상담 채팅</span>
                   <ChevronIcon />
                 </button>
               </>

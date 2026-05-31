@@ -12,6 +12,9 @@ export interface Listing {
   managementFee?: string;
   highlights?: string[];
   options?: string[];
+  brokerName?: string;
+  brokerOfficeName?: string;
+  brokerRegistrationNumber?: string;
   viewerAssetId?: string;
   mapPosition?: {
     lat: number;
