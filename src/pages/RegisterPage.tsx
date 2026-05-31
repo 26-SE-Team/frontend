@@ -2,14 +2,17 @@ import React, { useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { AuthLayout } from '../components/AuthLayout'
 import { Input } from '../components/Input'
+import { useAuth } from '../contexts/AuthContext'
 import { useForm } from '../hooks/useForm'
 import { useSocialLogin } from '../hooks/useSocialLogin'
+import { authStorage, type AccountMode, type AuthUser } from '../services/authService'
 import type { RegisterFormData } from '../types/auth'
 import styles from './AuthPage.module.css'
 
 const initialValues: RegisterFormData = {
   name: '',
   email: '',
+  accountMode: 'tenant',
   password: '',
   confirmPassword: '',
   agreeToTerms: false,
@@ -28,6 +31,10 @@ function validate(values: RegisterFormData): Record<string, string> {
     errors.email = '이메일을 입력해주세요.'
   } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email)) {
     errors.email = '올바른 이메일 형식이 아닙니다.'
+  }
+
+  if (values.accountMode !== 'tenant' && values.accountMode !== 'broker') {
+    errors.accountMode = '가입 유형을 선택해주세요.'
   }
 
   if (!values.password) {
@@ -70,6 +77,7 @@ function getPasswordStrength(password: string): {
 
 export const RegisterPage: React.FC = () => {
   const navigate = useNavigate()
+  const { setUser } = useAuth()
   const { loginWithKakao, loginWithGoogle, loading } = useSocialLogin()
 
   const {
@@ -86,9 +94,30 @@ export const RegisterPage: React.FC = () => {
   } = useForm<RegisterFormData>({
     initialValues,
     validate,
-    onSubmit: async () => {
+    onSubmit: async (submittedValues) => {
       await new Promise((res) => setTimeout(res, 1400))
-      navigate('/login')
+      const accountMode = submittedValues.accountMode as AccountMode
+      const now = Date.now()
+      const user: AuthUser = {
+        id: `registered-${now}`,
+        email: submittedValues.email,
+        nickname: submittedValues.name,
+        provider: 'email',
+        accountMode,
+        brokerCertificationStatus:
+          accountMode === 'broker' ? 'required' : 'not-required',
+        isBrokerCertified: false,
+      }
+
+      authStorage.setSession(
+        {
+          accessToken: `registered-access-${now}`,
+          refreshToken: `registered-refresh-${now}`,
+        },
+        user
+      )
+      setUser(user)
+      navigate(accountMode === 'broker' ? '/mypage' : '/home', { replace: true })
     },
   })
 
@@ -127,6 +156,45 @@ export const RegisterPage: React.FC = () => {
             icon={<EmailIcon />}
             {...getFieldProps('email')}
           />
+
+          <fieldset className={styles.accountType}>
+            <legend>어떤 계정으로 가입하시나요?</legend>
+            <div className={styles.accountTypeOptions}>
+              <label className={styles.accountTypeOption}>
+                <input
+                  type="radio"
+                  name="accountMode"
+                  value="tenant"
+                  checked={values.accountMode === 'tenant'}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                />
+                <span>
+                  <strong>임차인</strong>
+                  <small>매물 탐색과 상담을 이용해요</small>
+                </span>
+              </label>
+              <label className={styles.accountTypeOption}>
+                <input
+                  type="radio"
+                  name="accountMode"
+                  value="broker"
+                  checked={values.accountMode === 'broker'}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                />
+                <span>
+                  <strong>중개인</strong>
+                  <small>인증 후 매물을 등록해요</small>
+                </span>
+              </label>
+            </div>
+            {touched.accountMode && errors.accountMode && (
+              <p className={styles.fieldError}>
+                <AlertIcon /> {errors.accountMode}
+              </p>
+            )}
+          </fieldset>
 
           {/* Password with strength indicator */}
           <div>

@@ -2,7 +2,7 @@ import { initKakao, getKakaoRedirectUri } from "../lib/kakao";
 import { publicEnv } from "../config/publicEnv";
 import { getPrototypeStorage } from "./prototypeStorage";
 
-export type AuthProvider = "kakao" | "google";
+export type AuthProvider = "kakao" | "google" | "email";
 export type AccountMode = "broker" | "tenant";
 
 export type BrokerCertificationStatus =

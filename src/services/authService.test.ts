@@ -62,6 +62,27 @@ describe("authStorage prototype session", () => {
     assert.equal(authStorage.getUser(), null);
   });
 
+  it("stores email registration sessions with the selected account mode", () => {
+    authStorage.setSession(
+      {
+        accessToken: "registered-access",
+      },
+      {
+        id: "registered-user",
+        email: "agent@example.com",
+        nickname: "가입자",
+        provider: "email",
+        accountMode: "broker",
+        brokerCertificationStatus: "required",
+        isBrokerCertified: false,
+      }
+    );
+
+    assert.equal(authStorage.getUser()?.provider, "email");
+    assert.equal(authStorage.getUser()?.accountMode, "broker");
+    assert.equal(authStorage.getUser()?.brokerCertificationStatus, "required");
+  });
+
   it("approves broker certification in the local session", () => {
     createPrototypeSession("kakao");
 
