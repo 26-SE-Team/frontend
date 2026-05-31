@@ -7,7 +7,7 @@ import { BottomNav } from "../components/home/BottomNav";
 import { recommendedListings, recentListings } from "../data/mockListings";
 import { filterListings } from "../utils/filterListings";
 import { useAuth } from "../contexts/AuthContext";
-import { isBrokerUser } from "../services/authService";
+import { isBrokerUser, isCertifiedBroker } from "../services/authService";
 import "./home.css";
 
 export function HomePage() {
@@ -15,6 +15,7 @@ export function HomePage() {
   const { user } = useAuth();
   const [query, setQuery] = useState("");
   const isBroker = isBrokerUser(user);
+  const isCertified = isCertifiedBroker(user);
 
   const filteredRecommended = useMemo(
     () => filterListings(recommendedListings, query),
@@ -46,7 +47,7 @@ export function HomePage() {
         <header className="home__header">
           <div className="home__header-top">
             <StayViewLogo />
-            {isBroker && (
+            {isBroker && isCertified && (
               <button
                 type="button"
                 className="home__register-chip"

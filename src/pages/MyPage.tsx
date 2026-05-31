@@ -7,6 +7,8 @@ import {
   isBrokerUser,
   isCertifiedBroker,
 } from "../services/authService";
+import { readDraftListingsForDisplay } from "../services/prototypeStorage";
+import type { Listing } from "../types/listing";
 import "./mypage.css";
 
 interface CertificationStatusView {
@@ -25,6 +27,10 @@ export function MyPage() {
   const certificationView = isBroker
     ? getCertificationStatusView(certificationStatus)
     : null;
+  const brokerListings = useMemo(
+    () => (isBroker && isCertified ? readDraftListingsForDisplay() : []),
+    [isBroker, isCertified]
+  );
   const displayName = user?.nickname?.trim() || "홍길동";
   const roleLabel = isBroker ? "중개인 계정" : "임차인 계정";
 
@@ -65,26 +71,21 @@ export function MyPage() {
             </section>
           )}
 
+          {isBroker && isCertified && (
+            <BrokerListingsOverview
+              listings={brokerListings}
+              onRegister={() => navigate("/listing/new")}
+              onOpenAll={() => navigate("/my-listings")}
+              onOpenListing={(listingId) => navigate(`/listing/${listingId}`)}
+            />
+          )}
+
           <section className="mypage-menu" aria-label="내 계정 메뉴">
             {isBroker ? (
-              <>
-                <button type="button" onClick={() => navigate("/stored")}>
-                  <span>관심 매물</span>
-                  <ChevronIcon />
-                </button>
-                <button type="button" onClick={() => navigate("/chat")}>
-                  <span>상담 채팅</span>
-                  <ChevronIcon />
-                </button>
-                <button type="button" onClick={() => navigate("/listing/new")}>
-                  <span>매물 등록</span>
-                  <ChevronIcon />
-                </button>
-                <button type="button" onClick={() => navigate("/my-listings")}>
-                  <span>내가 올린 매물</span>
-                  <ChevronIcon />
-                </button>
-              </>
+              <button type="button" onClick={() => navigate("/stored")}>
+                <span>관심 매물</span>
+                <ChevronIcon />
+              </button>
             ) : (
               <>
                 <button type="button" onClick={() => navigate("/stored")}>
@@ -124,6 +125,78 @@ export function MyPage() {
         <BottomNav active="mypage" />
       </div>
     </main>
+  );
+}
+
+interface BrokerListingsOverviewProps {
+  listings: Listing[];
+  onRegister: () => void;
+  onOpenAll: () => void;
+  onOpenListing: (listingId: string) => void;
+}
+
+function BrokerListingsOverview({
+  listings,
+  onRegister,
+  onOpenAll,
+  onOpenListing,
+}: BrokerListingsOverviewProps) {
+  return (
+    <section className="mypage-listings" aria-labelledby="mypage-listings-title">
+      <div className="mypage-listings__header">
+        <h2 id="mypage-listings-title">내가 올린 매물</h2>
+        <div className="mypage-listings__actions">
+          {listings.length > 0 && (
+            <button
+              type="button"
+              className="mypage-listings__text-button"
+              onClick={onOpenAll}
+            >
+              전체
+            </button>
+          )}
+          <button
+            type="button"
+            className="mypage-listings__register"
+            onClick={onRegister}
+            aria-label="매물 등록하기"
+          >
+            <PlusIcon />
+            등록
+          </button>
+        </div>
+      </div>
+
+      {listings.length > 0 ? (
+        <div className="mypage-listings__rail" aria-label="내가 올린 매물 목록">
+          {listings.map((listing) => (
+            <button
+              type="button"
+              key={listing.id}
+              className="mypage-listings__card"
+              onClick={() => onOpenListing(listing.id)}
+              aria-label={`${listing.price} ${listing.type} 상세 보기`}
+            >
+              <img src={listing.imageUrl} alt={`${listing.type} 매물`} />
+              <span>
+                <strong>{listing.price}</strong>
+                <span>{listing.location ?? listing.type}</span>
+                <small>{listing.info}</small>
+              </span>
+            </button>
+          ))}
+        </div>
+      ) : (
+        <button
+          type="button"
+          className="mypage-listings__empty"
+          onClick={onRegister}
+        >
+          <strong>등록된 매물이 없습니다.</strong>
+          <span>새 매물을 등록하면 이곳에서 바로 관리할 수 있어요.</span>
+        </button>
+      )}
+    </section>
   );
 }
 
@@ -201,6 +274,23 @@ function ChevronIcon() {
       aria-hidden
     >
       <path d="M9 18l6-6-6-6" />
+    </svg>
+  );
+}
+
+function PlusIcon() {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.3"
+      aria-hidden
+    >
+      <path d="M12 5v14" />
+      <path d="M5 12h14" />
     </svg>
   );
 }
