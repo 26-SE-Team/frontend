@@ -1,7 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { ChangeEvent, FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import { savePrototypeListingDraft } from "../services/prototypeStorage";
+import { useAuth } from "../contexts/AuthContext";
+import {
+  readLatestCertificationDraft,
+  savePrototypeListingDraft,
+} from "../services/prototypeStorage";
 import "./propertyRegister.css";
 
 const optionItems = ["주차", "반려동물"];
@@ -24,6 +28,7 @@ type ScanState = "idle" | "recording" | "processing" | "ready" | "error";
 
 export function PropertyRegisterPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
   const [modelFileName, setModelFileName] = useState("");
   const [scanState, setScanState] = useState<ScanState>("idle");
@@ -39,6 +44,11 @@ export function PropertyRegisterPage() {
   const chunksRef = useRef<BlobPart[]>([]);
   const timerRef = useRef<number | null>(null);
   const previewUrlRef = useRef<string | null>(null);
+  const latestCertification = readLatestCertificationDraft();
+  const brokerName =
+    latestCertification?.agentName.trim() || user?.nickname?.trim() || "중개인 회원";
+  const brokerOfficeName = latestCertification?.officeName.trim() || "인증 사무소";
+  const brokerRegistrationNumber = latestCertification?.agentNumber.trim();
 
   const toggleOption = (option: string) => {
     setSelectedOptions((current) =>
@@ -220,6 +230,9 @@ export function PropertyRegisterPage() {
       scanSource: scanVideoFileName ? "camera" : "upload",
       scanVideoFileName: scanVideoFileName || undefined,
       scanStatus: scanState === "ready" ? "ready" : "idle",
+      brokerName,
+      brokerOfficeName,
+      brokerRegistrationNumber,
       viewerAssetId:
         modelFileName === "camera-capture" || !!scanVideoFileName
           ? generatedViewerAssetId
@@ -269,6 +282,15 @@ export function PropertyRegisterPage() {
         </header>
 
         <form className="property-register__form" onSubmit={handleSubmit}>
+          <section className="property-register__broker" aria-label="등록 명의">
+            <span>등록 명의</span>
+            <strong>{brokerName}</strong>
+            <small>
+              {brokerOfficeName}
+              {brokerRegistrationNumber ? ` · ${brokerRegistrationNumber}` : ""}
+            </small>
+          </section>
+
           <TextField id="address" label="주소" defaultValue="서울 동작구 상도동" />
           <TextField id="price" label="가격" defaultValue="월세 500/31" />
           <TextField id="size" label="면적" defaultValue="26.44m²" />

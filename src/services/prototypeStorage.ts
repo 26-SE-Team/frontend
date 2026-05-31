@@ -22,6 +22,9 @@ export interface PrototypeListingDraft {
   scanStatus?: "idle" | "ready" | "processing" | "failed";
   viewerAssetId?: string;
   mapPosition?: Listing["mapPosition"];
+  brokerName?: string;
+  brokerOfficeName?: string;
+  brokerRegistrationNumber?: string;
   createdAt: string;
 }
 
@@ -103,6 +106,9 @@ export function mapDraftToListing(draft: PrototypeListingDraft): Listing {
     managementFee: "관리비 협의",
     highlights: ["휴대폰 촬영 기반 3D 스캔", ...(draft.options.length ? draft.options : ["옵션 미등록"])],
     options: draft.options,
+    brokerName: draft.brokerName,
+    brokerOfficeName: draft.brokerOfficeName,
+    brokerRegistrationNumber: draft.brokerRegistrationNumber,
     viewerAssetId: draft.viewerAssetId ?? defaultScanViewerAssetId,
     mapPosition: draft.mapPosition ?? resolveDraftMapPosition(draft.address),
   };
@@ -283,6 +289,12 @@ export function readCertificationDrafts(
   storage: StorageLike = getPrototypeStorage()
 ): PrototypeCertificationDraft[] {
   return readJson(prototypeStorageKeys.certificationDrafts, [], storage);
+}
+
+export function readLatestCertificationDraft(
+  storage: StorageLike = getPrototypeStorage()
+): PrototypeCertificationDraft | null {
+  return readCertificationDrafts(storage)[0] ?? null;
 }
 
 export function saveCertificationDraft(

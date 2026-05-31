@@ -28,6 +28,9 @@ export function MyListingsPage() {
                   <strong>{listing.price}</strong>
                   <span>{listing.type}</span>
                   <span>{listing.info}</span>
+                  {listing.brokerName && (
+                    <span>{listing.brokerName} · {listing.brokerOfficeName ?? "인증 사무소"}</span>
+                  )}
                 </span>
               </Link>
             ))

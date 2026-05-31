@@ -46,6 +46,9 @@ describe("prototypeStorage", () => {
         availableDate: "즉시",
         options: ["주차"],
         modelFileName: "room0.splat",
+        brokerName: "김중개",
+        brokerOfficeName: "테스트부동산",
+        brokerRegistrationNumber: "BROKER-1",
       },
       storage,
       () => new Date("2026-05-30T09:00:00.000Z")
@@ -61,6 +64,7 @@ describe("prototypeStorage", () => {
     );
 
     assert.equal(readPrototypeListingDrafts(storage)[0]?.id, "draft-1780131600000");
+    assert.equal(readPrototypeListingDrafts(storage)[0]?.brokerName, "김중개");
     assert.equal(readCertificationDrafts(storage)[0]?.officeName, "테스트부동산");
   });
 });

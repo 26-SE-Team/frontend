@@ -63,6 +63,33 @@
   gap: 1.125rem;
 }
 
+.property-register__broker {
+  border-radius: 0.625rem;
+  background: #f7f7f8;
+  padding: 0.875rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.property-register__broker span {
+  color: #6f4df6;
+  font-size: 0.75rem;
+  font-weight: 900;
+}
+
+.property-register__broker strong {
+  color: #111111;
+  font-size: 1rem;
+  font-weight: 900;
+}
+
+.property-register__broker small {
+  color: #606a78;
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+
 .property-register__field {
   display: flex;
   flex-direction: column;

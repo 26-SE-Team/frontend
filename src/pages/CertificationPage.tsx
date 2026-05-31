@@ -21,7 +21,7 @@ export function CertificationPage() {
       officeName: String(formData.get("office-name") ?? ""),
       fileName: fileName || undefined,
     });
-    const updatedUser = setBrokerCertificationStatus("pending");
+    const updatedUser = setBrokerCertificationStatus("approved");
     if (updatedUser) setUser(updatedUser);
     setSubmitted(true);
   };
@@ -63,12 +63,12 @@ export function CertificationPage() {
 
           {submitted && (
             <p className="cert-form__status" role="status">
-              인증 정보가 접수되었습니다.
+              인증이 완료되었습니다.
             </p>
           )}
 
           <button className="cert-form__submit" type="submit">
-            인증 정보 제출하기
+            인증 완료하기
           </button>
         </form>
       </div>
