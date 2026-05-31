@@ -22,10 +22,6 @@ export function ListingDetailPage() {
   const optionItems = listing.options ?? ["옷장", "냉장고", "싱크대", "전자레인지"];
   const isFavorite = favoriteIds.includes(listing.id);
 
-  const scrollTo = (id: string) => {
-    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
-
   return (
     <main className="listing-detail">
       <div className="listing-detail__frame">
@@ -60,29 +56,16 @@ export function ListingDetailPage() {
             <InfoRow label="엘리베이터" value="있음" />
           </section>
 
-          <nav className="listing-detail__tabs" aria-label="상세 정보 바로가기">
-            <button type="button" onClick={() => scrollTo("price-info")}>
-              가격정보
-            </button>
-            <button type="button" onClick={() => scrollTo("detail-info")}>
-              상세정보
-            </button>
-            <button type="button" onClick={() => scrollTo("option-info")}>
-              옵션
-            </button>
-            <button type="button" onClick={() => scrollTo("viewer-info")}>
-              공간보기
-            </button>
-            <button type="button" onClick={() => scrollTo("analysis-info")}>
-              AI 분석
-            </button>
-          </nav>
-
           <section className="listing-detail__section" id="option-info">
             <h2>옵션</h2>
             <div className="listing-detail__options">
               {optionItems.map((option) => (
-                <span key={option}>{option}</span>
+                <span key={option} className="listing-detail__option">
+                  <span className="listing-detail__option-icon" aria-hidden>
+                    {optionIconFor(option)}
+                  </span>
+                  <span>{option}</span>
+                </span>
               ))}
             </div>
           </section>
@@ -97,11 +80,6 @@ export function ListingDetailPage() {
             >
               <img src={selectedImage} alt="" />
             </button>
-          </section>
-
-          <section className="listing-detail__section" id="analysis-info">
-            <h2>AI 공간 분석 리포트</h2>
-            <div className="listing-detail__analysis" />
           </section>
         </div>
 
@@ -123,6 +101,62 @@ export function ListingDetailPage() {
         </div>
       </div>
     </main>
+  );
+}
+
+function optionIconFor(label: string) {
+  const text = label.replace(/\s+/g, "").toLowerCase();
+
+  if (text.includes("소파") || text.includes("의자")) {
+    return (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+        <path d="M5 8h14a3 3 0 013 3v7a1 1 0 01-1 1h-1" />
+        <path d="M4 8v11" />
+        <path d="M20 8v11" />
+        <path d="M5 8c0-2.5 1.8-4 4-4h6c2.2 0 4 1.5 4 4" />
+      </svg>
+    );
+  }
+
+  if (text.includes("테이블")) {
+    return (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+        <path d="M4 12h16" />
+        <path d="M6 9V6a1 1 0 011-1h10a1 1 0 011 1v3" />
+        <path d="M4 12v6a1 1 0 001 1h14a1 1 0 001-1v-6" />
+        <path d="M9 12v4" />
+        <path d="M15 12v4" />
+      </svg>
+    );
+  }
+
+  if (text.includes("냉장고")) {
+    return (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+        <path d="M6 3h12a2 2 0 012 2v14a1 1 0 01-1 1h-1v-1a1 1 0 10-2 0v1h-6v-1a1 1 0 10-2 0v1H7a1 1 0 01-1-1V5a2 2 0 012-2z" />
+        <path d="M8 7h8" />
+        <path d="M8 11h8" />
+      </svg>
+    );
+  }
+
+  if (text.includes("조명") || text.includes("에어컨") || text.includes("스탠드")) {
+    return (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+        <path d="M12 2l4 6h-8l4-6z" />
+        <path d="M10 11v2" />
+        <path d="M14 11v2" />
+        <path d="M12 13v9" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M8 12h8" />
+      <path d="M12 8v8" />
+    </svg>
   );
 }
 
