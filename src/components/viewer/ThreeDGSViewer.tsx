@@ -63,6 +63,15 @@ interface FloorPlaneCandidate {
   score: number;
 }
 
+interface SplatPointStats {
+  buffer: ArrayBuffer;
+  splatCount: number;
+  samples: THREE.Vector3[];
+  fallbackHeights: number[];
+  min: THREE.Vector3;
+  max: THREE.Vector3;
+}
+
 const vectorFromTuple = ([x, y, z]: [number, number, number]) =>
   new THREE.Vector3(x, y, z);
 
@@ -417,11 +426,77 @@ function detectFloorPlane(
   };
 }
 
-async function estimateSplatFloor(
+function quantileValue(values: number[], quantile: number) {
+  if (values.length === 0) return undefined;
+
+  const sortedValues = [...values].sort((left, right) => left - right);
+  const index = Math.min(
+    sortedValues.length - 1,
+    Math.max(0, Math.floor(quantile * (sortedValues.length - 1)))
+  );
+
+  return sortedValues[index];
+}
+
+async function readSplatPointStats(
   asset: ViewerAsset,
   upHint: THREE.Vector3,
   signal: AbortSignal
-): Promise<FloorState | null> {
+): Promise<SplatPointStats> {
+  if (asset.kind !== "splat-scene") {
+    throw new Error("splat scene required");
+  }
+
+  const response = await fetch(asset.url, { signal });
+  if (!response.ok) throw new Error("failed to load splat data");
+
+  const buffer = await response.arrayBuffer();
+  if (signal.aborted) throw new Error("splat analysis aborted");
+
+  const view = new DataView(buffer);
+  const splatCount = Math.floor(buffer.byteLength / splatStrideBytes);
+  if (splatCount <= 0) throw new Error("empty splat scene");
+
+  const sampleStride = Math.max(
+    1,
+    Math.floor(splatCount / maxFloorSampleCount)
+  );
+  const min = new THREE.Vector3(Infinity, Infinity, Infinity);
+  const max = new THREE.Vector3(-Infinity, -Infinity, -Infinity);
+  const samples: THREE.Vector3[] = [];
+  const fallbackHeights: number[] = [];
+
+  for (let index = 0; index < splatCount; index += 1) {
+    const offset = index * splatStrideBytes;
+    const point = new THREE.Vector3(
+      view.getFloat32(offset, true),
+      view.getFloat32(offset + 4, true),
+      view.getFloat32(offset + 8, true)
+    );
+
+    fallbackHeights.push(point.dot(upHint));
+    min.min(point);
+    max.max(point);
+    if (index % sampleStride === 0) {
+      samples.push(point);
+    }
+  }
+
+  return {
+    buffer,
+    splatCount,
+    samples,
+    fallbackHeights,
+    min,
+    max,
+  };
+}
+
+function resolveSplatFloorState(
+  asset: ViewerAsset,
+  upHint: THREE.Vector3,
+  stats: SplatPointStats
+): FloorState | null {
   if (asset.kind !== "splat-scene") return null;
 
   const floorConfig = asset.navigationFrame?.floor;
@@ -429,48 +504,16 @@ async function estimateSplatFloor(
   const eyeHeight = floorConfig?.eyeHeight ?? 1.45;
   const startOffset = floorConfig?.startOffset ?? 1.8;
   const lookDistance = floorConfig?.lookDistance ?? 3.2;
-  const min = new THREE.Vector3(Infinity, Infinity, Infinity);
-  const max = new THREE.Vector3(-Infinity, -Infinity, -Infinity);
-  const samples: THREE.Vector3[] = [];
-  const fallbackHeights: number[] = [];
-
   let floorHeight = floorConfig?.height;
   let floorUp = upHint.clone().normalize();
 
   if (floorHeight === undefined && floorConfig?.autoDetect !== false) {
-    const response = await fetch(asset.url, { signal });
-    if (!response.ok) throw new Error("failed to load splat data");
-
-    const buffer = await response.arrayBuffer();
-    const view = new DataView(buffer);
-    const splatCount = Math.floor(buffer.byteLength / splatStrideBytes);
-    if (splatCount <= 0) throw new Error("empty splat scene");
-    const sampleStride = Math.max(
-      1,
-      Math.floor(splatCount / maxFloorSampleCount)
-    );
-
-    for (let index = 0; index < splatCount; index += 1) {
-      const offset = index * splatStrideBytes;
-      const point = new THREE.Vector3(
-        view.getFloat32(offset, true),
-        view.getFloat32(offset + 4, true),
-        view.getFloat32(offset + 8, true)
-      );
-      fallbackHeights.push(point.dot(upHint));
-      min.min(point);
-      max.max(point);
-      if (index % sampleStride === 0) {
-        samples.push(point);
-      }
-    }
-
     const cameraPreset = splatCameraForMode(asset, "orbit") ?? asset.camera;
     const floorPlane = asset.navigationFrame?.autoAlign === false
       ? null
       : detectFloorPlane(
-          samples,
-          max.clone().sub(min),
+          stats.samples,
+          stats.max.clone().sub(stats.min),
           upHint.clone().normalize(),
           cameraPreset
         );
@@ -479,33 +522,31 @@ async function estimateSplatFloor(
       floorUp = floorPlane.normal;
       floorHeight = floorPlane.height;
     } else {
-      fallbackHeights.sort((left, right) => left - right);
-      const floorIndex = Math.min(
-        fallbackHeights.length - 1,
-        Math.max(0, Math.floor(quantile * (fallbackHeights.length - 1)))
-      );
-      floorHeight = fallbackHeights[floorIndex];
+      floorHeight = quantileValue(stats.fallbackHeights, quantile);
     }
   }
 
   if (floorHeight === undefined) return null;
 
-  if (!Number.isFinite(min.x)) {
-    const preset = splatCameraForMode(asset, "orbit") ?? asset.camera;
-    const position = vectorFromTuple(preset.position);
-    const lookAt = vectorFromTuple(preset.lookAt);
-    min.copy(position).min(lookAt);
-    max.copy(position).max(lookAt);
-  }
-
   return {
     up: floorUp,
     floorHeight,
     eyeHeight,
-    boundsCenter: min.add(max).multiplyScalar(0.5),
+    boundsCenter: stats.min.clone().add(stats.max).multiplyScalar(0.5),
     startOffset,
     lookDistance,
   };
+}
+
+async function estimateSplatFloor(
+  asset: ViewerAsset,
+  upHint: THREE.Vector3,
+  signal: AbortSignal
+): Promise<FloorState | null> {
+  if (asset.kind !== "splat-scene") return null;
+
+  const stats = await readSplatPointStats(asset, upHint, signal);
+  return resolveSplatFloorState(asset, upHint, stats);
 }
 
 function disposeObject(object: THREE.Object3D) {
@@ -656,6 +697,18 @@ export const ThreeDGSViewer = forwardRef<ThreeDGSViewerHandle, ThreeDGSViewerPro
               return null;
             })
         : Promise.resolve(null);
+      const loadPromise = viewer.addSplatScene(asset.url, {
+        format: asset.format ? splatFormatMap[asset.format] : undefined,
+        splatAlphaRemovalThreshold: 5,
+        showLoadingUI: false,
+        progressiveLoad: true,
+        position: asset.transform?.position,
+        rotation: asset.transform?.rotation,
+        scale: asset.transform?.scale,
+        onProgress: (percentComplete) => {
+          if (!disposed) setLoadingProgress(Math.round(percentComplete));
+        },
+      });
 
       let syncControls = false;
       const handleControlsChange = () => {
@@ -838,19 +891,6 @@ export const ThreeDGSViewer = forwardRef<ThreeDGSViewerHandle, ThreeDGSViewerPro
       renderer.domElement.addEventListener("wheel", handleWheel, {
         capture: true,
         passive: false,
-      });
-
-      const loadPromise = viewer.addSplatScene(asset.url, {
-        format: asset.format ? splatFormatMap[asset.format] : undefined,
-        splatAlphaRemovalThreshold: 5,
-        showLoadingUI: false,
-        progressiveLoad: true,
-        position: asset.transform?.position,
-        rotation: asset.transform?.rotation,
-        scale: asset.transform?.scale,
-        onProgress: (percentComplete) => {
-          if (!disposed) setLoadingProgress(Math.round(percentComplete));
-        },
       });
 
       loadPromise
