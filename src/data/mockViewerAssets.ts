@@ -155,8 +155,8 @@ export const room0ViewerAsset: ViewerAsset = {
     up: [0, -0.42, 0.9],
   },
   planCamera: {
-    position: [0, 0.1, 8],
-    lookAt: [0, 0, 0],
+    position: [-0.15, 0.15, 11],
+    lookAt: [-0.15, 0.15, 0.28],
     up: [0, 1, 0],
   },
   navigationFrame: {
