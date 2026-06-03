@@ -1,24 +1,16 @@
-import { useMemo, useRef, useState } from "react";
-import type { ChangeEvent } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { ThreeDGSViewer } from "../components/viewer/ThreeDGSViewer";
 import { defaultViewerAsset, findViewerAssetById } from "../data/mockViewerAssets";
 import { allListings } from "../data/mockListings";
 import { readDraftListingsForDisplay } from "../services/prototypeStorage";
-import { loadSceneFromFile } from "../utils/sceneLoader";
-import type { ViewerAsset, ViewerMode } from "../types/viewer";
+import type { ViewerMode } from "../types/viewer";
 import "./viewer.css";
-
-const supportedModelExtensions = ["glb", "gltf", "ply"] as const;
-const supportedSplatExtensions = ["splat", "ksplat"] as const;
 
 export function ViewerPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [localAsset, setLocalAsset] = useState<ViewerAsset | null>(null);
   const [mode, setMode] = useState<ViewerMode>("orbit");
-  const [fileError, setFileError] = useState<string | null>(null);
-  const objectUrlRef = useRef<string | null>(null);
   const listingId = searchParams.get("listing") ?? undefined;
 
   const listing = useMemo(() => {
@@ -29,90 +21,8 @@ export function ViewerPage() {
     () => (listing ? findViewerAssetById(listing.viewerAssetId) : defaultViewerAsset),
     [listing]
   );
-  const asset = localAsset ?? routeAsset;
   const handleTogglePlanView = () => {
     setMode((currentMode) => (currentMode === "plan" ? "orbit" : "plan"));
-  };
-
-  const revokeObjectUrl = () => {
-    if (objectUrlRef.current) {
-      URL.revokeObjectURL(objectUrlRef.current);
-      objectUrlRef.current = null;
-    }
-  };
-
-  const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    setFileError(null);
-    revokeObjectUrl();
-
-    const extension = file.name.split(".").pop()?.toLowerCase();
-    try {
-      if (extension === "json") {
-        const scene = await loadSceneFromFile(file);
-        setLocalAsset({
-          id: `local-${Date.now()}`,
-          kind: "gaussian-scene",
-          label: file.name,
-          description: "선택한 Gaussian scene JSON",
-          scene,
-        });
-        return;
-      }
-
-      if (
-        extension &&
-        supportedModelExtensions.includes(
-          extension as (typeof supportedModelExtensions)[number]
-        )
-      ) {
-        const url = URL.createObjectURL(file);
-        objectUrlRef.current = url;
-        setLocalAsset({
-          id: `local-${Date.now()}`,
-          kind: "model-file",
-          label: file.name,
-          description: "선택한 3D 모델",
-          format: extension as "glb" | "gltf" | "ply",
-          url,
-        });
-        return;
-      }
-
-      if (
-        extension &&
-        supportedSplatExtensions.includes(
-          extension as (typeof supportedSplatExtensions)[number]
-        )
-      ) {
-        const url = URL.createObjectURL(file);
-        objectUrlRef.current = url;
-        setLocalAsset({
-          id: `local-${Date.now()}`,
-          kind: "splat-scene",
-          label: file.name,
-          description: "선택한 Gaussian Splat scene",
-          url,
-          format: extension as "splat" | "ksplat",
-          previewImageUrl: "",
-          photos: [],
-          camera: {
-            position: [-1.15, -4.2, 2.65],
-            lookAt: [0, 0.65, 0],
-            up: [0, -0.42, 0.9],
-          },
-        });
-        return;
-      }
-
-      setFileError("지원하는 파일은 .json, .glb, .gltf, .ply, .splat, .ksplat입니다.");
-    } catch {
-      setFileError("파일 형식을 확인해주세요.");
-    } finally {
-      event.target.value = "";
-    }
   };
 
   return (
@@ -126,42 +36,15 @@ export function ViewerPage() {
             <p>{listing?.location ?? "StayView"}</p>
             <h1>{listing ? listing.price : "공간 보기"}</h1>
           </div>
-          <div className="viewer-page__header-actions">
-            {listing && (
-              <button
-                type="button"
-                onClick={() => navigate(`/listing/${listing.id}`)}
-              >
-                상세
-              </button>
-            )}
-            <button type="button" onClick={() => navigate("/home")}>
-              홈
-            </button>
-            <label className="viewer-page__file">
-              <input
-                type="file"
-                accept=".json,.glb,.gltf,.ply,.splat,.ksplat"
-                onChange={(event) => void handleFileChange(event)}
-              />
-              파일
-            </label>
-          </div>
         </header>
 
         <section className="viewer-page__stage" aria-label="공간 뷰어">
           <ThreeDGSViewer
-            asset={asset}
+            asset={routeAsset}
             mode={mode}
             onTogglePlanView={handleTogglePlanView}
           />
         </section>
-
-        {fileError && (
-          <p className="viewer-page__error" role="alert">
-            {fileError}
-          </p>
-        )}
       </div>
     </main>
   );
