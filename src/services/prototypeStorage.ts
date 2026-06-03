@@ -41,6 +41,7 @@ export interface PrototypeCertificationDraft {
 export const prototypeStorageKeys = {
   chatRooms: "stayview_chat_rooms",
   favoriteListings: "stayview_favorite_listing_ids",
+  recentlyViewedListings: "stayview_recently_viewed_listing_ids",
   listingDrafts: "stayview_listing_drafts",
   certificationDrafts: "stayview_certification_drafts",
 } as const;
@@ -127,6 +128,7 @@ export function readDraftListingsForDisplay(
 
 const fallbackStorage = createMemoryStorage();
 const defaultFavoriteListingIds = ["rec-1"];
+const defaultRecentlyViewedListingIds = ["recent-1", "recent-2", "recent-3"];
 
 export function createMemoryStorage(): StorageLike {
   const values = new Map<string, string>();
@@ -263,6 +265,29 @@ export function removeFavoriteListing(
 ): string[] {
   const nextIds = readFavoriteListingIds(storage).filter((id) => id !== listingId);
   saveFavoriteListingIds(nextIds, storage);
+  return nextIds;
+}
+
+export function readRecentlyViewedListingIds(
+  storage: StorageLike = getPrototypeStorage()
+): string[] {
+  return readJson(
+    prototypeStorageKeys.recentlyViewedListings,
+    defaultRecentlyViewedListingIds,
+    storage
+  );
+}
+
+export function recordRecentlyViewedListing(
+  listingId: string,
+  storage: StorageLike = getPrototypeStorage()
+): string[] {
+  const nextIds = [
+    listingId,
+    ...readRecentlyViewedListingIds(storage).filter((id) => id !== listingId),
+  ].slice(0, 10);
+
+  writeJson(prototypeStorageKeys.recentlyViewedListings, nextIds, storage);
   return nextIds;
 }
 

@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { allListings } from "../data/mockListings";
 import { readDraftListingsForDisplay } from "../services/prototypeStorage";
 import {
+  recordRecentlyViewedListing,
   readFavoriteListingIds,
   toggleFavoriteListing,
 } from "../services/prototypeStorage";
@@ -28,6 +29,7 @@ export function ListingDetailPage() {
 
   useEffect(() => {
     setSelectedImageIndex(0);
+    recordRecentlyViewedListing(listing.id);
   }, [listing.id]);
 
   const moveImage = (direction: -1 | 1) => {

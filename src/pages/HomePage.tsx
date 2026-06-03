@@ -5,6 +5,10 @@ import { SearchBar } from "../components/home/SearchBar";
 import { ListingSection } from "../components/home/ListingSection";
 import { BottomNav } from "../components/home/BottomNav";
 import { recommendedListings, recentListings } from "../data/mockListings";
+import {
+  readDraftListingsForDisplay,
+  readRecentlyViewedListingIds,
+} from "../services/prototypeStorage";
 import { filterListings } from "../utils/filterListings";
 import { useAuth } from "../contexts/AuthContext";
 import { isBrokerUser, isCertifiedBroker } from "../services/authService";
@@ -16,6 +20,17 @@ export function HomePage() {
   const [query, setQuery] = useState("");
   const isBroker = isBrokerUser(user);
   const isCertified = isCertifiedBroker(user);
+  const allCatalog = useMemo(
+    () => [...recommendedListings, ...recentListings, ...readDraftListingsForDisplay()],
+    []
+  );
+  const recentlyViewedListings = useMemo(() => {
+    const catalogById = new Map(allCatalog.map((listing) => [listing.id, listing]));
+
+    return readRecentlyViewedListingIds()
+      .map((listingId) => catalogById.get(listingId))
+      .filter((listing): listing is (typeof allCatalog)[number] => Boolean(listing));
+  }, [allCatalog]);
 
   const filteredRecommended = useMemo(
     () => filterListings(recommendedListings, query),
@@ -23,8 +38,8 @@ export function HomePage() {
   );
 
   const filteredRecent = useMemo(
-    () => filterListings(recentListings, query),
-    [query]
+    () => filterListings(recentlyViewedListings, query),
+    [query, recentlyViewedListings]
   );
 
   const isSearching = query.trim().length > 0;

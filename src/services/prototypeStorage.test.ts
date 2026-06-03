@@ -7,6 +7,8 @@ import {
   readDraftListingsForDisplay,
   readFavoriteListingIds,
   readPrototypeListingDrafts,
+  readRecentlyViewedListingIds,
+  recordRecentlyViewedListing,
   removeFavoriteListing,
   saveCertificationDraft,
   savePrototypeListingDraft,
@@ -34,6 +36,28 @@ describe("prototypeStorage", () => {
     assert.deepEqual(readFavoriteListingIds(storage), ["rec-1"]);
     assert.deepEqual(toggleFavoriteListing("rec-2", storage), ["rec-2", "rec-1"]);
     assert.deepEqual(removeFavoriteListing("rec-1", storage), ["rec-2"]);
+  });
+
+  it("keeps recently viewed listings in latest-first order", () => {
+    const storage = createMemoryStorage();
+
+    assert.deepEqual(readRecentlyViewedListingIds(storage), [
+      "recent-1",
+      "recent-2",
+      "recent-3",
+    ]);
+    assert.deepEqual(recordRecentlyViewedListing("rec-2", storage), [
+      "rec-2",
+      "recent-1",
+      "recent-2",
+      "recent-3",
+    ]);
+    assert.deepEqual(recordRecentlyViewedListing("recent-1", storage), [
+      "recent-1",
+      "rec-2",
+      "recent-2",
+      "recent-3",
+    ]);
   });
 
   it("stores listing and certification drafts as prototype records", () => {
