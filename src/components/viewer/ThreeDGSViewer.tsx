@@ -100,6 +100,8 @@ const floorPlaneIterations = 420;
 const groundedDragYawSpeed = 0.006;
 const groundedDragPitchSpeed = 0.0048;
 const maxGroundedPitchDot = 0.92;
+const planClipQuantile = 0.78;
+const minPlanSplatRetentionRatio = 0.16;
 
 function projectOntoPlane(vector: THREE.Vector3, planeNormal: THREE.Vector3) {
   return vector
@@ -538,6 +540,118 @@ function resolveSplatFloorState(
   };
 }
 
+function resolvePlanClipUp(asset: ViewerAsset) {
+  if (asset.kind !== "splat-scene") return fallbackUp.clone();
+
+  if (asset.planCamera) {
+    const viewAxis = vectorFromTuple(asset.planCamera.position).sub(
+      vectorFromTuple(asset.planCamera.lookAt)
+    );
+    if (viewAxis.lengthSq() > 0.0001) return viewAxis.normalize();
+  }
+
+  return resolveNavigationUp(asset, "orbit");
+}
+
+function getSplatHeightRange(stats: SplatPointStats, upDirection: THREE.Vector3) {
+  const view = new DataView(stats.buffer);
+  let minHeight = Infinity;
+  let maxHeight = -Infinity;
+
+  for (let index = 0; index < stats.splatCount; index += 1) {
+    const offset = index * splatStrideBytes;
+    const height =
+      view.getFloat32(offset, true) * upDirection.x +
+      view.getFloat32(offset + 4, true) * upDirection.y +
+      view.getFloat32(offset + 8, true) * upDirection.z;
+    minHeight = Math.min(minHeight, height);
+    maxHeight = Math.max(maxHeight, height);
+  }
+
+  return { minHeight, maxHeight };
+}
+
+function createFilteredSplatUrl(
+  stats: SplatPointStats,
+  upDirection: THREE.Vector3,
+  maxHeight: number
+) {
+  const source = new Uint8Array(stats.buffer);
+  const view = new DataView(stats.buffer);
+  const keptOffsets: number[] = [];
+
+  for (let index = 0; index < stats.splatCount; index += 1) {
+    const offset = index * splatStrideBytes;
+    const height =
+      view.getFloat32(offset, true) * upDirection.x +
+      view.getFloat32(offset + 4, true) * upDirection.y +
+      view.getFloat32(offset + 8, true) * upDirection.z;
+
+    if (height <= maxHeight) {
+      keptOffsets.push(offset);
+    }
+  }
+
+  const minimumKeptCount = Math.max(
+    1000,
+    Math.floor(stats.splatCount * minPlanSplatRetentionRatio)
+  );
+  if (
+    keptOffsets.length < minimumKeptCount ||
+    keptOffsets.length === stats.splatCount
+  ) {
+    return null;
+  }
+
+  const filtered = new Uint8Array(keptOffsets.length * splatStrideBytes);
+  keptOffsets.forEach((offset, index) => {
+    filtered.set(
+      source.subarray(offset, offset + splatStrideBytes),
+      index * splatStrideBytes
+    );
+  });
+
+  const filteredBuffer = filtered.buffer.slice(
+    filtered.byteOffset,
+    filtered.byteOffset + filtered.byteLength
+  );
+
+  return URL.createObjectURL(
+    new Blob([filteredBuffer], { type: "application/octet-stream" })
+  );
+}
+
+async function createPlanSplatUrl(
+  asset: ViewerAsset,
+  signal: AbortSignal
+): Promise<string | null> {
+  if (
+    asset.kind !== "splat-scene" ||
+    (asset.format !== undefined && asset.format !== "splat")
+  ) {
+    return null;
+  }
+
+  const clipUp = resolvePlanClipUp(asset);
+  const stats = await readSplatPointStats(asset, clipUp, signal);
+  if (signal.aborted) throw new Error("plan splat clipping aborted");
+
+  const floor = resolveSplatFloorState(asset, clipUp, stats);
+  const clipAxis = floor?.up ?? clipUp;
+  const { minHeight, maxHeight } = getSplatHeightRange(stats, clipAxis);
+  const sceneHeight = maxHeight - minHeight;
+  const fallbackCutHeight = quantileValue(stats.fallbackHeights, planClipQuantile);
+  const floorCutHeight =
+    floor?.floorHeight === undefined
+      ? undefined
+      : floor.floorHeight + THREE.MathUtils.clamp(sceneHeight * 0.72, 1.75, 2.35);
+  const maxVisibleHeight = floorCutHeight ?? fallbackCutHeight;
+
+  if (maxVisibleHeight === undefined) return null;
+
+  return createFilteredSplatUrl(stats, clipAxis, maxVisibleHeight);
+}
+
 async function estimateSplatFloor(
   asset: ViewerAsset,
   upHint: THREE.Vector3,
@@ -626,18 +740,24 @@ export const ThreeDGSViewer = forwardRef<ThreeDGSViewerHandle, ThreeDGSViewerPro
   const [status, setStatus] = useState<ViewerStatus>("loading");
   const [floorStatus, setFloorStatus] = useState<FloorStatus>("off");
   const [loadingProgress, setLoadingProgress] = useState(0);
+  const [fallbackAsset, setFallbackAsset] = useState<ViewerAsset | null>(null);
   const [, setActiveViewpoint] = useState<Viewpoint | null>(null);
+  const activeAsset = fallbackAsset ?? asset;
+
+  useEffect(() => {
+    setFallbackAsset(null);
+  }, [asset.id]);
 
   useEffect(() => {
     const mount = mountRef.current;
     if (!mount) return;
 
-    if (asset.kind === "splat-scene") {
+    if (activeAsset.kind === "splat-scene") {
       let disposed = false;
       const floorAbortController = new AbortController();
-      const cameraPreset = splatCameraForMode(asset, mode) as SplatCameraPreset;
-      const navigationUp = resolveNavigationUp(asset, mode);
-      const useGroundedFloor = shouldUseGroundedFloor(asset, mode);
+      const cameraPreset = splatCameraForMode(activeAsset, mode) as SplatCameraPreset;
+      const navigationUp = resolveNavigationUp(activeAsset, mode);
+      const useGroundedFloor = shouldUseGroundedFloor(activeAsset, mode);
       const renderer = new THREE.WebGLRenderer({
         antialias: false,
         precision: "highp",
@@ -685,7 +805,7 @@ export const ThreeDGSViewer = forwardRef<ThreeDGSViewerHandle, ThreeDGSViewerPro
       groundedLookDirectionRef.current = null;
 
       const floorPromise = useGroundedFloor
-        ? estimateSplatFloor(asset, navigationUp, floorAbortController.signal)
+        ? estimateSplatFloor(activeAsset, navigationUp, floorAbortController.signal)
             .then((floor) => {
               if (disposed) return null;
               floorStateRef.current = floor;
@@ -697,18 +817,26 @@ export const ThreeDGSViewer = forwardRef<ThreeDGSViewerHandle, ThreeDGSViewerPro
               return null;
             })
         : Promise.resolve(null);
-      const loadPromise = viewer.addSplatScene(asset.url, {
-        format: asset.format ? splatFormatMap[asset.format] : undefined,
-        splatAlphaRemovalThreshold: 5,
-        showLoadingUI: false,
-        progressiveLoad: true,
-        position: asset.transform?.position,
-        rotation: asset.transform?.rotation,
-        scale: asset.transform?.scale,
-        onProgress: (percentComplete) => {
-          if (!disposed) setLoadingProgress(Math.round(percentComplete));
-        },
-      });
+      let loadPromise: GaussianSplats3D.AbortablePromise | null = null;
+      let planSceneObjectUrl: string | null = null;
+      const loadSplatScene = (sceneUrl: string) => {
+        loadPromise = viewer.addSplatScene(sceneUrl, {
+          format: activeAsset.format
+            ? splatFormatMap[activeAsset.format]
+            : undefined,
+          splatAlphaRemovalThreshold: 5,
+          showLoadingUI: false,
+          progressiveLoad: true,
+          position: activeAsset.transform?.position,
+          rotation: activeAsset.transform?.rotation,
+          scale: activeAsset.transform?.scale,
+          onProgress: (percentComplete) => {
+            if (!disposed) setLoadingProgress(Math.round(percentComplete));
+          },
+        });
+
+        return loadPromise;
+      };
 
       let syncControls = false;
       const handleControlsChange = () => {
@@ -893,27 +1021,78 @@ export const ThreeDGSViewer = forwardRef<ThreeDGSViewerHandle, ThreeDGSViewerPro
         passive: false,
       });
 
-      loadPromise
-        .then(async () => {
-          if (disposed) return;
-          const floor = await floorPromise;
-          if (disposed) return;
-          if (floor) {
-            applyGroundedStart(viewer, asset, mode, floor);
-            if (viewer.controls) {
-              groundedLookDirectionRef.current = viewer.controls.target
-                .clone()
-                .sub(viewer.camera.position)
-                .normalize();
-            }
+      const handleSplatLoadFailure = () => {
+        if (disposed) return;
+        if (activeAsset.fallbackScene) {
+          setFallbackAsset({
+            id: `${activeAsset.id}-fallback`,
+            kind: "gaussian-scene",
+            label: activeAsset.label,
+            description: activeAsset.description,
+            scene: activeAsset.fallbackScene,
+          });
+          return;
+        }
+        setStatus("error");
+      };
+
+      const startSplatSceneLoad = async () => {
+        try {
+          const sceneUrl =
+            mode === "plan"
+              ? (await createPlanSplatUrl(
+                  activeAsset,
+                  floorAbortController.signal
+                )) ?? activeAsset.url
+              : activeAsset.url;
+
+          if (disposed) {
+            if (sceneUrl.startsWith("blob:")) URL.revokeObjectURL(sceneUrl);
+            return;
           }
-          viewer.start();
-          setLoadingProgress(100);
-          setStatus("ready");
-        })
-        .catch(() => {
-          if (!disposed) setStatus("error");
-        });
+
+          if (sceneUrl.startsWith("blob:")) {
+            planSceneObjectUrl = sceneUrl;
+          }
+
+          loadSplatScene(sceneUrl)
+            .then(async () => {
+              if (disposed) return;
+              const floor = await floorPromise;
+              if (disposed) return;
+              if (floor) {
+                applyGroundedStart(viewer, activeAsset, mode, floor);
+                if (viewer.controls) {
+                  groundedLookDirectionRef.current = viewer.controls.target
+                    .clone()
+                    .sub(viewer.camera.position)
+                    .normalize();
+                }
+              }
+              viewer.start();
+              setLoadingProgress(100);
+              setStatus("ready");
+            })
+            .catch(handleSplatLoadFailure);
+        } catch {
+          if (disposed) return;
+          loadSplatScene(activeAsset.url)
+            .then(async () => {
+              if (disposed) return;
+              const floor = await floorPromise;
+              if (disposed) return;
+              if (floor) {
+                applyGroundedStart(viewer, activeAsset, mode, floor);
+              }
+              viewer.start();
+              setLoadingProgress(100);
+              setStatus("ready");
+            })
+            .catch(handleSplatLoadFailure);
+        }
+      };
+
+      void startSplatSceneLoad();
 
       return () => {
         disposed = true;
@@ -921,7 +1100,10 @@ export const ThreeDGSViewer = forwardRef<ThreeDGSViewerHandle, ThreeDGSViewerPro
         floorStateRef.current = null;
         groundedLookDirectionRef.current = null;
         floorAbortController.abort();
-        loadPromise.abort("viewer disposed");
+        loadPromise?.abort("viewer disposed");
+        if (planSceneObjectUrl) {
+          URL.revokeObjectURL(planSceneObjectUrl);
+        }
         viewer.controls?.removeEventListener?.("change", handleControlsChange);
         renderer.domElement.removeEventListener(
           "pointerdown",
@@ -1016,8 +1198,8 @@ export const ThreeDGSViewer = forwardRef<ThreeDGSViewerHandle, ThreeDGSViewerPro
     };
 
     const loadGaussianScene = () => {
-      if (asset.kind !== "gaussian-scene") return;
-      const { object, bounds, hotspots } = buildGaussianObject(asset.scene);
+      if (activeAsset.kind !== "gaussian-scene") return;
+      const { object, bounds, hotspots } = buildGaussianObject(activeAsset.scene);
       scene.add(object);
       cleanupTargets.push(object);
       focusBounds(bounds);
@@ -1048,7 +1230,7 @@ export const ThreeDGSViewer = forwardRef<ThreeDGSViewerHandle, ThreeDGSViewerPro
     };
 
     const loadModelFile = () => {
-      if (asset.kind !== "model-file") return;
+      if (activeAsset.kind !== "model-file") return;
 
       const handleLoadedObject = (object: THREE.Object3D) => {
         if (disposed) return;
@@ -1063,9 +1245,9 @@ export const ThreeDGSViewer = forwardRef<ThreeDGSViewerHandle, ThreeDGSViewerPro
         if (!disposed) setStatus("error");
       };
 
-      if (asset.format === "ply") {
+      if (activeAsset.format === "ply") {
         new PLYLoader().load(
-          asset.url,
+          activeAsset.url,
           (geometry) => {
             geometry.computeVertexNormals();
             const material = new THREE.MeshStandardMaterial({
@@ -1081,7 +1263,7 @@ export const ThreeDGSViewer = forwardRef<ThreeDGSViewerHandle, ThreeDGSViewerPro
       }
 
       new GLTFLoader().load(
-        asset.url,
+        activeAsset.url,
         (gltf) => handleLoadedObject(gltf.scene),
         undefined,
         handleError
@@ -1092,7 +1274,7 @@ export const ThreeDGSViewer = forwardRef<ThreeDGSViewerHandle, ThreeDGSViewerPro
     setFloorStatus("off");
     setLoadingProgress(0);
     setActiveViewpoint(null);
-    if (asset.kind === "gaussian-scene") {
+    if (activeAsset.kind === "gaussian-scene") {
       loadGaussianScene();
     } else {
       loadModelFile();
@@ -1130,7 +1312,7 @@ export const ThreeDGSViewer = forwardRef<ThreeDGSViewerHandle, ThreeDGSViewerPro
         mount.removeChild(renderer.domElement);
       }
     };
-  }, [asset, mode]);
+  }, [activeAsset, mode]);
 
   const resetView = useCallback(() => {
     const camera = cameraRef.current;
@@ -1138,15 +1320,15 @@ export const ThreeDGSViewer = forwardRef<ThreeDGSViewerHandle, ThreeDGSViewerPro
     const gaussianViewer = gaussianViewerRef.current;
 
     if (gaussianViewer) {
-      if (asset.kind !== "splat-scene") return;
-      const cameraPreset = splatCameraForMode(asset, mode) as SplatCameraPreset;
-      const navigationUp = resolveNavigationUp(asset, mode);
+      if (activeAsset.kind !== "splat-scene") return;
+      const cameraPreset = splatCameraForMode(activeAsset, mode) as SplatCameraPreset;
+      const navigationUp = resolveNavigationUp(activeAsset, mode);
       gaussianViewer.camera.position.copy(vectorFromTuple(cameraPreset.position));
       gaussianViewer.camera.up.copy(navigationUp).normalize();
       gaussianViewer.camera.lookAt(vectorFromTuple(cameraPreset.lookAt));
       gaussianViewer.controls?.target.copy(vectorFromTuple(cameraPreset.lookAt));
       if (floorStateRef.current && gaussianViewer.controls) {
-        applyGroundedStart(gaussianViewer, asset, mode, floorStateRef.current);
+        applyGroundedStart(gaussianViewer, activeAsset, mode, floorStateRef.current);
         groundedLookDirectionRef.current = gaussianViewer.controls.target
           .clone()
           .sub(gaussianViewer.camera.position)
@@ -1163,7 +1345,7 @@ export const ThreeDGSViewer = forwardRef<ThreeDGSViewerHandle, ThreeDGSViewerPro
     controls.target.set(0, 1, 0);
     controls.update();
     setActiveViewpoint(null);
-  }, [asset, mode]);
+  }, [activeAsset, mode]);
 
   const moveCamera = useCallback((command: ViewerMoveCommand) => {
     const gaussianViewer = gaussianViewerRef.current;
@@ -1171,13 +1353,13 @@ export const ThreeDGSViewer = forwardRef<ThreeDGSViewerHandle, ThreeDGSViewerPro
     const controls = gaussianViewer?.controls ?? controlsRef.current;
     if (!camera || !controls) return;
 
-    const floorState = shouldUseGroundedFloor(asset, mode)
+    const floorState = shouldUseGroundedFloor(activeAsset, mode)
       ? floorStateRef.current
       : null;
     const viewDirection = controls.target.clone().sub(camera.position).normalize();
-    const upDirection = floorState?.up ?? resolveNavigationUp(asset, mode);
+    const upDirection = floorState?.up ?? resolveNavigationUp(activeAsset, mode);
     const forwardDirection = resolveNavigationForward(
-      asset,
+      activeAsset,
       mode,
       upDirection,
       viewDirection
@@ -1286,7 +1468,7 @@ export const ThreeDGSViewer = forwardRef<ThreeDGSViewerHandle, ThreeDGSViewerPro
       }
     }
     gaussianViewer?.forceRenderNextFrame();
-  }, [asset, mode]);
+  }, [activeAsset, mode]);
 
   useImperativeHandle(
     ref,

@@ -149,6 +149,7 @@ export const room0ViewerAsset: ViewerAsset = {
   format: "splat",
   previewImageUrl: demoPath("demo/room0/photos/room0_3dgs_preview.webp"),
   photos: room0ViewerPhotos,
+  fallbackScene: sangdoStudioScene,
   camera: {
     position: [-1.15, -4.2, 2.65],
     lookAt: [0, 0.65, 0],

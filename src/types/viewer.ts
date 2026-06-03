@@ -71,6 +71,7 @@ export type ViewerAsset =
       previewImageUrl: string;
       photos: ViewerPhoto[];
       camera: SplatCameraPreset;
+      fallbackScene?: GaussianSceneData;
       planCamera?: SplatCameraPreset;
       navigationFrame?: NavigationFrame;
       transform?: {

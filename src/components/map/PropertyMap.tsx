@@ -2,10 +2,17 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   GoogleMap,
   Marker,
+  OVERLAY_MOUSE_TARGET,
+  OverlayView,
   useJsApiLoader,
 } from "@react-google-maps/api";
 import { publicEnv } from "../../config/publicEnv";
 import type { Listing } from "../../types/listing";
+import { formatMapPrice } from "../../utils/formatMapPrice";
+import {
+  filterListingsByMapBounds,
+  type MapBoundsLiteral,
+} from "../../utils/mapViewport";
 
 const MAP_CONTAINER_STYLE = { width: "100%", height: "100%" };
 const SEOUL_CENTER = { lat: 37.5368, lng: 126.9784 };
@@ -18,12 +25,16 @@ const MAP_OPTIONS: google.maps.MapOptions = {
   fullscreenControl: false,
   clickableIcons: false,
   gestureHandling: "greedy",
+  maxZoom: 18,
 };
+
+export const detailListingCardZoom = 18;
 
 interface PropertyMapProps {
   listings: Listing[];
   selectedListingId?: string | null;
   onListingClick?: (listing: Listing) => void;
+  onVisibleListingsChange?: (listings: Listing[]) => void;
 }
 
 function createClusterIcon(count: number, isSelected: boolean): google.maps.Icon {
@@ -55,12 +66,32 @@ type ClusterPoint = {
   listings: Listing[];
 };
 
-function getMapClusterStep(zoom: number): number {
+export function shouldShowListingCardMarkers(zoom: number): boolean {
+  return zoom >= detailListingCardZoom;
+}
+
+export function getMapClusterStep(zoom: number): number {
+  if (shouldShowListingCardMarkers(zoom)) return 0;
   if (zoom >= 17) return 0.0015;
   if (zoom >= 15) return 0.003;
   if (zoom >= 13) return 0.012;
   if (zoom >= 11) return 0.04;
   return 0.12;
+}
+
+function getListingCardOffset(width: number, height: number) {
+  return {
+    x: Math.round(width / -2),
+    y: Math.round(-height - 12),
+  };
+}
+
+function getPriceCaption(price: string) {
+  const normalized = price.trim();
+  if (normalized.startsWith("월세")) return "보/월";
+  if (normalized.startsWith("전세")) return "전세";
+  if (normalized.startsWith("매매")) return "매매";
+  return "가격";
 }
 
 function roundToGrid(value: number, step: number): number {
@@ -72,6 +103,7 @@ export function PropertyMap({
   listings,
   selectedListingId,
   onListingClick,
+  onVisibleListingsChange,
 }: PropertyMapProps) {
   const apiKey = publicEnv.googleMapsApiKey;
   const [map, setMap] = useState<google.maps.Map | null>(null);
@@ -87,6 +119,28 @@ export function PropertyMap({
   const mappedListings = useMemo(
     () => listings.filter((listing) => listing.mapPosition),
     [listings]
+  );
+  const showListingCards = shouldShowListingCardMarkers(zoomLevel);
+
+  const emitVisibleListings = useCallback(
+    (targetMap: google.maps.Map | null) => {
+      if (!onVisibleListingsChange) return;
+
+      const bounds = targetMap?.getBounds();
+      const literalBounds: MapBoundsLiteral | null = bounds
+        ? {
+            north: bounds.getNorthEast().lat(),
+            east: bounds.getNorthEast().lng(),
+            south: bounds.getSouthWest().lat(),
+            west: bounds.getSouthWest().lng(),
+          }
+        : null;
+
+      onVisibleListingsChange(
+        filterListingsByMapBounds(mappedListings, literalBounds)
+      );
+    },
+    [mappedListings, onVisibleListingsChange]
   );
 
   const mapPoints = useMemo(() => {
@@ -169,12 +223,18 @@ export function PropertyMap({
   const handleMapLoad = useCallback((nextMap: google.maps.Map) => {
     setMap(nextMap);
     setZoomLevel(nextMap.getZoom() ?? 11);
-  }, []);
+    emitVisibleListings(nextMap);
+  }, [emitVisibleListings]);
 
   const handleMapIdle = useCallback(() => {
     if (!map) return;
     setZoomLevel(map.getZoom() ?? 11);
-  }, [map]);
+    emitVisibleListings(map);
+  }, [emitVisibleListings, map]);
+
+  useEffect(() => {
+    emitVisibleListings(map);
+  }, [emitVisibleListings, map]);
 
   const handlePointClick = useCallback(
     (point: ClusterPoint) => () => {
@@ -256,6 +316,36 @@ export function PropertyMap({
         if (!listing?.mapPosition) return null;
         const position = listing.mapPosition;
         const isSelected = listing.id === selectedListingId;
+
+        if (showListingCards) {
+          return (
+            <OverlayView
+              key={point.id}
+              position={{ lat: point.lat, lng: point.lng }}
+              mapPaneName={OVERLAY_MOUSE_TARGET}
+              zIndex={isSelected ? 20 : 2}
+              getPixelPositionOffset={getListingCardOffset}
+            >
+              <button
+                type="button"
+                className={`map-listing-card-marker${
+                  isSelected ? " is-active" : ""
+                }`}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onListingClick?.(listing);
+                }}
+                aria-label={`${listing.price} ${listing.type}`}
+              >
+                <img src={listing.imageUrl} alt="" />
+                <span>
+                  <em>{getPriceCaption(listing.price)}</em>
+                  <strong>{formatMapPrice(listing.price)}</strong>
+                </span>
+              </button>
+            </OverlayView>
+          );
+        }
 
         return (
           <Marker
