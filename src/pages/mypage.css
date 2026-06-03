@@ -250,15 +250,6 @@
   color: #e8a0aa;
 }
 
-.mypage-menu .mypage-menu__broker {
-  color: #4b2fc9;
-  font-weight: 800;
-}
-
-.mypage-menu .mypage-menu__broker svg {
-  color: #b7aacd;
-}
-
 @media (min-width: 768px) {
   .mypage {
     background: #f5f5f5;
