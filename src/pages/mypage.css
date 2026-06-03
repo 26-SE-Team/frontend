@@ -84,52 +84,13 @@
   gap: 1.875rem;
 }
 
-.mypage-cert-warning,
 .mypage-menu {
   width: 100%;
   border-radius: 0.875rem;
   background: #f7f7f8;
 }
 
-.mypage-cert-warning {
-  border: 1px solid rgba(120, 53, 233, 0.18);
-  background: #f4eefd;
-  color: #3e2c72;
-  padding: 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  box-sizing: border-box;
-}
-
-.mypage-cert-warning h2 {
-  margin: 0;
-  color: #2f235c;
-  font-size: 1rem;
-  font-weight: 900;
-  letter-spacing: 0;
-}
-
-.mypage-cert-warning p {
-  margin: 0;
-  font-size: 0.875rem;
-  font-weight: 700;
-  line-height: 1.5;
-}
-
-.mypage-cert-warning button {
-  align-self: flex-start;
-  border: none;
-  height: 2rem;
-  border-radius: 999px;
-  padding: 0 0.95rem;
-  background: #6f4df6;
-  color: #ffffff;
-  font-size: 0.8125rem;
-  font-weight: 800;
-}
-
-.mypage-listings {
+.mypage-broker {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
@@ -140,21 +101,21 @@
   box-sizing: border-box;
 }
 
-.mypage-listings__header {
+.mypage-broker__header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
 }
 
-.mypage-listings__title {
+.mypage-broker__header > div {
   min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 0.375rem;
 }
 
-.mypage-listings__title span {
+.mypage-broker__header span {
   align-self: flex-start;
   min-height: 1.625rem;
   border-radius: 999px;
@@ -168,7 +129,7 @@
   box-shadow: 0 1px 4px rgba(111, 77, 246, 0.12);
 }
 
-.mypage-listings__header h2 {
+.mypage-broker__header h2 {
   margin: 0;
   color: #4b2fc9;
   font-size: 1.0625rem;
@@ -176,14 +137,9 @@
   letter-spacing: 0;
 }
 
-.mypage-listings__actions {
-  display: flex;
-  align-items: center;
-  gap: 0.375rem;
-}
-
-.mypage-listings__text-button,
-.mypage-listings__register {
+.mypage-broker__apply,
+.mypage-broker__register,
+.mypage-broker__primary {
   border: none;
   min-height: 2rem;
   border-radius: 999px;
@@ -193,106 +149,65 @@
   cursor: pointer;
 }
 
-.mypage-listings__text-button {
-  background: #ffffff;
-  color: #6f4df6;
-}
-
-.mypage-listings__register {
+.mypage-broker__apply,
+.mypage-broker__register,
+.mypage-broker__primary {
   background: #6f4df6;
   color: #ffffff;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
   box-shadow: 0 0.375rem 0.875rem rgba(111, 77, 246, 0.22);
 }
 
-.mypage-listings__rail {
-  margin: 0 -1rem;
-  padding: 0 1rem 0.25rem;
-  display: flex;
-  gap: 0.75rem;
-  overflow-x: auto;
-  overscroll-behavior-x: contain;
-  scroll-snap-type: x proximity;
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
-}
-
-.mypage-listings__rail::-webkit-scrollbar {
-  display: none;
-}
-
-.mypage-listings__card,
-.mypage-listings__empty {
-  border: 1px solid rgba(111, 77, 246, 0.12);
-  border-radius: 0.875rem;
-  background: #ffffff;
-  color: #111111;
-  cursor: pointer;
-  text-align: left;
-  box-shadow: 0 0.25rem 0.875rem rgba(111, 77, 246, 0.08);
-}
-
-.mypage-listings__card {
-  flex: 0 0 min(18.25rem, 78%);
-  min-height: 7rem;
-  padding: 0.75rem;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  scroll-snap-align: start;
-}
-
-.mypage-listings__card img {
-  width: 5.5rem;
-  height: 5.5rem;
-  border-radius: 0.75rem;
-  object-fit: cover;
-  flex-shrink: 0;
-  background: #e8e8ec;
-}
-
-.mypage-listings__card > span {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.mypage-listings__card strong,
-.mypage-listings__empty strong {
-  color: #111111;
-  font-size: 0.9375rem;
-  font-weight: 900;
-  letter-spacing: 0;
-}
-
-.mypage-listings__card span span,
-.mypage-listings__card small,
-.mypage-listings__empty span {
-  color: #6b7280;
+.mypage-broker p {
+  margin: 0;
+  color: #4f4670;
   font-size: 0.8125rem;
   font-weight: 700;
-  line-height: 1.4;
+  line-height: 1.5;
 }
 
-.mypage-listings__card span span,
-.mypage-listings__card small {
-  display: block;
+.mypage-broker__menu {
+  border-radius: 0.75rem;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
-  text-overflow: ellipsis;
+}
+
+.mypage-broker__menu button {
+  width: 100%;
+  min-height: 3.5rem;
+  border: none;
+  background: transparent;
+  color: #111111;
+  padding: 0 1rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 0.5rem;
+  text-align: left;
+  font-size: 0.9375rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.mypage-broker__menu button + button {
+  border-top: 1px solid rgba(111, 77, 246, 0.08);
+}
+
+.mypage-broker__menu strong {
+  color: #6f4df6;
+  font-size: 0.8125rem;
+  font-weight: 900;
   white-space: nowrap;
 }
 
-.mypage-listings__empty {
+.mypage-broker__menu svg {
+  color: #b7aacd;
+}
+
+.mypage-broker__primary {
   width: 100%;
-  min-height: 5.75rem;
-  padding: 1rem;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 0.35rem;
+  min-height: 2.5rem;
 }
 
 .mypage-menu {
