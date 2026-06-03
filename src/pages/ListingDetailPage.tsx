@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { allListings } from "../data/mockListings";
 import { readDraftListingsForDisplay } from "../services/prototypeStorage";
@@ -18,11 +18,23 @@ export function ListingDetailPage() {
     return local ?? allCatalog[0];
   }, [listingId]);
   const [favoriteIds, setFavoriteIds] = useState(() => readFavoriteListingIds());
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
   const images = listing.imageUrls?.length ? listing.imageUrls : [listing.imageUrl];
-  const selectedImage = images[0] ?? listing.imageUrl;
+  const selectedImage = images[selectedImageIndex] ?? images[0] ?? listing.imageUrl;
+  const hasMultipleImages = images.length > 1;
   const optionItems = listing.options ?? ["옷장", "냉장고", "싱크대", "전자레인지"];
   const isFavorite = favoriteIds.includes(listing.id);
+
+  useEffect(() => {
+    setSelectedImageIndex(0);
+  }, [listing.id]);
+
+  const moveImage = (direction: -1 | 1) => {
+    setSelectedImageIndex((current) =>
+      (current + direction + images.length) % images.length
+    );
+  };
 
   return (
     <main className="listing-detail">
@@ -35,8 +47,50 @@ export function ListingDetailPage() {
 
         <section className="listing-detail__gallery" aria-label="매물 사진">
           <img src={selectedImage} alt={`${listing.type} 대표 사진`} />
-          <div className="listing-detail__gallery-count">1 / {images.length}</div>
+          <div className="listing-detail__gallery-count">
+            {selectedImageIndex + 1} / {images.length}
+          </div>
+          {hasMultipleImages && (
+            <>
+              <button
+                type="button"
+                className="listing-detail__gallery-nav listing-detail__gallery-nav--prev"
+                aria-label="이전 사진"
+                onClick={() => moveImage(-1)}
+              >
+                <ChevronIcon direction="left" />
+              </button>
+              <button
+                type="button"
+                className="listing-detail__gallery-nav listing-detail__gallery-nav--next"
+                aria-label="다음 사진"
+                onClick={() => moveImage(1)}
+              >
+                <ChevronIcon direction="right" />
+              </button>
+            </>
+          )}
         </section>
+        {hasMultipleImages && (
+          <div className="listing-detail__thumbs" aria-label="매물 사진 선택">
+            {images.map((image, index) => (
+              <button
+                type="button"
+                key={image}
+                className={
+                  index === selectedImageIndex
+                    ? "listing-detail__thumb is-active"
+                    : "listing-detail__thumb"
+                }
+                aria-label={`${index + 1}번째 사진 보기`}
+                aria-pressed={index === selectedImageIndex}
+                onClick={() => setSelectedImageIndex(index)}
+              >
+                <img src={image} alt="" />
+              </button>
+            ))}
+          </div>
+        )}
 
         <div className="listing-detail__content">
           <section className="listing-detail__summary">
@@ -178,6 +232,16 @@ function BackIcon() {
   return (
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
       <path d="M15 18l-6-6 6-6" />
+    </svg>
+  );
+}
+
+function ChevronIcon({ direction }: { direction: "left" | "right" }) {
+  const points = direction === "left" ? "15 18 9 12 15 6" : "9 18 15 12 9 6";
+
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden>
+      <polyline points={points} />
     </svg>
   );
 }
