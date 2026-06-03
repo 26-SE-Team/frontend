@@ -1,5 +1,6 @@
 import "../utils/filterListings.test";
 import "../utils/mapListingFilters.test";
+import "../utils/mapViewport.test";
 import "../data/mockListings.test";
 import "../data/mockViewerAssets.test";
 import "../services/prototypeStorage.test";

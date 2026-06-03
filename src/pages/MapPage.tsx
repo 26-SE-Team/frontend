@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { BottomNav } from "../components/home/BottomNav";
 import { PropertyMap } from "../components/map/PropertyMap";
@@ -29,6 +29,9 @@ export function MapPage() {
   const [favoriteIds, setFavoriteIds] = useState(() => readFavoriteListingIds());
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [sheetState, setSheetState] = useState<MapSheetState>("expanded");
+  const [viewportListings, setViewportListings] = useState<Listing[] | null>(
+    null
+  );
   const [filters, setFilters] = useState<MapListingFilters>(
     defaultMapListingFilters
   );
@@ -43,10 +46,11 @@ export function MapPage() {
       ),
     [combinedListings, filters]
   );
+  const sheetListings = viewportListings ?? filteredListings;
 
   const totalCount = useMemo(
-    () => filteredListings.filter((listing) => listing.mapPosition).length,
-    [filteredListings]
+    () => sheetListings.filter((listing) => listing.mapPosition).length,
+    [sheetListings]
   );
   const hasActiveFilter =
     filters.tradeType !== "all" ||
@@ -57,11 +61,15 @@ export function MapPage() {
   useEffect(() => {
     if (
       selectedListing &&
-      !filteredListings.some((listing) => listing.id === selectedListing.id)
+      !sheetListings.some((listing) => listing.id === selectedListing.id)
     ) {
       setSelectedListing(null);
     }
-  }, [filteredListings, selectedListing]);
+  }, [sheetListings, selectedListing]);
+
+  const handleVisibleListingsChange = useCallback((listings: Listing[]) => {
+    setViewportListings(listings);
+  }, []);
 
   const handleTradeTypeChange = (tradeType: MapTradeType) => {
     setFilters((current) => ({ ...current, tradeType }));
@@ -79,6 +87,7 @@ export function MapPage() {
             listings={filteredListings}
             selectedListingId={selectedListing?.id ?? null}
             onListingClick={setSelectedListing}
+            onVisibleListingsChange={handleVisibleListingsChange}
           />
           <div className="map-page__overlay">
             <MapFilterButton
@@ -102,7 +111,7 @@ export function MapPage() {
 
         <MapBottomSheet
           totalCount={totalCount}
-          listings={filteredListings}
+          listings={sheetListings}
           selectedListing={selectedListing}
           favoriteIds={favoriteIds}
           sheetState={sheetState}

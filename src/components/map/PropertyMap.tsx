@@ -6,6 +6,10 @@ import {
 } from "@react-google-maps/api";
 import { publicEnv } from "../../config/publicEnv";
 import type { Listing } from "../../types/listing";
+import {
+  filterListingsByMapBounds,
+  type MapBoundsLiteral,
+} from "../../utils/mapViewport";
 
 const MAP_CONTAINER_STYLE = { width: "100%", height: "100%" };
 const SEOUL_CENTER = { lat: 37.5368, lng: 126.9784 };
@@ -24,6 +28,7 @@ interface PropertyMapProps {
   listings: Listing[];
   selectedListingId?: string | null;
   onListingClick?: (listing: Listing) => void;
+  onVisibleListingsChange?: (listings: Listing[]) => void;
 }
 
 function createClusterIcon(count: number, isSelected: boolean): google.maps.Icon {
@@ -72,6 +77,7 @@ export function PropertyMap({
   listings,
   selectedListingId,
   onListingClick,
+  onVisibleListingsChange,
 }: PropertyMapProps) {
   const apiKey = publicEnv.googleMapsApiKey;
   const [map, setMap] = useState<google.maps.Map | null>(null);
@@ -87,6 +93,27 @@ export function PropertyMap({
   const mappedListings = useMemo(
     () => listings.filter((listing) => listing.mapPosition),
     [listings]
+  );
+
+  const emitVisibleListings = useCallback(
+    (targetMap: google.maps.Map | null) => {
+      if (!onVisibleListingsChange) return;
+
+      const bounds = targetMap?.getBounds();
+      const literalBounds: MapBoundsLiteral | null = bounds
+        ? {
+            north: bounds.getNorthEast().lat(),
+            east: bounds.getNorthEast().lng(),
+            south: bounds.getSouthWest().lat(),
+            west: bounds.getSouthWest().lng(),
+          }
+        : null;
+
+      onVisibleListingsChange(
+        filterListingsByMapBounds(mappedListings, literalBounds)
+      );
+    },
+    [mappedListings, onVisibleListingsChange]
   );
 
   const mapPoints = useMemo(() => {
@@ -169,12 +196,18 @@ export function PropertyMap({
   const handleMapLoad = useCallback((nextMap: google.maps.Map) => {
     setMap(nextMap);
     setZoomLevel(nextMap.getZoom() ?? 11);
-  }, []);
+    emitVisibleListings(nextMap);
+  }, [emitVisibleListings]);
 
   const handleMapIdle = useCallback(() => {
     if (!map) return;
     setZoomLevel(map.getZoom() ?? 11);
-  }, [map]);
+    emitVisibleListings(map);
+  }, [emitVisibleListings, map]);
+
+  useEffect(() => {
+    emitVisibleListings(map);
+  }, [emitVisibleListings, map]);
 
   const handlePointClick = useCallback(
     (point: ClusterPoint) => () => {
