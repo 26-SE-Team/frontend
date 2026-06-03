@@ -5,21 +5,23 @@ import { useAuth } from "../contexts/AuthContext";
 import {
   type BrokerCertificationStatus,
   isCertifiedBroker,
+  updateCurrentAuthUser,
 } from "../services/authService";
-import { readDraftListingsForDisplay } from "../services/prototypeStorage";
-import type { Listing } from "../types/listing";
+import {
+  readDraftListingsForDisplay,
+  readLatestCertificationDraft,
+} from "../services/prototypeStorage";
 import "./mypage.css";
 
 interface CertificationStatusView {
   title: string;
   description: string;
-  ctaLabel?: string;
 }
 
 export function MyPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, logout } = useAuth();
+  const { user, logout, setUser } = useAuth();
 
   const isCertified = useMemo(() => isCertifiedBroker(user), [user]);
   const certificationStatus = user?.brokerCertificationStatus ?? "not-required";
@@ -38,7 +40,19 @@ export function MyPage() {
     () => (isCertified ? readDraftListingsForDisplay() : []),
     [isCertified]
   );
+  const certificationDraft = useMemo(() => readLatestCertificationDraft(), []);
   const displayName = user?.nickname?.trim() || "홍길동";
+
+  const startBrokerApplication = () => {
+    const nextUser = updateCurrentAuthUser({
+      accountMode: "tenant",
+      brokerCertificationStatus: "required",
+      isBrokerCertified: false,
+    });
+
+    if (nextUser) setUser(nextUser);
+    navigate("/certification");
+  };
 
   const handleLogout = () => {
     logout();
@@ -65,26 +79,16 @@ export function MyPage() {
         </header>
 
         <div className="mypage__content">
-          {certificationView && !isCertified && (
-            <section className="mypage-cert-warning" role="status" aria-live="polite">
-              <h2>{certificationView.title}</h2>
-              <p>{certificationView.description}</p>
-              {certificationView.ctaLabel && (
-                <button type="button" onClick={() => navigate("/certification")}>
-                  {certificationView.ctaLabel}
-                </button>
-              )}
-            </section>
-          )}
-
-          {isCertified && (
-            <BrokerListingsOverview
-              listings={brokerListings}
-              onRegister={() => navigate("/listing/new")}
-              onOpenAll={() => navigate("/my-listings")}
-              onOpenListing={(listingId) => navigate(`/listing/${listingId}`)}
-            />
-          )}
+          <BrokerAccessPanel
+            isCertified={isCertified}
+            certificationView={certificationView}
+            listingCount={brokerListings.length}
+            certificationOfficeName={certificationDraft?.officeName}
+            onApply={startBrokerApplication}
+            onRegister={() => navigate("/listing/new")}
+            onOpenCertification={() => navigate("/certification")}
+            onOpenListings={() => navigate("/my-listings")}
+          />
 
           <section className="mypage-menu" aria-label="내 계정 메뉴">
             <button type="button" onClick={() => navigate("/stored")}>
@@ -121,75 +125,85 @@ export function MyPage() {
   );
 }
 
-interface BrokerListingsOverviewProps {
-  listings: Listing[];
+interface BrokerAccessPanelProps {
+  isCertified: boolean;
+  certificationView: CertificationStatusView | null;
+  listingCount: number;
+  certificationOfficeName?: string;
+  onApply: () => void;
   onRegister: () => void;
-  onOpenAll: () => void;
-  onOpenListing: (listingId: string) => void;
+  onOpenCertification: () => void;
+  onOpenListings: () => void;
 }
 
-function BrokerListingsOverview({
-  listings,
+function BrokerAccessPanel({
+  isCertified,
+  certificationView,
+  listingCount,
+  certificationOfficeName,
+  onApply,
   onRegister,
-  onOpenAll,
-  onOpenListing,
-}: BrokerListingsOverviewProps) {
+  onOpenCertification,
+  onOpenListings,
+}: BrokerAccessPanelProps) {
+  const statusText = isCertified
+    ? "중개사 인증 완료"
+    : (certificationView?.title ?? "중개사 인증이 필요해요");
+  const statusDescription = isCertified
+    ? certificationOfficeName
+      ? `${certificationOfficeName} 정보로 인증되어 있습니다.`
+      : "인증된 명의로 매물을 등록하고 관리할 수 있습니다."
+    : (certificationView?.description ??
+      "중개사 인증을 완료하면 매물 등록과 내 매물 관리를 사용할 수 있습니다.");
+
   return (
-    <section className="mypage-listings" aria-labelledby="mypage-listings-title">
-      <div className="mypage-listings__header">
-        <div className="mypage-listings__title">
-          <span>중개인 인증 완료</span>
-          <h2 id="mypage-listings-title">내가 올린 매물</h2>
+    <section className="mypage-broker" aria-labelledby="mypage-broker-title">
+      <div className="mypage-broker__header">
+        <div>
+          <span>{statusText}</span>
+          <h2 id="mypage-broker-title">중개사 메뉴</h2>
         </div>
-        <div className="mypage-listings__actions">
-          {listings.length > 0 && (
-            <button
-              type="button"
-              className="mypage-listings__text-button"
-              onClick={onOpenAll}
-            >
-              전체
-            </button>
-          )}
+        {isCertified ? (
           <button
             type="button"
-            className="mypage-listings__register"
+            className="mypage-broker__register"
             onClick={onRegister}
             aria-label="매물 등록하기"
           >
-            <PlusIcon />
-            등록
+            매물 등록
           </button>
-        </div>
+        ) : (
+          <button
+            type="button"
+            className="mypage-broker__apply"
+            onClick={onApply}
+          >
+            중개사 신청
+          </button>
+        )}
       </div>
 
-      {listings.length > 0 ? (
-        <div className="mypage-listings__rail" aria-label="내가 올린 매물 목록">
-          {listings.map((listing) => (
-            <button
-              type="button"
-              key={listing.id}
-              className="mypage-listings__card"
-              onClick={() => onOpenListing(listing.id)}
-              aria-label={`${listing.price} ${listing.type} 상세 보기`}
-            >
-              <img src={listing.imageUrl} alt={`${listing.type} 매물`} />
-              <span>
-                <strong>{listing.price}</strong>
-                <span>{listing.location ?? listing.type}</span>
-                <small>{listing.info}</small>
-              </span>
-            </button>
-          ))}
+      <p>{statusDescription}</p>
+
+      {isCertified ? (
+        <div className="mypage-broker__menu" aria-label="중개사 메뉴">
+          <button type="button" onClick={onOpenCertification}>
+            <span>중개사 인증 정보 보기</span>
+            <ChevronIcon />
+          </button>
+          <button type="button" onClick={onOpenListings}>
+            <span>내가 올린 매물 보기</span>
+            <strong>{listingCount}개</strong>
+            <ChevronIcon />
+          </button>
         </div>
       ) : (
         <button
           type="button"
-          className="mypage-listings__empty"
-          onClick={onRegister}
+          className="mypage-broker__primary"
+          onClick={onApply}
         >
-          <strong>등록된 매물이 없습니다.</strong>
-          <span>새 매물을 등록하면 이곳에서 바로 관리할 수 있어요.</span>
+          중개사 인증 시작하기
         </button>
       )}
     </section>
@@ -205,21 +219,19 @@ function getCertificationStatusView(
       return null;
     case "pending":
       return {
-        title: "중개인 인증이 진행 중이에요",
+        title: "중개사 인증이 진행 중이에요",
         description: "제출한 정보를 확인하고 있습니다. 승인되면 매물 등록 기능이 열립니다.",
       };
     case "rejected":
       return {
         title: "인증 정보를 다시 확인해 주세요",
         description: "입력한 정보나 첨부 서류를 확인한 뒤 다시 제출해 주세요.",
-        ctaLabel: "다시 제출하기",
       };
     case "required":
     default:
       return {
-        title: "중개인 인증이 필요해요",
-        description: "중개인 인증을 완료하면 매물 등록과 내 매물 관리를 사용할 수 있습니다.",
-        ctaLabel: "정보 입력하기",
+        title: "중개사 인증이 필요해요",
+        description: "중개사 인증을 완료하면 매물 등록과 내 매물 관리를 사용할 수 있습니다.",
       };
   }
 }
@@ -270,23 +282,6 @@ function ChevronIcon() {
       aria-hidden
     >
       <path d="M9 18l6-6-6-6" />
-    </svg>
-  );
-}
-
-function PlusIcon() {
-  return (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.3"
-      aria-hidden
-    >
-      <path d="M12 5v14" />
-      <path d="M5 12h14" />
     </svg>
   );
 }

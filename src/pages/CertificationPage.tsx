@@ -1,16 +1,24 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import { saveCertificationDraft } from "../services/prototypeStorage";
+import {
+  readLatestCertificationDraft,
+  saveCertificationDraft,
+} from "../services/prototypeStorage";
 import { useAuth } from "../contexts/AuthContext";
-import { setBrokerCertificationStatus } from "../services/authService";
+import {
+  isCertifiedBroker,
+  setBrokerCertificationStatus,
+} from "../services/authService";
 import "./certification.css";
 
 export function CertificationPage() {
   const navigate = useNavigate();
-  const { setUser } = useAuth();
+  const { user, setUser } = useAuth();
   const [fileName, setFileName] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const latestDraft = readLatestCertificationDraft();
+  const isCertified = isCertifiedBroker(user);
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -25,6 +33,37 @@ export function CertificationPage() {
     if (updatedUser) setUser(updatedUser);
     setSubmitted(true);
   };
+
+  if (isCertified) {
+    return (
+      <main className="cert-page">
+        <div className="cert-page__frame">
+          <header className="cert-page__header">
+            <button type="button" onClick={() => navigate(-1)} aria-label="뒤로가기">
+              <BackIcon />
+            </button>
+            <h1>중개사 인증 정보</h1>
+            <p>
+              인증된 정보로
+              <br />
+              매물을 등록하고 관리할 수 있습니다.
+            </p>
+          </header>
+
+          <section className="cert-info" aria-label="중개사 인증 정보">
+            <div className="cert-info__status">인증 완료</div>
+            <InfoRow label="이름" value={latestDraft?.agentName || user?.nickname || "홍길동"} />
+            <InfoRow label="중개사 번호" value={latestDraft?.agentNumber || "등록 완료"} />
+            <InfoRow label="사무소명" value={latestDraft?.officeName || "인증된 중개사무소"} />
+            <InfoRow label="제출 서류" value={latestDraft?.fileName || "확인 완료"} />
+            <button type="button" onClick={() => navigate("/mypage")}>
+              마이페이지로 돌아가기
+            </button>
+          </section>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="cert-page">
@@ -82,6 +121,15 @@ function TextField({ id, label }: { id: string; label: string }) {
       <span>{label}</span>
       <input id={id} name={id} placeholder="입력하기" />
     </label>
+  );
+}
+
+function InfoRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="cert-info__row">
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </div>
   );
 }
 
