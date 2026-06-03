@@ -87,16 +87,10 @@ export function MyPage() {
           )}
 
           <section className="mypage-menu" aria-label="내 계정 메뉴">
-            <>
-              <button type="button" onClick={() => navigate("/stored")}>
-                <span>관심 매물</span>
-                <ChevronIcon />
-              </button>
-              <button type="button" onClick={() => navigate("/chat")}>
-                <span>채팅</span>
-                <ChevronIcon />
-              </button>
-            </>
+            <button type="button" onClick={() => navigate("/stored")}>
+              <span>관심 매물</span>
+              <ChevronIcon />
+            </button>
           </section>
 
           <section className="mypage-menu mypage-menu--spaced" aria-label="서비스 메뉴">
