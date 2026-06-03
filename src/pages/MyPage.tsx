@@ -13,11 +13,6 @@ import {
 } from "../services/prototypeStorage";
 import "./mypage.css";
 
-interface CertificationStatusView {
-  title: string;
-  description: string;
-}
-
 export function MyPage() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -32,10 +27,9 @@ export function MyPage() {
     certificationStatus === "not-required" && redirectedFromBrokerFeature
       ? "required"
       : certificationStatus;
-  const certificationView =
-    effectiveCertificationStatus !== "not-required"
-      ? getCertificationStatusView(effectiveCertificationStatus)
-      : null;
+  const brokerApplicationLabel = getBrokerApplicationLabel(
+    effectiveCertificationStatus
+  );
   const brokerListings = useMemo(
     () => (isCertified ? readDraftListingsForDisplay() : []),
     [isCertified]
@@ -79,16 +73,15 @@ export function MyPage() {
         </header>
 
         <div className="mypage__content">
-          <BrokerAccessPanel
-            isCertified={isCertified}
-            certificationView={certificationView}
-            listingCount={brokerListings.length}
-            certificationOfficeName={certificationDraft?.officeName}
-            onApply={startBrokerApplication}
-            onRegister={() => navigate("/listing/new")}
-            onOpenCertification={() => navigate("/certification")}
-            onOpenListings={() => navigate("/my-listings")}
-          />
+          {isCertified && (
+            <BrokerAccessPanel
+              listingCount={brokerListings.length}
+              certificationOfficeName={certificationDraft?.officeName}
+              onRegister={() => navigate("/listing/new")}
+              onOpenCertification={() => navigate("/certification")}
+              onOpenListings={() => navigate("/my-listings")}
+            />
+          )}
 
           <section className="mypage-menu" aria-label="내 계정 메뉴">
             <button type="button" onClick={() => navigate("/stored")}>
@@ -102,6 +95,17 @@ export function MyPage() {
               <span>문의하기</span>
               <ChevronIcon />
             </button>
+
+            {!isCertified && (
+              <button
+                type="button"
+                className="mypage-menu__broker"
+                onClick={startBrokerApplication}
+              >
+                <span>{brokerApplicationLabel}</span>
+                <ChevronIcon />
+              </button>
+            )}
 
             <div className="mypage-menu__static">
               <span>앱 버전</span>
@@ -126,113 +130,67 @@ export function MyPage() {
 }
 
 interface BrokerAccessPanelProps {
-  isCertified: boolean;
-  certificationView: CertificationStatusView | null;
   listingCount: number;
   certificationOfficeName?: string;
-  onApply: () => void;
   onRegister: () => void;
   onOpenCertification: () => void;
   onOpenListings: () => void;
 }
 
 function BrokerAccessPanel({
-  isCertified,
-  certificationView,
   listingCount,
   certificationOfficeName,
-  onApply,
   onRegister,
   onOpenCertification,
   onOpenListings,
 }: BrokerAccessPanelProps) {
-  const statusText = isCertified
-    ? "중개사 인증 완료"
-    : (certificationView?.title ?? "중개사 인증이 필요해요");
-  const statusDescription = isCertified
-    ? certificationOfficeName
-      ? `${certificationOfficeName} 정보로 인증되어 있습니다.`
-      : "인증된 명의로 매물을 등록하고 관리할 수 있습니다."
-    : (certificationView?.description ??
-      "중개사 인증을 완료하면 매물 등록과 내 매물 관리를 사용할 수 있습니다.");
+  const statusDescription = certificationOfficeName
+    ? `${certificationOfficeName} 정보로 인증되어 있습니다.`
+    : "인증된 명의로 매물을 등록하고 관리할 수 있습니다.";
 
   return (
     <section className="mypage-broker" aria-labelledby="mypage-broker-title">
       <div className="mypage-broker__header">
         <div>
-          <span>{statusText}</span>
           <h2 id="mypage-broker-title">중개사 메뉴</h2>
         </div>
-        {isCertified ? (
-          <button
-            type="button"
-            className="mypage-broker__register"
-            onClick={onRegister}
-            aria-label="매물 등록하기"
-          >
-            매물 등록
-          </button>
-        ) : (
-          <button
-            type="button"
-            className="mypage-broker__apply"
-            onClick={onApply}
-          >
-            중개사 신청
-          </button>
-        )}
+        <button
+          type="button"
+          className="mypage-broker__register"
+          onClick={onRegister}
+          aria-label="매물 등록하기"
+        >
+          매물 등록
+        </button>
       </div>
 
       <p>{statusDescription}</p>
 
-      {isCertified ? (
-        <div className="mypage-broker__menu" aria-label="중개사 메뉴">
-          <button type="button" onClick={onOpenCertification}>
-            <span>중개사 인증 정보 보기</span>
-            <ChevronIcon />
-          </button>
-          <button type="button" onClick={onOpenListings}>
-            <span>내가 올린 매물 보기</span>
-            <strong>{listingCount}개</strong>
-            <ChevronIcon />
-          </button>
-        </div>
-      ) : (
-        <button
-          type="button"
-          className="mypage-broker__primary"
-          onClick={onApply}
-        >
-          중개사 인증 시작하기
+      <div className="mypage-broker__menu" aria-label="중개사 메뉴">
+        <button type="button" onClick={onOpenCertification}>
+          <span>중개사 인증 정보 보기</span>
+          <ChevronIcon />
         </button>
-      )}
+        <button type="button" onClick={onOpenListings}>
+          <span>내가 올린 매물 보기</span>
+          <strong>{listingCount}개</strong>
+          <ChevronIcon />
+        </button>
+      </div>
     </section>
   );
 }
 
-function getCertificationStatusView(
-  status: BrokerCertificationStatus
-): CertificationStatusView | null {
+function getBrokerApplicationLabel(status: BrokerCertificationStatus): string {
   switch (status) {
+    case "pending":
+      return "중개사 인증 진행 중";
+    case "rejected":
+      return "인증 정보 다시 제출하기";
     case "approved":
     case "not-required":
-      return null;
-    case "pending":
-      return {
-        title: "중개사 인증이 진행 중이에요",
-        description: "제출한 정보를 확인하고 있습니다. 승인되면 매물 등록 기능이 열립니다.",
-      };
-    case "rejected":
-      return {
-        title: "인증 정보를 다시 확인해 주세요",
-        description: "입력한 정보나 첨부 서류를 확인한 뒤 다시 제출해 주세요.",
-      };
-    case "required":
     default:
-      return {
-        title: "중개사 인증이 필요해요",
-        description: "중개사 인증을 완료하면 매물 등록과 내 매물 관리를 사용할 수 있습니다.",
-      };
+      return "중개사 신청하기";
   }
 }
 
