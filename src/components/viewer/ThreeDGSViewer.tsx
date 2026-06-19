@@ -22,7 +22,6 @@ import type {
 interface ThreeDGSViewerProps {
   asset: ViewerAsset;
   mode: ViewerMode;
-  onTogglePlanView?: () => void;
 }
 
 type ViewerStatus = "loading" | "ready" | "error";
@@ -730,7 +729,7 @@ function buildGaussianObject(sceneData: GaussianSceneData) {
 }
 
 export const ThreeDGSViewer = forwardRef<ThreeDGSViewerHandle, ThreeDGSViewerProps>(
-  function ThreeDGSViewer({ asset, mode, onTogglePlanView }, ref) {
+  function ThreeDGSViewer({ asset, mode }, ref) {
   const mountRef = useRef<HTMLDivElement | null>(null);
   const controlsRef = useRef<OrbitControls | null>(null);
   const gaussianViewerRef = useRef<GaussianSplats3D.Viewer | null>(null);
@@ -740,13 +739,8 @@ export const ThreeDGSViewer = forwardRef<ThreeDGSViewerHandle, ThreeDGSViewerPro
   const [status, setStatus] = useState<ViewerStatus>("loading");
   const [floorStatus, setFloorStatus] = useState<FloorStatus>("off");
   const [loadingProgress, setLoadingProgress] = useState(0);
-  const [fallbackAsset, setFallbackAsset] = useState<ViewerAsset | null>(null);
   const [, setActiveViewpoint] = useState<Viewpoint | null>(null);
-  const activeAsset = fallbackAsset ?? asset;
-
-  useEffect(() => {
-    setFallbackAsset(null);
-  }, [asset.id]);
+  const activeAsset = asset;
 
   useEffect(() => {
     const mount = mountRef.current;
@@ -1023,16 +1017,6 @@ export const ThreeDGSViewer = forwardRef<ThreeDGSViewerHandle, ThreeDGSViewerPro
 
       const handleSplatLoadFailure = () => {
         if (disposed) return;
-        if (activeAsset.fallbackScene) {
-          setFallbackAsset({
-            id: `${activeAsset.id}-fallback`,
-            kind: "gaussian-scene",
-            label: activeAsset.label,
-            description: activeAsset.description,
-            scene: activeAsset.fallbackScene,
-          });
-          return;
-        }
         setStatus("error");
       };
 
@@ -1485,22 +1469,6 @@ export const ThreeDGSViewer = forwardRef<ThreeDGSViewerHandle, ThreeDGSViewerPro
   return (
     <div className={`viewer3d${isGroundedWalk ? " viewer3d--walk" : ""}`}>
       <div ref={mountRef} className="viewer3d__stage" />
-      <div className="viewer3d__hud viewer3d__hud--top">
-        <div className="viewer3d__actions">
-          <button type="button" onClick={resetView}>
-            초기화
-          </button>
-          {onTogglePlanView && (
-            <button
-              type="button"
-              aria-pressed={mode === "plan"}
-              onClick={onTogglePlanView}
-            >
-              {mode === "plan" ? "평면뷰 해제" : "평면뷰"}
-            </button>
-          )}
-        </div>
-      </div>
       {shouldShowStatus && (
         <div className="viewer3d__hud viewer3d__hud--bottom">
           {status === "loading" && (

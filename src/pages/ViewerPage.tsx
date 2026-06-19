@@ -1,6 +1,9 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ThreeDGSViewer } from "../components/viewer/ThreeDGSViewer";
+import {
+  ThreeDGSViewer,
+  type ThreeDGSViewerHandle,
+} from "../components/viewer/ThreeDGSViewer";
 import { defaultViewerAsset, findViewerAssetById } from "../data/mockViewerAssets";
 import { allListings } from "../data/mockListings";
 import { readDraftListingsForDisplay } from "../services/prototypeStorage";
@@ -11,6 +14,7 @@ export function ViewerPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [mode, setMode] = useState<ViewerMode>("orbit");
+  const viewerRef = useRef<ThreeDGSViewerHandle | null>(null);
   const listingId = searchParams.get("listing") ?? undefined;
 
   const listing = useMemo(() => {
@@ -24,6 +28,9 @@ export function ViewerPage() {
   const handleTogglePlanView = () => {
     setMode((currentMode) => (currentMode === "plan" ? "orbit" : "plan"));
   };
+  const handleResetView = () => {
+    viewerRef.current?.reset();
+  };
 
   return (
     <main className="viewer-page">
@@ -36,13 +43,25 @@ export function ViewerPage() {
             <p>{listing?.location ?? "StayView"}</p>
             <h1>{listing ? listing.price : "공간 보기"}</h1>
           </div>
+          <div className="viewer-page__header-actions" aria-label="공간 보기 조작">
+            <button type="button" onClick={handleResetView}>
+              초기화
+            </button>
+            <button
+              type="button"
+              aria-pressed={mode === "plan"}
+              onClick={handleTogglePlanView}
+            >
+              {mode === "plan" ? "평면뷰 해제" : "평면뷰"}
+            </button>
+          </div>
         </header>
 
         <section className="viewer-page__stage" aria-label="공간 뷰어">
           <ThreeDGSViewer
+            ref={viewerRef}
             asset={routeAsset}
             mode={mode}
-            onTogglePlanView={handleTogglePlanView}
           />
         </section>
       </div>
