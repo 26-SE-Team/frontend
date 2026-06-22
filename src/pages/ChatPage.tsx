@@ -40,6 +40,13 @@ export function ChatPage() {
     () => rooms.find((room) => room.id === activeRoomId) ?? null,
     [activeRoomId, rooms]
   );
+  const activeListing = useMemo(() => {
+    if (!activeRoom) return null;
+
+    return [...allListings, ...readDraftListingsForDisplay()].find(
+      (listing) => listing.id === activeRoom.listingId
+    ) ?? null;
+  }, [activeRoom]);
   const filteredRooms = useMemo(() => {
     const keyword = query.trim().toLowerCase();
     if (!keyword) return rooms;
@@ -74,6 +81,7 @@ export function ChatPage() {
             <header className="chat-room__header">
               <button
                 type="button"
+                className="chat-room__back"
                 onClick={() => setActiveRoomId(null)}
                 aria-label="채팅 목록으로 돌아가기"
               >
@@ -84,8 +92,8 @@ export function ChatPage() {
                 className="chat-room__listing"
                 onClick={openListingDetail}
               >
+                <p>{activeListing?.location ?? activeRoom.listingTitle}</p>
                 <h1>{activeRoom.listingPrice}</h1>
-                <p>서울 {activeRoom.listingTitle} · 상세 정보 보기</p>
               </button>
             </header>
 
