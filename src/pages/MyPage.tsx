@@ -109,7 +109,7 @@ export function MyPage() {
 
             <div className="mypage-menu__static">
               <span>앱 버전</span>
-              <strong>0.0.1 beta</strong>
+              <strong>0.0.1 pre-alpha</strong>
             </div>
 
             <button
