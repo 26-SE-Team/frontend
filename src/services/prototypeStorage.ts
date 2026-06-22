@@ -2,7 +2,10 @@ import { mockChatRooms } from "../data/mockChats";
 import {
   replicaViewerPhotosByScene,
   room0ViewerPhotos,
+  normalizeViewerAssetId,
+  room0ViewerAssetId,
   uploadGeneratedReplicaSceneId,
+  uploadGeneratedViewerAssetId,
 } from "../data/mockViewerAssets";
 import type { Listing } from "../types/listing";
 import type { ChatRoom } from "../types/chat";
@@ -55,7 +58,7 @@ export const prototypeStorageKeys = {
 const publicRoot = (path: string) =>
   `${import.meta.env?.BASE_URL ?? "/"}${path.replace(/^\/+/, "")}`;
 
-const defaultScanViewerAssetId = "room0-studio-preview";
+const defaultScanViewerAssetId = room0ViewerAssetId;
 
 const generatedRoomImageUrls = room0ViewerPhotos.map((photo) => photo.src);
 const generatedRoomCoverImageUrl =
@@ -118,6 +121,11 @@ export function mapDraftToListing(draft: PrototypeListingDraft): Listing {
     (draft.scanSource === "upload"
       ? uploadGeneratedImageUrls[0]
       : generatedRoomCoverImageUrl);
+  const viewerAssetId =
+    normalizeViewerAssetId(draft.viewerAssetId ?? draft.modelFileName) ??
+    (draft.scanSource === "upload"
+      ? uploadGeneratedViewerAssetId
+      : defaultScanViewerAssetId);
 
   return {
     id: draft.id,
@@ -139,7 +147,7 @@ export function mapDraftToListing(draft: PrototypeListingDraft): Listing {
     brokerName: draft.brokerName,
     brokerOfficeName: draft.brokerOfficeName,
     brokerRegistrationNumber: draft.brokerRegistrationNumber,
-    viewerAssetId: draft.viewerAssetId ?? defaultScanViewerAssetId,
+    viewerAssetId,
     mapPosition: draft.mapPosition ?? resolveDraftMapPosition(draft.address),
   };
 }

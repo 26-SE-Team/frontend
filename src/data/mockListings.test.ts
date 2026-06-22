@@ -2,6 +2,11 @@ import assert from "node:assert/strict";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { describe, it } from "node:test";
+import {
+  findViewerAssetById,
+  normalizeViewerAssetId,
+  room0ViewerAssetId,
+} from "./mockViewerAssets";
 import { allListings, findListingById } from "./mockListings";
 
 const publicRoot = join(process.cwd(), "public");
@@ -21,7 +26,7 @@ describe("mockListings fixture", () => {
     const room0Listing = findListingById("rec-1");
 
     assert.equal(room0Listing?.price, "월세 500/31");
-    assert.equal(room0Listing?.viewerAssetId, "room0-studio-preview");
+    assert.equal(room0Listing?.viewerAssetId, room0ViewerAssetId);
     assert.ok((room0Listing?.imageUrls?.length ?? 0) > 1);
     assert.match(room0Listing?.mapPosition?.label ?? "", /상도역 원룸/);
   });
@@ -64,6 +69,21 @@ describe("mockListings fixture", () => {
         true,
         `${url} must exist under public/`
       );
+    }
+  });
+
+  it("wires every listing viewer key to a concrete 3D sample asset", () => {
+    for (const listing of allListings) {
+      const normalizedAssetId = normalizeViewerAssetId(listing.viewerAssetId);
+      const asset = findViewerAssetById(listing.viewerAssetId);
+
+      assert.ok(
+        normalizedAssetId,
+        `${listing.id} has an unknown viewer asset key: ${listing.viewerAssetId}`
+      );
+      assert.equal(asset.id, normalizedAssetId);
+      assert.notEqual(asset.id, "sangdo-studio");
+      assert.match(asset.id, /-3dgs$/);
     }
   });
 });

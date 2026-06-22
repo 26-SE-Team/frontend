@@ -13,6 +13,10 @@ import {
   filterListingsByMapBounds,
   type MapBoundsLiteral,
 } from "../../utils/mapViewport";
+import {
+  getMapClusterStep,
+  shouldShowListingCardMarkers,
+} from "./mapMarkerConfig";
 
 const MAP_CONTAINER_STYLE = { width: "100%", height: "100%" };
 const SEOUL_CENTER = { lat: 37.5368, lng: 126.9784 };
@@ -27,8 +31,6 @@ const MAP_OPTIONS: google.maps.MapOptions = {
   gestureHandling: "greedy",
   maxZoom: 18,
 };
-
-export const detailListingCardZoom = 18;
 
 interface PropertyMapProps {
   listings: Listing[];
@@ -65,19 +67,6 @@ type ClusterPoint = {
   listing?: Listing;
   listings: Listing[];
 };
-
-export function shouldShowListingCardMarkers(zoom: number): boolean {
-  return zoom >= detailListingCardZoom;
-}
-
-export function getMapClusterStep(zoom: number): number {
-  if (shouldShowListingCardMarkers(zoom)) return 0;
-  if (zoom >= 17) return 0.0015;
-  if (zoom >= 15) return 0.003;
-  if (zoom >= 13) return 0.012;
-  if (zoom >= 11) return 0.04;
-  return 0.12;
-}
 
 function getListingCardOffset(width: number, height: number) {
   return {

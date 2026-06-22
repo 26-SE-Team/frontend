@@ -20,13 +20,20 @@ export function ListingDetailPage() {
     return local ?? allCatalog[0];
   }, [listingId]);
   const [favoriteIds, setFavoriteIds] = useState(() => readFavoriteListingIds());
-  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [gallerySelection, setGallerySelection] = useState({
+    listingId: "",
+    index: 0,
+  });
   const [isGalleryControlsVisible, setIsGalleryControlsVisible] = useState(false);
   const galleryTrackRef = useRef<HTMLDivElement>(null);
   const thumbnailTrackRef = useRef<HTMLDivElement>(null);
   const galleryControlsTimerRef = useRef<number | null>(null);
 
   const images = listing.imageUrls?.length ? listing.imageUrls : [listing.imageUrl];
+  const selectedImageIndex =
+    gallerySelection.listingId === listing.id
+      ? Math.min(gallerySelection.index, images.length - 1)
+      : 0;
   const selectedImage = images[selectedImageIndex] ?? images[0] ?? listing.imageUrl;
   const optionItems = listing.options ?? ["옷장", "냉장고", "싱크대", "전자레인지"];
   const isFavorite = favoriteIds.includes(listing.id);
@@ -65,7 +72,7 @@ export function ListingDetailPage() {
   const selectImage = (index: number) => {
     const boundedIndex = Math.min(Math.max(index, 0), images.length - 1);
 
-    setSelectedImageIndex(boundedIndex);
+    setGallerySelection({ listingId: listing.id, index: boundedIndex });
     galleryTrackRef.current?.children
       .item(boundedIndex)
       ?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "start" });
@@ -80,7 +87,10 @@ export function ListingDetailPage() {
 
     const nextIndex = Math.round(galleryTrack.scrollLeft / galleryTrack.clientWidth);
     if (nextIndex !== selectedImageIndex) {
-      setSelectedImageIndex(Math.min(Math.max(nextIndex, 0), images.length - 1));
+      setGallerySelection({
+        listingId: listing.id,
+        index: Math.min(Math.max(nextIndex, 0), images.length - 1),
+      });
     }
   };
 
@@ -91,7 +101,6 @@ export function ListingDetailPage() {
   }, [listing.id, listingId]);
 
   useEffect(() => {
-    setSelectedImageIndex(0);
     galleryTrackRef.current?.scrollTo({ left: 0 });
     thumbnailTrackRef.current?.scrollTo({ left: 0 });
   }, [listing.id]);

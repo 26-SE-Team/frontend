@@ -1,7 +1,9 @@
 import type { Listing } from "../types/listing";
 import {
+  room0ViewerAssetId,
   replicaViewerPhotosByScene,
   room0ViewerPhotos,
+  viewerAssetIdForReplicaScene,
   type ReplicaSceneId,
 } from "./mockViewerAssets";
 
@@ -23,7 +25,7 @@ export const recommendedListings: Listing[] = [
     managementFee: "5만 원",
     highlights: ["햇살 좋은 방", "깔끔한 구조", "채광 좋음"],
     options: ["소파", "테이블", "스탠드 조명", "블라인드"],
-    viewerAssetId: "room0-studio-preview",
+    viewerAssetId: room0ViewerAssetId,
     mapPosition: {
       lat: 37.5031,
       lng: 126.948,
@@ -44,7 +46,7 @@ export const recommendedListings: Listing[] = [
     managementFee: "6만 원",
     highlights: ["남향 채광", "정돈된 구조", "역 접근성 좋음"],
     options: ["에어컨", "책상", "블라인드", "인덕션"],
-    viewerAssetId: "replica-apartment-0-3dgs",
+    viewerAssetId: viewerAssetIdForReplicaScene("apartment_0"),
     mapPosition: {
       lat: 37.5038,
       lng: 126.9486,
@@ -65,7 +67,7 @@ export const recommendedListings: Listing[] = [
     managementFee: "9만 원",
     highlights: ["역세권", "풀옵션", "생활 동선 편리"],
     options: ["냉장고", "드럼세탁기", "전자레인지", "인덕션"],
-    viewerAssetId: "replica-apartment-1-3dgs",
+    viewerAssetId: viewerAssetIdForReplicaScene("apartment_1"),
     mapPosition: {
       lat: 37.5126,
       lng: 126.9437,
@@ -86,7 +88,7 @@ export const recommendedListings: Listing[] = [
     managementFee: "5만 원",
     highlights: ["큰 창", "차분한 주택가", "즉시 입주 협의"],
     options: ["책상", "옷장", "블라인드", "에어컨"],
-    viewerAssetId: "replica-apartment-2-3dgs",
+    viewerAssetId: viewerAssetIdForReplicaScene("apartment_2"),
     mapPosition: {
       lat: 37.5078,
       lng: 126.9592,
@@ -110,7 +112,7 @@ export const recentListings: Listing[] = [
     managementFee: "6만 원",
     highlights: ["가구 포함", "한강공원 접근", "수납 공간 여유"],
     options: ["침대", "책상", "스탠드 조명", "옷장"],
-    viewerAssetId: "replica-room-1-3dgs",
+    viewerAssetId: viewerAssetIdForReplicaScene("room_1"),
     mapPosition: {
       lat: 37.5344,
       lng: 126.9024,
@@ -131,7 +133,7 @@ export const recentListings: Listing[] = [
     managementFee: "7만 원",
     highlights: ["분리형 주방", "조용한 골목", "카페거리 인접"],
     options: ["세탁기", "인덕션", "수납장", "에어컨"],
-    viewerAssetId: "replica-room-2-3dgs",
+    viewerAssetId: viewerAssetIdForReplicaScene("room_2"),
     mapPosition: {
       lat: 37.5186,
       lng: 126.8959,

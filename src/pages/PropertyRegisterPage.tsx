@@ -4,6 +4,10 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { uploadGeneratedViewerAssetId } from "../data/mockViewerAssets";
 import {
+  room0ViewerAssetId,
+  uploadGeneratedViewerAssetId,
+} from "../data/mockViewerAssets";
+import {
   readLatestCertificationDraft,
   rememberRecentViewedListing,
   savePrototypeListingDraft,
@@ -12,7 +16,6 @@ import {
 import "./propertyRegister.css";
 
 const optionItems = ["주차", "반려동물"];
-const generatedViewerAssetId = "room0-studio-preview";
 const uploadGeneratedModelFileName = "hotel_0.splat";
 const modelInferenceDelayMs = 10000;
 const defaultMimeTypeCandidates = [
@@ -462,7 +465,7 @@ export function PropertyRegisterPage() {
       brokerOfficeName,
       brokerRegistrationNumber,
       viewerAssetId:
-        scanSource === "upload" ? uploadGeneratedViewerAssetId : generatedViewerAssetId,
+        scanSource === "upload" ? uploadGeneratedViewerAssetId : room0ViewerAssetId,
     };
 
     if (scanSource === "upload") {

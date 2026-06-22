@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { BottomNav } from "../components/home/BottomNav";
 import { PropertyMap } from "../components/map/PropertyMap";
@@ -47,6 +47,11 @@ export function MapPage() {
     [combinedListings, filters]
   );
   const sheetListings = viewportListings ?? filteredListings;
+  const visibleSelectedListing =
+    selectedListing &&
+    sheetListings.some((listing) => listing.id === selectedListing.id)
+      ? selectedListing
+      : null;
 
   const totalCount = useMemo(
     () => sheetListings.filter((listing) => listing.mapPosition).length,
@@ -57,15 +62,6 @@ export function MapPage() {
     filters.depositMax !== defaultMapListingFilters.depositMax ||
     filters.monthlyRentMax !== defaultMapListingFilters.monthlyRentMax ||
     filters.managementFeeMax !== defaultMapListingFilters.managementFeeMax;
-
-  useEffect(() => {
-    if (
-      selectedListing &&
-      !sheetListings.some((listing) => listing.id === selectedListing.id)
-    ) {
-      setSelectedListing(null);
-    }
-  }, [sheetListings, selectedListing]);
 
   const handleVisibleListingsChange = useCallback((listings: Listing[]) => {
     setViewportListings(listings);
@@ -85,7 +81,7 @@ export function MapPage() {
         <div className="map-page__map-wrap">
           <PropertyMap
             listings={filteredListings}
-            selectedListingId={selectedListing?.id ?? null}
+            selectedListingId={visibleSelectedListing?.id ?? null}
             onListingClick={setSelectedListing}
             onVisibleListingsChange={handleVisibleListingsChange}
           />
@@ -112,7 +108,7 @@ export function MapPage() {
         <MapBottomSheet
           totalCount={totalCount}
           listings={sheetListings}
-          selectedListing={selectedListing}
+          selectedListing={visibleSelectedListing}
           favoriteIds={favoriteIds}
           sheetState={sheetState}
           onListingClick={(listing) => navigate(`/listing/${listing.id}`)}
