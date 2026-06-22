@@ -4,7 +4,6 @@ export const mockChatRooms: ChatRoom[] = [
   {
     id: "chat-1",
     listingId: "rec-1",
-    inquiryRole: "tenant",
     listingTitle: "상도역 원룸 3층",
     listingPrice: "월세 500/31",
     participantName: "상도 공인중개사",
@@ -35,11 +34,10 @@ export const mockChatRooms: ChatRoom[] = [
   },
   {
     id: "chat-2",
-    listingId: "recent-1",
-    inquiryRole: "tenant",
-    listingTitle: "성수동 투룸",
-    listingPrice: "월세 1000/80",
-    participantName: "성수 하우스",
+    listingId: "replica-room-1",
+    listingTitle: "당산 가구 포함 원룸",
+    listingPrice: "월세 1000/57",
+    participantName: "당산 하우스",
     avatarUrl:
       "https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=160&h=160&fit=crop",
     lastMessage: "관리비에는 인터넷이 포함되어 있어요.",
@@ -55,11 +53,10 @@ export const mockChatRooms: ChatRoom[] = [
   },
   {
     id: "chat-3",
-    listingId: "recent-2",
-    inquiryRole: "tenant",
-    listingTitle: "잠실 오피스텔",
-    listingPrice: "전세 2억 5000",
-    participantName: "잠실 직방 파트너",
+    listingId: "replica-apartment-1",
+    listingTitle: "노량진 컴팩트 오피스텔",
+    listingPrice: "월세 1500/62",
+    participantName: "노량진 직방 파트너",
     avatarUrl:
       "https://images.unsplash.com/photo-1484154218962-a197022b5858?w=160&h=160&fit=crop",
     lastMessage: "등기부등본은 방문 전 공유드릴게요.",
@@ -70,26 +67,6 @@ export const mockChatRooms: ChatRoom[] = [
         sender: "agent",
         text: "등기부등본은 방문 전 공유드릴게요.",
         sentAt: "월",
-      },
-    ],
-  },
-  {
-    id: "chat-4",
-    listingId: "rec-2",
-    inquiryRole: "broker",
-    listingTitle: "노량진역 원룸 3층",
-    listingPrice: "월세 500/55",
-    participantName: "입주 희망자",
-    avatarUrl:
-      "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=160&h=160&fit=crop",
-    lastMessage: "오늘 저녁에 방을 볼 수 있을까요?",
-    unreadCount: 1,
-    messages: [
-      {
-        id: "m-6",
-        sender: "agent",
-        text: "오늘 저녁에 방을 볼 수 있을까요?",
-        sentAt: "10:20",
       },
     ],
   },

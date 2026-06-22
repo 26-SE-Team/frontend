@@ -1,52 +1,56 @@
-import { useMemo, useState } from "react";
-import type { FormEvent } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import type { FormEvent, KeyboardEvent } from "react";
+import { useSearchParams } from "react-router-dom";
 import { BottomNav } from "../components/home/BottomNav";
 import { SearchBar } from "../components/home/SearchBar";
 import { StayViewLogo } from "../components/start/StayViewLogo";
 import { allListings } from "../data/mockListings";
 import {
   appendPrototypeChatMessage,
-  findOrCreatePrototypeChatRoom,
+  buildPrototypeChatRoomCatalog,
+  ensurePrototypeChatRoomForListing,
   readDraftListingsForDisplay,
   readPrototypeChatRooms,
 } from "../services/prototypeStorage";
 import "./chat.css";
 
 export function ChatPage() {
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const initialListingId = searchParams.get("listing");
-  const [rooms, setRooms] = useState(() => {
-    if (!initialListingId) return readPrototypeChatRooms();
-
-    const listing = [...allListings, ...readDraftListingsForDisplay()].find(
-      (item) => item.id === initialListingId
-    );
-
-    return listing ? findOrCreatePrototypeChatRoom(listing) : readPrototypeChatRooms();
-  });
-  const [activeRoomId, setActiveRoomId] = useState<string | null>(() => {
-    if (!initialListingId) return null;
-
-    return (
-      rooms.find((room) => room.listingId === initialListingId)?.id ?? null
-    );
-  });
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [rooms, setRooms] = useState(() => readPrototypeChatRooms());
+  const [activeRoomId, setActiveRoomId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [draft, setDraft] = useState("");
+  const listingId = searchParams.get("listing");
+
+  const listingCatalog = useMemo(
+    () => [...allListings, ...readDraftListingsForDisplay()],
+    []
+  );
+  const requestedListing = useMemo(
+    () => listingCatalog.find((listing) => listing.id === listingId) ?? null,
+    [listingCatalog, listingId]
+  );
+  const potentialRooms = useMemo(
+    () => buildPrototypeChatRoomCatalog(listingCatalog, rooms),
+    [listingCatalog, rooms]
+  );
+
+  const requestedRoom = useMemo(
+    () => potentialRooms.find((room) => room.listingId === listingId) ?? null,
+    [listingId, potentialRooms]
+  );
 
   const activeRoom = useMemo(
-    () => rooms.find((room) => room.id === activeRoomId) ?? null,
-    [activeRoomId, rooms]
-  );
-  const activeListing = useMemo(() => {
-    if (!activeRoom) return null;
+    () => {
+      const persistedRoom = rooms.find((room) => room.id === activeRoomId);
+      if (persistedRoom) return persistedRoom;
+      const potentialRoom = potentialRooms.find((room) => room.id === activeRoomId);
+      if (potentialRoom) return potentialRoom;
 
-    return [...allListings, ...readDraftListingsForDisplay()].find(
-      (listing) => listing.id === activeRoom.listingId
-    ) ?? null;
-  }, [activeRoom]);
+      return requestedRoom;
+    },
+    [activeRoomId, potentialRooms, requestedRoom, rooms]
+  );
   const filteredRooms = useMemo(() => {
     const keyword = query.trim().toLowerCase();
     if (!keyword) return rooms;
@@ -59,18 +63,44 @@ export function ChatPage() {
     );
   }, [query, rooms]);
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const text = draft.trim();
-    if (!text || !activeRoom) return;
+  useEffect(() => {
+    if (requestedRoom) {
+      setActiveRoomId(requestedRoom.id);
+    }
+  }, [requestedRoom]);
 
-    setRooms(() => appendPrototypeChatMessage(activeRoom.id, text));
-    setDraft("");
+  const handleBackToList = () => {
+    setActiveRoomId(null);
+    setSearchParams({});
   };
 
-  const openListingDetail = () => {
-    if (!activeRoom) return;
-    navigate(`/listing/${activeRoom.listingId}`);
+  const sendDraftMessage = () => {
+    const text = draft.trim();
+    if (!text || !activeRoom) return false;
+
+    const activeRoomExists = rooms.some((room) => room.id === activeRoom.id);
+    const targetRoom =
+      !activeRoomExists && requestedListing
+        ? ensurePrototypeChatRoomForListing(requestedListing)
+        : activeRoom;
+    const nextRooms = appendPrototypeChatMessage(targetRoom.id, text);
+
+    setRooms(nextRooms);
+    setActiveRoomId(targetRoom.id);
+    setDraft("");
+    return true;
+  };
+
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    sendDraftMessage();
+  };
+
+  const handleComposerKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key !== "Enter" || event.nativeEvent.isComposing) return;
+
+    event.preventDefault();
+    sendDraftMessage();
   };
 
   return (
@@ -81,20 +111,17 @@ export function ChatPage() {
             <header className="chat-room__header">
               <button
                 type="button"
-                className="chat-room__back"
-                onClick={() => setActiveRoomId(null)}
+                onClick={handleBackToList}
                 aria-label="채팅 목록으로 돌아가기"
               >
                 <BackIcon />
               </button>
-              <button
-                type="button"
-                className="chat-room__listing"
-                onClick={openListingDetail}
-              >
-                <p>{activeListing?.location ?? activeRoom.listingTitle}</p>
+              <div>
                 <h1>{activeRoom.listingPrice}</h1>
-              </button>
+                <p>
+                  {activeRoom.listingTitle} · {activeRoom.participantName}
+                </p>
+              </div>
             </header>
 
             <section className="chat-room" aria-label="대화방">
@@ -119,8 +146,16 @@ export function ChatPage() {
                 <input
                   value={draft}
                   onChange={(event) => setDraft(event.target.value)}
+                  onKeyDown={handleComposerKeyDown}
                   placeholder="메시지 보내기"
                 />
+                <button
+                  type="submit"
+                  className="chat-room__send"
+                  disabled={!draft.trim()}
+                >
+                  전송
+                </button>
               </form>
             </section>
           </>
@@ -137,21 +172,15 @@ export function ChatPage() {
                   key={room.id}
                   type="button"
                   className="chat-list__item"
-                  onClick={() => setActiveRoomId(room.id)}
+                  onClick={() => {
+                    setActiveRoomId(room.id);
+                    setSearchParams({});
+                  }}
                 >
                   <img src={room.avatarUrl} alt="" className="chat-list__thumb" />
                   <span className="chat-list__main">
                     <span className="chat-list__topline">
                       <strong>{room.listingPrice}</strong>
-                      <span
-                        className={`chat-list__role chat-list__role--${
-                          room.inquiryRole ?? "tenant"
-                        }`}
-                      >
-                        {(room.inquiryRole ?? "tenant") === "broker"
-                          ? "받은 문의"
-                          : "문의한 채팅"}
-                      </span>
                       {room.unreadCount > 0 && (
                         <span className="chat-list__badge">{room.unreadCount}</span>
                       )}

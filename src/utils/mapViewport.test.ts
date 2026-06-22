@@ -14,7 +14,7 @@ describe("mapViewport", () => {
 
     assert.deepEqual(
       visible.map((listing) => listing.id).sort(),
-      ["rec-1", "rec-2", "recent-3"].sort()
+      ["rec-1", "replica-apartment-0", "replica-apartment-2"].sort()
     );
   });
 

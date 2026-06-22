@@ -183,7 +183,103 @@ export const room0ViewerAsset: ViewerAsset = {
   },
 };
 
-export const viewerAssets = [room0ViewerAsset, defaultViewerAsset];
+export const replicaSceneIds = [
+  "apartment_0",
+  "apartment_1",
+  "apartment_2",
+  "hotel_0",
+  "room_1",
+  "room_2",
+] as const;
+
+export type ReplicaSceneId = (typeof replicaSceneIds)[number];
+
+const replicaSceneLabels: Record<ReplicaSceneId, string> = {
+  apartment_0: "상도역 채광 원룸",
+  apartment_1: "노량진 컴팩트 오피스텔",
+  apartment_2: "흑석 채광형 원룸",
+  hotel_0: "업로드 생성 데모 공간",
+  room_1: "당산 가구 포함 원룸",
+  room_2: "문래 분리형 원룸",
+};
+
+const replicaPhotoNames = Array.from({ length: 20 }, (_, index) =>
+  String(index + 1).padStart(3, "0")
+);
+
+export const replicaViewerPhotosByScene: Record<ReplicaSceneId, ViewerPhoto[]> =
+  Object.fromEntries(
+    replicaSceneIds.map((sceneId) => [
+      sceneId,
+      replicaPhotoNames.map((captureNumber, index) => ({
+        id: `${sceneId}-photo-${captureNumber}`,
+        label: `${String(index + 1).padStart(2, "0")} / 실내 사진`,
+        src: demoPath(`demo/${sceneId}/photos/${sceneId}_capture_${captureNumber}.webp`),
+        thumbSrc: demoPath(
+          `demo/${sceneId}/thumbs/${sceneId}_capture_${captureNumber}_thumb.webp`
+        ),
+      })),
+    ])
+  ) as Record<ReplicaSceneId, ViewerPhoto[]>;
+
+export const uploadGeneratedReplicaSceneId: ReplicaSceneId = "hotel_0";
+export const uploadGeneratedViewerAssetId = "replica-hotel-0-3dgs";
+
+function createReplicaViewerAsset(sceneId: ReplicaSceneId): ViewerAsset {
+  const label = replicaSceneLabels[sceneId];
+  const photos = replicaViewerPhotosByScene[sceneId];
+
+  return {
+    id: `replica-${sceneId.replace("_", "-")}-3dgs`,
+    kind: "splat-scene",
+    label,
+    description: `${label} 실내 공간`,
+    url: demoPath(`demo/${sceneId}/models/${sceneId}.splat`),
+    format: "splat",
+    previewImageUrl: photos[0]?.src ?? demoPath("demo/room0/photos/room0_3dgs_preview.webp"),
+    photos,
+    fallbackScene: sangdoStudioScene,
+    camera: {
+      position: [0, -3.8, 1.8],
+      lookAt: [0, 0.3, 0.35],
+      up: [0, -0.18, 0.98],
+    },
+    planCamera: {
+      position: [0, 0, 9.5],
+      lookAt: [0, 0, 0],
+      up: [0, 1, 0],
+    },
+    navigationFrame: {
+      autoAlign: true,
+      floor: {
+        enabled: true,
+        autoDetect: true,
+        quantile: 0.05,
+        eyeHeight: 1.45,
+        startOffset: 1.8,
+        lookDistance: 3.2,
+      },
+    },
+    transform: {
+      position: [0, 0, 0],
+      rotation: [0, 0, 0, 1],
+      scale: [1, 1, 1],
+    },
+    stats: {
+      dataset: sceneId,
+      gaussianCount: 80000,
+      finalEvalLoss: 0.018,
+    },
+  };
+}
+
+const replicaViewerAssets = replicaSceneIds.map(createReplicaViewerAsset);
+
+export const viewerAssets = [
+  ...replicaViewerAssets,
+  room0ViewerAsset,
+  defaultViewerAsset,
+];
 
 export function findViewerAssetById(id: string | undefined): ViewerAsset {
   return viewerAssets.find((asset) => asset.id === id) ?? defaultViewerAsset;
