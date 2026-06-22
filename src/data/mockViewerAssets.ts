@@ -140,8 +140,10 @@ export const defaultViewerAsset: ViewerAsset = {
   scene: sangdoStudioScene,
 };
 
+export const room0ViewerAssetId = "room0-3dgs";
+
 export const room0ViewerAsset: ViewerAsset = {
-  id: "room0-studio-preview",
+  id: room0ViewerAssetId,
   kind: "splat-scene",
   label: "상도역 원룸",
   description: "상도역 원룸 실내 공간",
@@ -183,8 +185,182 @@ export const room0ViewerAsset: ViewerAsset = {
   },
 };
 
-export const viewerAssets = [room0ViewerAsset, defaultViewerAsset];
+export const replicaSceneIds = [
+  "apartment_0",
+  "apartment_1",
+  "apartment_2",
+  "hotel_0",
+  "room_1",
+  "room_2",
+] as const;
+
+export type ReplicaSceneId = (typeof replicaSceneIds)[number];
+
+export const replicaSceneViewerAssetIds: Record<ReplicaSceneId, string> = {
+  apartment_0: "replica-apartment-0-3dgs",
+  apartment_1: "replica-apartment-1-3dgs",
+  apartment_2: "replica-apartment-2-3dgs",
+  hotel_0: "replica-hotel-0-3dgs",
+  room_1: "replica-room-1-3dgs",
+  room_2: "replica-room-2-3dgs",
+};
+
+const replicaSceneLabels: Record<ReplicaSceneId, string> = {
+  apartment_0: "상도역 채광 원룸",
+  apartment_1: "노량진 컴팩트 오피스텔",
+  apartment_2: "흑석 채광형 원룸",
+  hotel_0: "업로드 생성 데모 공간",
+  room_1: "당산 가구 포함 원룸",
+  room_2: "문래 분리형 원룸",
+};
+
+const replicaPhotoNames = Array.from({ length: 20 }, (_, index) =>
+  String(index + 1).padStart(3, "0")
+);
+
+export const replicaViewerPhotosByScene: Record<ReplicaSceneId, ViewerPhoto[]> =
+  Object.fromEntries(
+    replicaSceneIds.map((sceneId) => [
+      sceneId,
+      replicaPhotoNames.map((captureNumber, index) => ({
+        id: `${sceneId}-photo-${captureNumber}`,
+        label: `${String(index + 1).padStart(2, "0")} / 실내 사진`,
+        src: demoPath(`demo/${sceneId}/photos/${sceneId}_capture_${captureNumber}.webp`),
+        thumbSrc: demoPath(
+          `demo/${sceneId}/thumbs/${sceneId}_capture_${captureNumber}_thumb.webp`
+        ),
+      })),
+    ])
+  ) as Record<ReplicaSceneId, ViewerPhoto[]>;
+
+export const uploadGeneratedReplicaSceneId: ReplicaSceneId = "hotel_0";
+export const uploadGeneratedViewerAssetId =
+  replicaSceneViewerAssetIds[uploadGeneratedReplicaSceneId];
+
+const replicaSceneIdSet = new Set<string>(replicaSceneIds);
+
+function isReplicaSceneId(value: string): value is ReplicaSceneId {
+  return replicaSceneIdSet.has(value);
+}
+
+export function viewerAssetIdForReplicaScene(sceneId: ReplicaSceneId) {
+  return replicaSceneViewerAssetIds[sceneId];
+}
+
+function normalizeReplicaSceneKey(value: string) {
+  return value
+    .replace(/^\/?demo\//, "")
+    .replace(/^public\/demo\//, "")
+    .replace(/\/models\/.*$/, "")
+    .replace(/\.splat$/, "")
+    .replace(/^replica-/, "")
+    .replace(/-3dgs$/, "")
+    .replace(/-/g, "_");
+}
+
+function createReplicaViewerAsset(sceneId: ReplicaSceneId): ViewerAsset {
+  const label = replicaSceneLabels[sceneId];
+  const photos = replicaViewerPhotosByScene[sceneId];
+
+  return {
+    id: viewerAssetIdForReplicaScene(sceneId),
+    kind: "splat-scene",
+    label,
+    description: `${label} 실내 공간`,
+    url: demoPath(`demo/${sceneId}/models/${sceneId}.splat`),
+    format: "splat",
+    previewImageUrl: photos[0]?.src ?? demoPath("demo/room0/photos/room0_3dgs_preview.webp"),
+    photos,
+    fallbackScene: sangdoStudioScene,
+    camera: {
+      position: [0, -3.8, 1.8],
+      lookAt: [0, 0.3, 0.35],
+      up: [0, -0.18, 0.98],
+    },
+    planCamera: {
+      position: [0, 0, 9.5],
+      lookAt: [0, 0, 0],
+      up: [0, 1, 0],
+    },
+    navigationFrame: {
+      autoAlign: true,
+      floor: {
+        enabled: true,
+        autoDetect: true,
+        quantile: 0.05,
+        eyeHeight: 1.45,
+        startOffset: 1.8,
+        lookDistance: 3.2,
+      },
+    },
+    transform: {
+      position: [0, 0, 0],
+      rotation: [0, 0, 0, 1],
+      scale: [1, 1, 1],
+    },
+    stats: {
+      dataset: sceneId,
+      gaussianCount: 80000,
+      finalEvalLoss: 0.018,
+    },
+  };
+}
+
+const replicaViewerAssets = replicaSceneIds.map(createReplicaViewerAsset);
+
+export const viewerAssets = [
+  ...replicaViewerAssets,
+  room0ViewerAsset,
+  defaultViewerAsset,
+];
+
+const viewerAssetById = new Map(viewerAssets.map((asset) => [asset.id, asset]));
+const legacyViewerAssetAliases = new Map<string, string>([
+  ["sangdo-studio", room0ViewerAsset.id],
+  ["sangdo-studio-3dgs", room0ViewerAsset.id],
+  ["room0", room0ViewerAsset.id],
+  ["room0.splat", room0ViewerAsset.id],
+  ["room0-3dgs", room0ViewerAsset.id],
+  ["room0-studio", room0ViewerAsset.id],
+  ["room0-preview", room0ViewerAsset.id],
+  ["room0-studio-preview", room0ViewerAsset.id],
+  ["demo/room0/models/room0.splat", room0ViewerAsset.id],
+  ["public/demo/room0/models/room0.splat", room0ViewerAsset.id],
+]);
+
+for (const sceneId of replicaSceneIds) {
+  const assetId = viewerAssetIdForReplicaScene(sceneId);
+  const dashedSceneId = sceneId.replace(/_/g, "-");
+
+  legacyViewerAssetAliases.set(sceneId, assetId);
+  legacyViewerAssetAliases.set(dashedSceneId, assetId);
+  legacyViewerAssetAliases.set(`${sceneId}.splat`, assetId);
+  legacyViewerAssetAliases.set(`${dashedSceneId}.splat`, assetId);
+  legacyViewerAssetAliases.set(`replica-${sceneId}-3dgs`, assetId);
+  legacyViewerAssetAliases.set(`replica-${dashedSceneId}`, assetId);
+  legacyViewerAssetAliases.set(`demo/${sceneId}/models/${sceneId}.splat`, assetId);
+  legacyViewerAssetAliases.set(`public/demo/${sceneId}/models/${sceneId}.splat`, assetId);
+}
+
+export function normalizeViewerAssetId(id: string | undefined): string | undefined {
+  if (!id) return undefined;
+
+  const trimmedId = id.trim();
+  const directAlias = legacyViewerAssetAliases.get(trimmedId);
+  if (directAlias) return directAlias;
+
+  if (viewerAssetById.has(trimmedId)) return trimmedId;
+
+  const normalizedSceneKey = normalizeReplicaSceneKey(trimmedId);
+  if (isReplicaSceneId(normalizedSceneKey)) {
+    return viewerAssetIdForReplicaScene(normalizedSceneKey);
+  }
+
+  return undefined;
+}
 
 export function findViewerAssetById(id: string | undefined): ViewerAsset {
-  return viewerAssets.find((asset) => asset.id === id) ?? defaultViewerAsset;
+  const normalizedId = normalizeViewerAssetId(id);
+
+  return (normalizedId ? viewerAssetById.get(normalizedId) : undefined) ?? defaultViewerAsset;
 }

@@ -4,7 +4,7 @@ import {
   detailListingCardZoom,
   getMapClusterStep,
   shouldShowListingCardMarkers,
-} from "./PropertyMap";
+} from "./mapMarkerConfig";
 
 describe("PropertyMap marker density", () => {
   it("keeps numeric clusters until the final listing-detail zoom", () => {

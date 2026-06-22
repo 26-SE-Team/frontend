@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { afterEach, beforeEach, describe, it } from "node:test";
 import { allListings, findListingById } from "../../data/mockListings";
-import { findViewerAssetById } from "../../data/mockViewerAssets";
+import { findViewerAssetById, room0ViewerAssetId } from "../../data/mockViewerAssets";
 import {
   appendPrototypeChatMessage,
   createMemoryStorage,
@@ -48,16 +48,23 @@ describe("prototype user flows", () => {
   it("supports the home search functional scenario", () => {
     const results = filterListings(allListings, "상도");
 
-    assert.equal(results.length, 1);
-    assert.equal(results[0]?.id, "rec-1");
-    assert.equal(results[0]?.price, "월세 500/31");
+    assert.ok(results.length >= 1);
+    assert.ok(results.some((listing) => listing.id === "rec-1"));
+    assert.equal(
+      results.every((listing) =>
+        [listing.location, listing.station, listing.price, listing.type]
+          .filter(Boolean)
+          .some((value) => value?.includes("상도"))
+      ),
+      true
+    );
   });
 
   it("keeps the listing detail to space viewer contract wired", () => {
     const listing = findListingById("rec-1");
     const asset = findViewerAssetById(listing?.viewerAssetId);
 
-    assert.equal(asset.id, "room0-studio-preview");
+    assert.equal(asset.id, room0ViewerAssetId);
     assert.equal(asset.kind, "splat-scene");
   });
 
@@ -109,7 +116,7 @@ describe("prototype user flows", () => {
     const removed = toggleFavoriteListing("rec-1", storage);
     assert.deepEqual(removed, []);
 
-    const added = toggleFavoriteListing("recent-2", storage);
-    assert.deepEqual(added, ["recent-2"]);
+    const added = toggleFavoriteListing("replica-room-2", storage);
+    assert.deepEqual(added, ["replica-room-2"]);
   });
 });

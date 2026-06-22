@@ -1,5 +1,12 @@
 import { mockChatRooms } from "../data/mockChats";
-import { room0ViewerPhotos } from "../data/mockViewerAssets";
+import {
+  replicaViewerPhotosByScene,
+  room0ViewerPhotos,
+  normalizeViewerAssetId,
+  room0ViewerAssetId,
+  uploadGeneratedReplicaSceneId,
+  uploadGeneratedViewerAssetId,
+} from "../data/mockViewerAssets";
 import type { Listing } from "../types/listing";
 import type { ChatRoom } from "../types/chat";
 
@@ -20,6 +27,8 @@ export interface PrototypeListingDraft {
   modelFileName?: string;
   scanSource?: "camera" | "upload";
   scanVideoFileName?: string;
+  scanImageFileNames?: string[];
+  scanImageUrls?: string[];
   scanStatus?: "idle" | "ready" | "processing" | "failed";
   viewerAssetId?: string;
   mapPosition?: Listing["mapPosition"];
@@ -41,7 +50,7 @@ export interface PrototypeCertificationDraft {
 export const prototypeStorageKeys = {
   chatRooms: "stayview_chat_rooms",
   favoriteListings: "stayview_favorite_listing_ids",
-  recentlyViewedListings: "stayview_recently_viewed_listing_ids",
+  recentViewedListings: "stayview_recent_viewed_listing_ids",
   listingDrafts: "stayview_listing_drafts",
   certificationDrafts: "stayview_certification_drafts",
 } as const;
@@ -49,12 +58,15 @@ export const prototypeStorageKeys = {
 const publicRoot = (path: string) =>
   `${import.meta.env?.BASE_URL ?? "/"}${path.replace(/^\/+/, "")}`;
 
-const defaultScanViewerAssetId = "room0-studio-preview";
+const defaultScanViewerAssetId = room0ViewerAssetId;
 
 const generatedRoomImageUrls = room0ViewerPhotos.map((photo) => photo.src);
 const generatedRoomCoverImageUrl =
   generatedRoomImageUrls[3] ??
   publicRoot("demo/room0/photos/room0_3dgs_preview.webp");
+const uploadGeneratedImageUrls = replicaViewerPhotosByScene[
+  uploadGeneratedReplicaSceneId
+].map((photo) => photo.src);
 
 const mapFallbacks: Array<{
   keywords: string[];
@@ -97,10 +109,28 @@ function resolveDraftMapPosition(address: string): Listing["mapPosition"] {
 }
 
 export function mapDraftToListing(draft: PrototypeListingDraft): Listing {
+  const uploadedImageUrls =
+    draft.scanSource === "upload" && draft.scanImageUrls?.length
+      ? draft.scanImageUrls
+      : null;
+  const imageUrls =
+    uploadedImageUrls ??
+    (draft.scanSource === "upload" ? uploadGeneratedImageUrls : generatedRoomImageUrls);
+  const imageUrl =
+    imageUrls[0] ??
+    (draft.scanSource === "upload"
+      ? uploadGeneratedImageUrls[0]
+      : generatedRoomCoverImageUrl);
+  const viewerAssetId =
+    normalizeViewerAssetId(draft.viewerAssetId ?? draft.modelFileName) ??
+    (draft.scanSource === "upload"
+      ? uploadGeneratedViewerAssetId
+      : defaultScanViewerAssetId);
+
   return {
     id: draft.id,
-    imageUrl: generatedRoomCoverImageUrl,
-    imageUrls: generatedRoomImageUrls,
+    imageUrl,
+    imageUrls,
     price: draft.price || "가격 미입력",
     type: "원룸",
     info: `${draft.size || "면적 미입력"} · ${draft.availableDate || "입주일 미입력"}`,
@@ -109,12 +139,15 @@ export function mapDraftToListing(draft: PrototypeListingDraft): Listing {
     size: draft.size || undefined,
     floor: "현재층 / 전체층",
     managementFee: "관리비 협의",
-    highlights: ["공간 보기 등록 완료", ...(draft.options.length ? draft.options : ["옵션 미등록"])],
+    highlights: [
+      draft.scanSource === "upload" ? "이미지 등록 완료" : "공간 보기 등록 완료",
+      ...(draft.options.length ? draft.options : ["옵션 미등록"]),
+    ],
     options: draft.options,
     brokerName: draft.brokerName,
     brokerOfficeName: draft.brokerOfficeName,
     brokerRegistrationNumber: draft.brokerRegistrationNumber,
-    viewerAssetId: draft.viewerAssetId ?? defaultScanViewerAssetId,
+    viewerAssetId,
     mapPosition: draft.mapPosition ?? resolveDraftMapPosition(draft.address),
   };
 }
@@ -128,7 +161,7 @@ export function readDraftListingsForDisplay(
 
 const fallbackStorage = createMemoryStorage();
 const defaultFavoriteListingIds = ["rec-1"];
-const defaultRecentlyViewedListingIds = ["recent-1", "recent-2", "recent-3"];
+const maxRecentViewedListings = 12;
 
 export function createMemoryStorage(): StorageLike {
   const values = new Map<string, string>();
@@ -193,41 +226,49 @@ export function savePrototypeChatRooms(
   writeJson(prototypeStorageKeys.chatRooms, rooms, storage);
 }
 
-export function findOrCreatePrototypeChatRoom(
-  listing: Listing,
-  storage: StorageLike = getPrototypeStorage(),
-  clock = () => Date.now()
-): ChatRoom[] {
-  const rooms = readPrototypeChatRooms(storage);
+export function buildPrototypeChatRoomForListing(listing: Listing): ChatRoom {
+  const listingTitle = [listing.location, listing.type].filter(Boolean).join(" · ");
+  const participantName =
+    listing.brokerOfficeName || listing.brokerName || "StayView 중개 파트너";
 
-  if (rooms.some((room) => room.listingId === listing.id)) {
-    return rooms;
+  return {
+    id: `chat-${listing.id}`,
+    listingId: listing.id,
+    listingTitle: listingTitle || listing.type,
+    listingPrice: listing.price,
+    participantName,
+    avatarUrl: listing.imageUrl,
+    lastMessage: "",
+    unreadCount: 0,
+    messages: [],
+  };
+}
+
+export function buildPrototypeChatRoomCatalog(
+  listings: Listing[],
+  rooms: ChatRoom[] = readPrototypeChatRooms()
+): ChatRoom[] {
+  const roomByListingId = new Map(rooms.map((room) => [room.listingId, room]));
+
+  return listings.map((listing) =>
+    roomByListingId.get(listing.id) ?? buildPrototypeChatRoomForListing(listing)
+  );
+}
+
+export function ensurePrototypeChatRoomForListing(
+  listing: Listing,
+  storage: StorageLike = getPrototypeStorage()
+): ChatRoom {
+  const rooms = readPrototypeChatRooms(storage);
+  const existingRoom = rooms.find((room) => room.listingId === listing.id);
+
+  if (existingRoom) {
+    return existingRoom;
   }
 
-  const now = clock();
-  const nextRoom: ChatRoom = {
-    id: `chat-${listing.id}-${now}`,
-    listingId: listing.id,
-    inquiryRole: "tenant",
-    listingTitle: `${listing.location ? `${listing.location} ` : ""}${listing.type}`,
-    listingPrice: listing.price,
-    participantName: listing.brokerName ?? "중개사",
-    avatarUrl: listing.imageUrl,
-    lastMessage: "매물 문의를 시작해보세요.",
-    unreadCount: 0,
-    messages: [
-      {
-        id: `system-${now}`,
-        sender: "agent",
-        text: "안녕하세요. 궁금한 점을 남겨주시면 확인 후 답변드릴게요.",
-        sentAt: "방금",
-      },
-    ],
-  };
-  const nextRooms = [nextRoom, ...rooms];
-
-  savePrototypeChatRooms(nextRooms, storage);
-  return nextRooms;
+  const nextRoom = buildPrototypeChatRoomForListing(listing);
+  savePrototypeChatRooms([nextRoom, ...rooms], storage);
+  return nextRoom;
 }
 
 export function appendPrototypeChatMessage(
@@ -296,35 +337,43 @@ export function toggleFavoriteListing(
   return nextIds;
 }
 
+export function readRecentViewedListingIds(
+  storage: StorageLike = getPrototypeStorage()
+): string[] {
+  return readJson(prototypeStorageKeys.recentViewedListings, [], storage);
+}
+
+export function saveRecentViewedListingIds(
+  listingIds: string[],
+  storage: StorageLike = getPrototypeStorage()
+) {
+  writeJson(
+    prototypeStorageKeys.recentViewedListings,
+    Array.from(new Set(listingIds)).slice(0, maxRecentViewedListings),
+    storage
+  );
+}
+
+export function rememberRecentViewedListing(
+  listingId: string,
+  storage: StorageLike = getPrototypeStorage()
+): string[] {
+  const currentIds = readRecentViewedListingIds(storage);
+  const nextIds = [
+    listingId,
+    ...currentIds.filter((currentId) => currentId !== listingId),
+  ].slice(0, maxRecentViewedListings);
+
+  saveRecentViewedListingIds(nextIds, storage);
+  return nextIds;
+}
+
 export function removeFavoriteListing(
   listingId: string,
   storage: StorageLike = getPrototypeStorage()
 ): string[] {
   const nextIds = readFavoriteListingIds(storage).filter((id) => id !== listingId);
   saveFavoriteListingIds(nextIds, storage);
-  return nextIds;
-}
-
-export function readRecentlyViewedListingIds(
-  storage: StorageLike = getPrototypeStorage()
-): string[] {
-  return readJson(
-    prototypeStorageKeys.recentlyViewedListings,
-    defaultRecentlyViewedListingIds,
-    storage
-  );
-}
-
-export function recordRecentlyViewedListing(
-  listingId: string,
-  storage: StorageLike = getPrototypeStorage()
-): string[] {
-  const nextIds = [
-    listingId,
-    ...readRecentlyViewedListingIds(storage).filter((id) => id !== listingId),
-  ].slice(0, 10);
-
-  writeJson(prototypeStorageKeys.recentlyViewedListings, nextIds, storage);
   return nextIds;
 }
 

@@ -14,9 +14,9 @@ describe("MapBottomSheet", () => {
 
     assert.match(html, new RegExp(`총 ${allListings.length}건`));
     assert.match(html, /500\/31/);
-    assert.match(html, /25000/);
+    assert.match(html, /1500\/62/);
     assert.doesNotMatch(html, /월세 500\/31/);
-    assert.doesNotMatch(html, /전세 2억 5000/);
+    assert.doesNotMatch(html, /월세 1500\/62/);
   });
 
   it("formats map prices as compact numeric labels", () => {
