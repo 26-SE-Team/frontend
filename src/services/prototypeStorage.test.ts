@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
   replicaViewerPhotosByScene,
+  room0ViewerAssetId,
   uploadGeneratedReplicaSceneId,
   uploadGeneratedViewerAssetId,
 } from "../data/mockViewerAssets";
@@ -188,7 +189,7 @@ describe("prototypeStorage", () => {
       (item) => item.id === draft.id
     );
 
-    assert.equal(listing?.viewerAssetId, "room0-studio-preview");
+    assert.equal(listing?.viewerAssetId, room0ViewerAssetId);
     assert.ok((listing?.imageUrls?.length ?? 0) > 1);
     assert.match(listing?.imageUrl ?? "", /room0_hotel_preview_/);
   });
@@ -260,5 +261,32 @@ describe("prototypeStorage", () => {
       listing?.imageUrls,
       preparedPhotos.map((photo) => photo.src)
     );
+  });
+
+  it("normalizes stale upload draft viewer keys to the prepared 3D asset", () => {
+    const storage = createMemoryStorage();
+
+    const draft = savePrototypeListingDraft(
+      {
+        address: "서울 영등포구 테스트동",
+        price: "월세 1000/60",
+        size: "25m²",
+        availableDate: "즉시",
+        options: ["주차"],
+        scanSource: "upload",
+        scanImageFileNames: ["hotel_0_frame_000000.jpg"],
+        scanStatus: "ready",
+        modelFileName: "hotel_0.splat",
+        viewerAssetId: "replica-hotel_0-3dgs",
+      },
+      storage,
+      () => new Date("2026-05-30T09:05:00.000Z")
+    );
+
+    const listing = readDraftListingsForDisplay(storage).find(
+      (item) => item.id === draft.id
+    );
+
+    assert.equal(listing?.viewerAssetId, uploadGeneratedViewerAssetId);
   });
 });

@@ -47,6 +47,8 @@ export function MapBottomSheet({
   } | null>(null);
   const lastSheetStateRef = React.useRef(sheetState);
   const [sheetHeight, setSheetHeight] = React.useState<number | null>(null);
+  const [sheetBounds, setSheetBounds] =
+    React.useState<SheetBounds>(sheetFallbackBounds);
   const [isDragging, setIsDragging] = React.useState(false);
   const mappedListings = React.useMemo(
     () => listings.filter((listing) => listing.mapPosition),
@@ -66,6 +68,13 @@ export function MapBottomSheet({
     const bounds = { collapsed, defaultExpanded, max };
 
     sheetBoundsRef.current = bounds;
+    setSheetBounds((current) =>
+      current.collapsed === bounds.collapsed &&
+      current.defaultExpanded === bounds.defaultExpanded &&
+      current.max === bounds.max
+        ? current
+        : bounds
+    );
     return bounds;
   }, []);
 
@@ -218,7 +227,7 @@ export function MapBottomSheet({
 
   const isCollapsed =
     sheetHeight !== null
-      ? sheetHeight <= sheetBoundsRef.current.collapsed + 24
+      ? sheetHeight <= sheetBounds.collapsed + 24
       : sheetState === "collapsed";
   const sheetClassName = [
     "map-sheet",
@@ -234,8 +243,8 @@ export function MapBottomSheet({
   const sliderValue =
     sheetHeight ??
     (sheetState === "collapsed"
-      ? sheetBoundsRef.current.collapsed
-      : sheetBoundsRef.current.defaultExpanded);
+      ? sheetBounds.collapsed
+      : sheetBounds.defaultExpanded);
 
   return (
     <div className={sheetClassName} ref={sheetRef} style={sheetStyle}>
@@ -245,8 +254,8 @@ export function MapBottomSheet({
         tabIndex={0}
         aria-label="매물 목록 높이"
         aria-orientation="vertical"
-        aria-valuemin={sheetBoundsRef.current.collapsed}
-        aria-valuemax={sheetBoundsRef.current.max}
+        aria-valuemin={sheetBounds.collapsed}
+        aria-valuemax={sheetBounds.max}
         aria-valuenow={Math.round(sliderValue)}
         aria-valuetext={isCollapsed ? "작게 보기" : "크게 보기"}
         onKeyDown={handleKeyDown}

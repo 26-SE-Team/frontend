@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { afterEach, beforeEach, describe, it } from "node:test";
 import { allListings, findListingById } from "../../data/mockListings";
-import { findViewerAssetById } from "../../data/mockViewerAssets";
+import { findViewerAssetById, room0ViewerAssetId } from "../../data/mockViewerAssets";
 import {
   appendPrototypeChatMessage,
   createMemoryStorage,
@@ -64,7 +64,7 @@ describe("prototype user flows", () => {
     const listing = findListingById("rec-1");
     const asset = findViewerAssetById(listing?.viewerAssetId);
 
-    assert.equal(asset.id, "room0-studio-preview");
+    assert.equal(asset.id, room0ViewerAssetId);
     assert.equal(asset.kind, "splat-scene");
   });
 

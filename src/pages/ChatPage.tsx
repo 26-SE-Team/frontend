@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import type { FormEvent, KeyboardEvent } from "react";
 import { useSearchParams } from "react-router-dom";
 import { BottomNav } from "../components/home/BottomNav";
@@ -17,7 +17,7 @@ import "./chat.css";
 export function ChatPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [rooms, setRooms] = useState(() => readPrototypeChatRooms());
-  const [activeRoomId, setActiveRoomId] = useState<string | null>(null);
+  const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [draft, setDraft] = useState("");
   const listingId = searchParams.get("listing");
@@ -40,6 +40,7 @@ export function ChatPage() {
     [listingId, potentialRooms]
   );
 
+  const activeRoomId = selectedRoomId ?? requestedRoom?.id ?? null;
   const activeRoom = useMemo(
     () => {
       const persistedRoom = rooms.find((room) => room.id === activeRoomId);
@@ -63,14 +64,8 @@ export function ChatPage() {
     );
   }, [query, rooms]);
 
-  useEffect(() => {
-    if (requestedRoom) {
-      setActiveRoomId(requestedRoom.id);
-    }
-  }, [requestedRoom]);
-
   const handleBackToList = () => {
-    setActiveRoomId(null);
+    setSelectedRoomId(null);
     setSearchParams({});
   };
 
@@ -86,7 +81,7 @@ export function ChatPage() {
     const nextRooms = appendPrototypeChatMessage(targetRoom.id, text);
 
     setRooms(nextRooms);
-    setActiveRoomId(targetRoom.id);
+    setSelectedRoomId(targetRoom.id);
     setDraft("");
     return true;
   };
@@ -173,7 +168,7 @@ export function ChatPage() {
                   type="button"
                   className="chat-list__item"
                   onClick={() => {
-                    setActiveRoomId(room.id);
+                    setSelectedRoomId(room.id);
                     setSearchParams({});
                   }}
                 >
