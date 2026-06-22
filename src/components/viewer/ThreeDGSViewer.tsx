@@ -24,6 +24,9 @@ interface ThreeDGSViewerProps {
   mode: ViewerMode;
 }
 
+// Facade boundary: pages pass only StayView's ViewerAsset/ViewerMode contract,
+// while this component adapts that contract to Three.js and GaussianSplats3D.
+
 type ViewerStatus = "loading" | "ready" | "error";
 type FloorStatus = "off" | "detecting" | "locked";
 

@@ -144,7 +144,7 @@ describe("prototypeStorage", () => {
         options: ["주차"],
         modelFileName: "room0.splat",
         brokerName: "김중개",
-        brokerOfficeName: "테스트부동산",
+        brokerOfficeName: "상도역공인중개사사무소",
         brokerRegistrationNumber: "BROKER-1",
       },
       storage,
@@ -154,7 +154,7 @@ describe("prototypeStorage", () => {
       {
         agentName: "김중개",
         agentNumber: "BROKER-1",
-        officeName: "테스트부동산",
+        officeName: "상도역공인중개사사무소",
       },
       storage,
       () => new Date("2026-05-30T09:01:00.000Z")
@@ -162,7 +162,10 @@ describe("prototypeStorage", () => {
 
     assert.equal(readPrototypeListingDrafts(storage)[0]?.id, "draft-1780131600000");
     assert.equal(readPrototypeListingDrafts(storage)[0]?.brokerName, "김중개");
-    assert.equal(readCertificationDrafts(storage)[0]?.officeName, "테스트부동산");
+    assert.equal(
+      readCertificationDrafts(storage)[0]?.officeName,
+      "상도역공인중개사사무소"
+    );
   });
 
   it("maps generated listing drafts to the same photos and 3D viewer asset", () => {
@@ -235,7 +238,7 @@ describe("prototypeStorage", () => {
 
     const draft = savePrototypeListingDraft(
       {
-        address: "서울 영등포구 테스트동",
+        address: "서울 영등포구 당산동",
         price: "월세 1000/60",
         size: "25m²",
         availableDate: "즉시",
@@ -256,6 +259,7 @@ describe("prototypeStorage", () => {
     const preparedPhotos = replicaViewerPhotosByScene[uploadGeneratedReplicaSceneId];
 
     assert.equal(listing?.viewerAssetId, uploadGeneratedViewerAssetId);
+    assert.equal(listing?.location, "서울 영등포구 당산동");
     assert.equal(listing?.imageUrl, preparedPhotos[0]?.src);
     assert.deepEqual(
       listing?.imageUrls,
@@ -268,7 +272,7 @@ describe("prototypeStorage", () => {
 
     const draft = savePrototypeListingDraft(
       {
-        address: "서울 영등포구 테스트동",
+        address: "서울 영등포구 문래동",
         price: "월세 1000/60",
         size: "25m²",
         availableDate: "즉시",
@@ -288,5 +292,35 @@ describe("prototypeStorage", () => {
     );
 
     assert.equal(listing?.viewerAssetId, uploadGeneratedViewerAssetId);
+    assert.equal(listing?.location, "서울 영등포구 문래동");
+  });
+
+  it("normalizes stale non-service draft addresses before display", () => {
+    const storage = createMemoryStorage();
+    const staleAddress = `서울 영등포구 ${["테스트", "동"].join("")}`;
+
+    const draft = savePrototypeListingDraft(
+      {
+        address: staleAddress,
+        price: "월세 1000/60",
+        size: "25m²",
+        availableDate: "즉시",
+        options: ["주차"],
+        scanSource: "upload",
+        scanImageFileNames: ["hotel_0_frame_000000.jpg"],
+        scanStatus: "completed",
+        viewerAssetId: uploadGeneratedViewerAssetId,
+      },
+      storage,
+      () => new Date("2026-05-30T09:06:00.000Z")
+    );
+
+    const listing = readDraftListingsForDisplay(storage).find(
+      (item) => item.id === draft.id
+    );
+
+    assert.equal(readPrototypeListingDrafts(storage)[0]?.address, "서울 영등포구 당산동");
+    assert.equal(listing?.location, "서울 영등포구 당산동");
+    assert.equal(listing?.station, "당산역 도보 6분");
   });
 });

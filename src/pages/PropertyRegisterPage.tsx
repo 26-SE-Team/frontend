@@ -3,23 +3,16 @@ import type { ChangeEvent, FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import {
-  room0ViewerAssetId,
-  uploadGeneratedViewerAssetId,
-} from "../data/mockViewerAssets";
-import {
-  room0ViewerAssetId,
-  uploadGeneratedViewerAssetId,
-} from "../data/mockViewerAssets";
-import {
   readLatestCertificationDraft,
-  rememberRecentViewedListing,
-  savePrototypeListingDraft,
   type PrototypeListingDraft,
 } from "../services/prototypeStorage";
+import { spaceRepository } from "../services/spaceRepository";
+import { viewerRepository } from "../services/viewerRepository";
 import "./propertyRegister.css";
 
 const optionItems = ["주차", "반려동물"];
 const uploadGeneratedModelFileName = "hotel_0.splat";
+const generationQueuedDelayMs = 400;
 const modelInferenceDelayMs = 10000;
 const defaultMimeTypeCandidates = [
   "video/webm;codecs=vp9",
@@ -52,7 +45,13 @@ const scanSourceItems = [
   },
 ] as const;
 
-type ScanState = "idle" | "recording" | "processing" | "ready" | "error";
+type ScanState =
+  | "idle"
+  | "recording"
+  | "queued"
+  | "processing"
+  | "ready"
+  | "error";
 type ScanSource = "camera" | "upload";
 type AreaUnit = "sqm" | "pyeong";
 
@@ -147,15 +146,20 @@ export function PropertyRegisterPage() {
   const allUploadedImagesSelected =
     uploadedImages.length > 0 && selectedUploadImages.length === uploadedImages.length;
 
-  const waitForModelInference = useCallback(
-    () =>
+  const waitForGenerationStep = useCallback(
+    (delayMs: number) =>
       new Promise<void>((resolve) => {
         modelInferenceTimerRef.current = window.setTimeout(() => {
           modelInferenceTimerRef.current = null;
           resolve();
-        }, modelInferenceDelayMs);
+        }, delayMs);
       }),
     []
+  );
+
+  const waitForModelInference = useCallback(
+    () => waitForGenerationStep(modelInferenceDelayMs),
+    [waitForGenerationStep]
   );
 
   const changeAreaUnit = (nextUnit: AreaUnit) => {
@@ -418,7 +422,7 @@ export function PropertyRegisterPage() {
     event.preventDefault();
     if (isSubmitting) return;
 
-    if (scanState === "processing") {
+    if (scanState === "queued" || scanState === "processing") {
       setScanMessage("모델 생성이 진행 중입니다. 완료되면 잠시 후 등록할 수 있어요.");
       return;
     }
@@ -463,25 +467,31 @@ export function PropertyRegisterPage() {
       scanImageFileNames:
         scanSource === "upload" ? selectedUploadImages.map((image) => image.name) : undefined,
       scanImageUrls: undefined,
-      scanStatus: scanState === "ready" || scanSource === "upload" ? "ready" : "idle",
+      scanStatus:
+        scanState === "ready" || scanSource === "upload" ? "completed" : "idle",
       brokerName,
       brokerOfficeName,
       brokerRegistrationNumber,
       viewerAssetId:
-        scanSource === "upload" ? uploadGeneratedViewerAssetId : room0ViewerAssetId,
+        scanSource === "upload"
+          ? viewerRepository.getUploadGeneratedAssetId()
+          : viewerRepository.getCameraGeneratedAssetId(),
     };
 
     if (scanSource === "upload") {
       setIsSubmitting(true);
       setSaved(false);
-      setScanState("processing");
-      setScanMessage("");
+      setScanState("queued");
+      setScanMessage("공간 생성 요청이 접수되었습니다.");
 
       try {
+        await waitForGenerationStep(generationQueuedDelayMs);
+        setScanState("processing");
+        setScanMessage("공간 모델을 생성하고 있습니다.");
         await waitForModelInference();
-        const savedDraft = savePrototypeListingDraft(draftPayload);
+        const savedDraft = spaceRepository.createSpaceDraft(draftPayload);
 
-        rememberRecentViewedListing(savedDraft.id);
+        spaceRepository.rememberViewedSpace(savedDraft.id);
 
         releasePreview();
         releaseUploadPreviews();
@@ -502,7 +512,7 @@ export function PropertyRegisterPage() {
       return;
     }
 
-    savePrototypeListingDraft(draftPayload);
+    spaceRepository.createSpaceDraft(draftPayload);
 
     releasePreview();
     releaseUploadPreviews();
@@ -642,8 +652,14 @@ export function PropertyRegisterPage() {
                 {isSubmitting && scanSource === "upload" && (
                   <div className="property-register__upload-processing" role="status">
                     <span aria-hidden />
-                    <strong>공간 모델 생성 중</strong>
-                    <p>선택한 사진으로 모델 인퍼런스를 진행하고 있습니다.</p>
+                    <strong>
+                      {scanState === "queued" ? "생성 요청 접수" : "공간 모델 생성 중"}
+                    </strong>
+                    <p>
+                      {scanState === "queued"
+                        ? "선택한 사진과 매물 정보를 저장하고 있습니다."
+                        : "선택한 사진으로 모델 인퍼런스를 진행하고 있습니다."}
+                    </p>
                   </div>
                 )}
 

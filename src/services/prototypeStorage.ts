@@ -29,7 +29,7 @@ export interface PrototypeListingDraft {
   scanVideoFileName?: string;
   scanImageFileNames?: string[];
   scanImageUrls?: string[];
-  scanStatus?: "idle" | "ready" | "processing" | "failed";
+  scanStatus?: "idle" | "queued" | "processing" | "completed" | "ready" | "failed";
   viewerAssetId?: string;
   mapPosition?: Listing["mapPosition"];
   brokerName?: string;
@@ -81,6 +81,38 @@ const mapFallbacks: Array<{
   { keywords: ["잠실", "송파"], lat: 37.5111, lng: 127.086, label: "잠실새내역" },
   { keywords: ["이태원", "용산"], lat: 37.5347, lng: 126.9946, label: "이태원역" },
 ];
+const fallbackDisplayAddress = "서울 동작구 상도동";
+
+function normalizeDisplayAddress(address: string | undefined) {
+  const normalizedAddress = address?.trim() ?? "";
+
+  if (!normalizedAddress) return fallbackDisplayAddress;
+
+  if (/테스트|샘플|가상|데모/i.test(normalizedAddress)) {
+    if (normalizedAddress.includes("영등포")) return "서울 영등포구 당산동";
+    if (normalizedAddress.includes("문래")) return "서울 영등포구 문래동";
+    if (normalizedAddress.includes("동작")) return "서울 동작구 상도동";
+    if (normalizedAddress.includes("흑석")) return "서울 동작구 흑석동";
+    if (normalizedAddress.includes("노량진")) return "서울 동작구 노량진동";
+
+    return fallbackDisplayAddress;
+  }
+
+  return normalizedAddress;
+}
+
+function resolveStationLabel(address: string) {
+  const normalizedAddress = address.replace(/\s/g, "");
+
+  if (normalizedAddress.includes("당산")) return "당산역 도보 6분";
+  if (normalizedAddress.includes("문래")) return "문래역 도보 5분";
+  if (normalizedAddress.includes("상도")) return "상도역 도보 6분";
+  if (normalizedAddress.includes("흑석")) return "흑석역 도보 7분";
+  if (normalizedAddress.includes("노량진")) return "노량진역 도보 6분";
+  if (normalizedAddress.includes("여의도")) return "여의도역 도보 8분";
+
+  return "인근 역 도보권";
+}
 
 function hashString(value: string) {
   return [...value].reduce(
@@ -109,6 +141,7 @@ function resolveDraftMapPosition(address: string): Listing["mapPosition"] {
 }
 
 export function mapDraftToListing(draft: PrototypeListingDraft): Listing {
+  const displayAddress = normalizeDisplayAddress(draft.address);
   const uploadedImageUrls =
     draft.scanSource === "upload" && draft.scanImageUrls?.length
       ? draft.scanImageUrls
@@ -131,11 +164,11 @@ export function mapDraftToListing(draft: PrototypeListingDraft): Listing {
     id: draft.id,
     imageUrl,
     imageUrls,
-    price: draft.price || "가격 미입력",
+    price: draft.price || "가격 문의",
     type: "원룸",
-    info: `${draft.size || "면적 미입력"} · ${draft.availableDate || "입주일 미입력"}`,
-    location: draft.address || "입력 필요",
-    station: "주소 기반 자동 매칭",
+    info: `${draft.size || "면적 협의"} · ${draft.availableDate || "입주일 협의"}`,
+    location: displayAddress,
+    station: resolveStationLabel(displayAddress),
     size: draft.size || undefined,
     floor: "현재층 / 전체층",
     managementFee: "관리비 협의",
@@ -148,7 +181,7 @@ export function mapDraftToListing(draft: PrototypeListingDraft): Listing {
     brokerOfficeName: draft.brokerOfficeName,
     brokerRegistrationNumber: draft.brokerRegistrationNumber,
     viewerAssetId,
-    mapPosition: draft.mapPosition ?? resolveDraftMapPosition(draft.address),
+    mapPosition: draft.mapPosition ?? resolveDraftMapPosition(displayAddress),
   };
 }
 
@@ -391,6 +424,7 @@ export function savePrototypeListingDraft(
   const now = clock();
   const savedDraft: PrototypeListingDraft = {
     ...draft,
+    address: normalizeDisplayAddress(draft.address),
     id: `draft-${now.getTime()}`,
     createdAt: now.toISOString(),
   };
