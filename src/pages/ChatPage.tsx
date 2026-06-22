@@ -1,17 +1,38 @@
 import { useMemo, useState } from "react";
 import type { FormEvent } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { BottomNav } from "../components/home/BottomNav";
 import { SearchBar } from "../components/home/SearchBar";
 import { StayViewLogo } from "../components/start/StayViewLogo";
+import { allListings } from "../data/mockListings";
 import {
   appendPrototypeChatMessage,
+  findOrCreatePrototypeChatRoom,
+  readDraftListingsForDisplay,
   readPrototypeChatRooms,
 } from "../services/prototypeStorage";
 import "./chat.css";
 
 export function ChatPage() {
-  const [rooms, setRooms] = useState(() => readPrototypeChatRooms());
-  const [activeRoomId, setActiveRoomId] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const initialListingId = searchParams.get("listing");
+  const [rooms, setRooms] = useState(() => {
+    if (!initialListingId) return readPrototypeChatRooms();
+
+    const listing = [...allListings, ...readDraftListingsForDisplay()].find(
+      (item) => item.id === initialListingId
+    );
+
+    return listing ? findOrCreatePrototypeChatRoom(listing) : readPrototypeChatRooms();
+  });
+  const [activeRoomId, setActiveRoomId] = useState<string | null>(() => {
+    if (!initialListingId) return null;
+
+    return (
+      rooms.find((room) => room.listingId === initialListingId)?.id ?? null
+    );
+  });
   const [query, setQuery] = useState("");
   const [draft, setDraft] = useState("");
 
@@ -40,6 +61,11 @@ export function ChatPage() {
     setDraft("");
   };
 
+  const openListingDetail = () => {
+    if (!activeRoom) return;
+    navigate(`/listing/${activeRoom.listingId}`);
+  };
+
   return (
     <main className="chat-page">
       <div className="chat-page__frame">
@@ -53,10 +79,14 @@ export function ChatPage() {
               >
                 <BackIcon />
               </button>
-              <div>
+              <button
+                type="button"
+                className="chat-room__listing"
+                onClick={openListingDetail}
+              >
                 <h1>{activeRoom.listingPrice}</h1>
-                <p>서울 {activeRoom.listingTitle} · 원룸 · 3층, 관리비 5만</p>
-              </div>
+                <p>서울 {activeRoom.listingTitle} · 상세 정보 보기</p>
+              </button>
             </header>
 
             <section className="chat-room" aria-label="대화방">
@@ -105,6 +135,15 @@ export function ChatPage() {
                   <span className="chat-list__main">
                     <span className="chat-list__topline">
                       <strong>{room.listingPrice}</strong>
+                      <span
+                        className={`chat-list__role chat-list__role--${
+                          room.inquiryRole ?? "tenant"
+                        }`}
+                      >
+                        {(room.inquiryRole ?? "tenant") === "broker"
+                          ? "받은 문의"
+                          : "문의한 채팅"}
+                      </span>
                       {room.unreadCount > 0 && (
                         <span className="chat-list__badge">{room.unreadCount}</span>
                       )}

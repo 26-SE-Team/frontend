@@ -8,6 +8,7 @@ export interface ChatMessage {
 export interface ChatRoom {
   id: string;
   listingId: string;
+  inquiryRole?: "tenant" | "broker";
   listingTitle: string;
   listingPrice: string;
   participantName: string;

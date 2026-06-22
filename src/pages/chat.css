@@ -123,6 +123,7 @@
 }
 
 .chat-list__topline strong,
+.chat-list__role,
 .chat-list__title,
 .chat-list__message {
   display: block;
@@ -135,6 +136,26 @@
   color: #8a93a5;
   font-size: 0.875rem;
   font-weight: 700;
+  flex-shrink: 0;
+}
+
+.chat-list__role {
+  max-width: 5.25rem;
+  border-radius: 9999px;
+  padding: 0.1875rem 0.4375rem;
+  font-size: 0.625rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.chat-list__role--tenant {
+  background: #f3efff;
+  color: #6f4df6;
+}
+
+.chat-list__role--broker {
+  background: #edf7f2;
+  color: #16724a;
 }
 
 .chat-list__badge {
@@ -176,7 +197,7 @@
   align-items: center;
 }
 
-.chat-room__header button {
+.chat-room__header > button {
   width: 2rem;
   height: 2rem;
   border: none;
@@ -186,6 +207,15 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
+}
+
+.chat-room__listing {
+  min-width: 0;
+  border: none;
+  background: transparent;
+  padding: 0;
+  text-align: left;
   cursor: pointer;
 }
 

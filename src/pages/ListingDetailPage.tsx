@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { allListings } from "../data/mockListings";
 import { readDraftListingsForDisplay } from "../services/prototypeStorage";
 import {
+  findOrCreatePrototypeChatRoom,
   recordRecentlyViewedListing,
   readFavoriteListingIds,
   toggleFavoriteListing,
@@ -19,23 +20,37 @@ export function ListingDetailPage() {
     return local ?? allCatalog[0];
   }, [listingId]);
   const [favoriteIds, setFavoriteIds] = useState(() => readFavoriteListingIds());
-  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [selectedImageState, setSelectedImageState] = useState({
+    listingId: listing.id,
+    index: 0,
+  });
 
   const images = listing.imageUrls?.length ? listing.imageUrls : [listing.imageUrl];
+  const selectedImageIndex =
+    selectedImageState.listingId === listing.id ? selectedImageState.index : 0;
   const selectedImage = images[selectedImageIndex] ?? images[0] ?? listing.imageUrl;
   const hasMultipleImages = images.length > 1;
   const optionItems = listing.options ?? ["옷장", "냉장고", "싱크대", "전자레인지"];
   const isFavorite = favoriteIds.includes(listing.id);
 
   useEffect(() => {
-    setSelectedImageIndex(0);
     recordRecentlyViewedListing(listing.id);
   }, [listing.id]);
 
   const moveImage = (direction: -1 | 1) => {
-    setSelectedImageIndex((current) =>
-      (current + direction + images.length) % images.length
-    );
+    setSelectedImageState((current) => ({
+      listingId: listing.id,
+      index:
+        ((current.listingId === listing.id ? current.index : 0) +
+          direction +
+          images.length) %
+        images.length,
+    }));
+  };
+
+  const openListingChat = () => {
+    findOrCreatePrototypeChatRoom(listing);
+    navigate(`/chat?listing=${listing.id}`);
   };
 
   return (
@@ -86,7 +101,7 @@ export function ListingDetailPage() {
                 }
                 aria-label={`${index + 1}번째 사진 보기`}
                 aria-pressed={index === selectedImageIndex}
-                onClick={() => setSelectedImageIndex(index)}
+                onClick={() => setSelectedImageState({ listingId: listing.id, index })}
               >
                 <img src={image} alt="" />
               </button>
@@ -156,7 +171,7 @@ export function ListingDetailPage() {
           >
             <HeartIcon filled={isFavorite} />
           </button>
-          <button type="button" onClick={() => navigate("/chat")}>
+          <button type="button" onClick={openListingChat}>
             채팅하기
           </button>
         </div>

@@ -193,6 +193,43 @@ export function savePrototypeChatRooms(
   writeJson(prototypeStorageKeys.chatRooms, rooms, storage);
 }
 
+export function findOrCreatePrototypeChatRoom(
+  listing: Listing,
+  storage: StorageLike = getPrototypeStorage(),
+  clock = () => Date.now()
+): ChatRoom[] {
+  const rooms = readPrototypeChatRooms(storage);
+
+  if (rooms.some((room) => room.listingId === listing.id)) {
+    return rooms;
+  }
+
+  const now = clock();
+  const nextRoom: ChatRoom = {
+    id: `chat-${listing.id}-${now}`,
+    listingId: listing.id,
+    inquiryRole: "tenant",
+    listingTitle: `${listing.location ? `${listing.location} ` : ""}${listing.type}`,
+    listingPrice: listing.price,
+    participantName: listing.brokerName ?? "중개사",
+    avatarUrl: listing.imageUrl,
+    lastMessage: "매물 문의를 시작해보세요.",
+    unreadCount: 0,
+    messages: [
+      {
+        id: `system-${now}`,
+        sender: "agent",
+        text: "안녕하세요. 궁금한 점을 남겨주시면 확인 후 답변드릴게요.",
+        sentAt: "방금",
+      },
+    ],
+  };
+  const nextRooms = [nextRoom, ...rooms];
+
+  savePrototypeChatRooms(nextRooms, storage);
+  return nextRooms;
+}
+
 export function appendPrototypeChatMessage(
   roomId: string,
   text: string,

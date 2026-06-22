@@ -275,10 +275,10 @@ export function PropertyRegisterPage() {
             </small>
           </section>
 
-          <TextField id="address" label="주소" defaultValue="서울 동작구 상도동" />
-          <TextField id="price" label="가격" defaultValue="월세 500/31" />
-          <TextField id="size" label="면적" defaultValue="26.44m²" />
-          <TextField id="availableDate" label="입주 가능일" defaultValue="즉시" />
+          <TextField id="address" label="주소" placeholder="서울 동작구 상도동" />
+          <TextField id="price" label="가격" placeholder="월세 500/31" />
+          <TextField id="size" label="면적" placeholder="26.44m²" />
+          <TextField id="availableDate" label="입주 가능일" placeholder="즉시" />
 
           <section className="property-register__scan">
             <h2>공간 촬영</h2>
@@ -356,16 +356,16 @@ export function PropertyRegisterPage() {
 function TextField({
   id,
   label,
-  defaultValue,
+  placeholder,
 }: {
   id: string;
   label: string;
-  defaultValue: string;
+  placeholder: string;
 }) {
   return (
     <label className="property-register__field" htmlFor={id}>
       <span>{label}</span>
-      <input id={id} name={id} placeholder="입력하기" defaultValue={defaultValue} />
+      <input id={id} name={id} placeholder={placeholder} />
     </label>
   );
 }

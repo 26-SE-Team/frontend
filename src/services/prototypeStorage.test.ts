@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 import {
   appendPrototypeChatMessage,
   createMemoryStorage,
+  findOrCreatePrototypeChatRoom,
   readCertificationDrafts,
   readDraftListingsForDisplay,
   readFavoriteListingIds,
@@ -28,6 +29,27 @@ describe("prototypeStorage", () => {
 
     assert.equal(room?.lastMessage, "오늘 저녁에 볼 수 있나요?");
     assert.equal(room?.messages.at(-1)?.id, "local-1");
+  });
+
+  it("opens a listing-specific chat room from listing detail", () => {
+    const storage = createMemoryStorage();
+    const rooms = findOrCreatePrototypeChatRoom(
+      {
+        id: "rec-new",
+        imageUrl: "/test.jpg",
+        price: "월세 300/40",
+        type: "원룸",
+        info: "2층, 관리비 4만",
+        location: "동작구 흑석동",
+      },
+      storage,
+      () => 2
+    );
+    const room = rooms.find((item) => item.listingId === "rec-new");
+
+    assert.equal(room?.id, "chat-rec-new-2");
+    assert.equal(room?.inquiryRole, "tenant");
+    assert.equal(room?.listingPrice, "월세 300/40");
   });
 
   it("persists favorite listing toggles and removals", () => {
