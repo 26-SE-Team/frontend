@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { ChangeEvent, FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import { uploadGeneratedViewerAssetId } from "../data/mockViewerAssets";
 import {
   room0ViewerAssetId,
   uploadGeneratedViewerAssetId,
