@@ -4,14 +4,14 @@ import { StayViewLogo } from "../components/start/StayViewLogo";
 import { SearchBar } from "../components/home/SearchBar";
 import { ListingSection } from "../components/home/ListingSection";
 import { BottomNav } from "../components/home/BottomNav";
-import { recommendedListings, recentListings } from "../data/mockListings";
-import {
-  readDraftListingsForDisplay,
-  readRecentlyViewedListingIds,
-} from "../services/prototypeStorage";
+import { allListings, recommendedListings } from "../data/mockListings";
 import { filterListings } from "../utils/filterListings";
 import { useAuth } from "../contexts/AuthContext";
 import { isBrokerUser, isCertifiedBroker } from "../services/authService";
+import {
+  readDraftListingsForDisplay,
+  readRecentViewedListingIds,
+} from "../services/prototypeStorage";
 import "./home.css";
 
 export function HomePage() {
@@ -20,17 +20,12 @@ export function HomePage() {
   const [query, setQuery] = useState("");
   const isBroker = isBrokerUser(user);
   const isCertified = isCertifiedBroker(user);
-  const allCatalog = useMemo(
-    () => [...recommendedListings, ...recentListings, ...readDraftListingsForDisplay()],
-    []
-  );
-  const recentlyViewedListings = useMemo(() => {
-    const catalogById = new Map(allCatalog.map((listing) => [listing.id, listing]));
-
-    return readRecentlyViewedListingIds()
-      .map((listingId) => catalogById.get(listingId))
-      .filter((listing): listing is (typeof allCatalog)[number] => Boolean(listing));
-  }, [allCatalog]);
+  const recentViewedListings = useMemo(() => {
+    const catalog = [...allListings, ...readDraftListingsForDisplay()];
+    return readRecentViewedListingIds()
+      .map((listingId) => catalog.find((listing) => listing.id === listingId))
+      .filter((listing): listing is NonNullable<typeof listing> => Boolean(listing));
+  }, []);
 
   const filteredRecommended = useMemo(
     () => filterListings(recommendedListings, query),
@@ -38,8 +33,8 @@ export function HomePage() {
   );
 
   const filteredRecent = useMemo(
-    () => filterListings(recentlyViewedListings, query),
-    [query, recentlyViewedListings]
+    () => filterListings(recentViewedListings, query),
+    [query, recentViewedListings]
   );
 
   const isSearching = query.trim().length > 0;
@@ -97,13 +92,13 @@ export function HomePage() {
           ) : (
             <>
               <ListingSection
-                title={isSearching ? "추천 매물 검색 결과" : "추천 매물"}
-                listings={filteredRecommended}
-                hideWhenEmpty={isSearching}
-              />
-              <ListingSection
                 title={isSearching ? `${homeCopy.recentTitle} 검색 결과` : homeCopy.recentTitle}
                 listings={filteredRecent}
+                hideWhenEmpty
+              />
+              <ListingSection
+                title={isSearching ? "추천 매물 검색 결과" : "추천 매물"}
+                listings={filteredRecommended}
                 hideWhenEmpty={isSearching}
               />
             </>
