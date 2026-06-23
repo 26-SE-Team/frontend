@@ -163,14 +163,19 @@ export const room0ViewerAsset: ViewerAsset = {
     up: [0, 1, 0],
   },
   navigationFrame: {
+    forward: [0, -1, 0],
     autoAlign: true,
     floor: {
       enabled: true,
       autoDetect: true,
       quantile: 0.05,
-      eyeHeight: 1.45,
-      startOffset: 1.8,
-      lookDistance: 3.2,
+      eyeHeight: 1.32,
+      startOffset: 1.35,
+      lookDistance: 2.7,
+      walkBounds: {
+        center: [0, 0, 0],
+        halfSize: [1.75, 1.15],
+      },
     },
   },
   transform: {
@@ -212,6 +217,56 @@ const replicaSceneLabels: Record<ReplicaSceneId, string> = {
   hotel_0: "업로드 생성 데모 공간",
   room_1: "당산 가구 포함 원룸",
   room_2: "문래 분리형 원룸",
+};
+
+const replicaNavigationPresets: Record<
+  ReplicaSceneId,
+  {
+    eyeHeight: number;
+    startOffset: number;
+    lookDistance: number;
+    walkBounds: {
+      center: [number, number, number];
+      halfSize: [number, number];
+    };
+  }
+> = {
+  apartment_0: {
+    eyeHeight: 0.86,
+    startOffset: 0.85,
+    lookDistance: 2.1,
+    walkBounds: { center: [0.05, -0.05, 0], halfSize: [1.15, 0.95] },
+  },
+  apartment_1: {
+    eyeHeight: 0.78,
+    startOffset: 0.8,
+    lookDistance: 2,
+    walkBounds: { center: [0, -0.02, 0], halfSize: [1.05, 0.92] },
+  },
+  apartment_2: {
+    eyeHeight: 0.82,
+    startOffset: 0.82,
+    lookDistance: 2.05,
+    walkBounds: { center: [-0.05, -0.04, 0], halfSize: [1.12, 0.95] },
+  },
+  hotel_0: {
+    eyeHeight: 0.9,
+    startOffset: 0.9,
+    lookDistance: 2.15,
+    walkBounds: { center: [0.02, -0.05, 0], halfSize: [1.22, 1.02] },
+  },
+  room_1: {
+    eyeHeight: 0.84,
+    startOffset: 0.82,
+    lookDistance: 2.05,
+    walkBounds: { center: [0, -0.06, 0], halfSize: [1.08, 0.92] },
+  },
+  room_2: {
+    eyeHeight: 0.8,
+    startOffset: 0.78,
+    lookDistance: 2,
+    walkBounds: { center: [-0.03, -0.03, 0], halfSize: [1.04, 0.9] },
+  },
 };
 
 const replicaPhotoNames = Array.from({ length: 20 }, (_, index) =>
@@ -261,6 +316,7 @@ function normalizeReplicaSceneKey(value: string) {
 function createReplicaViewerAsset(sceneId: ReplicaSceneId): ViewerAsset {
   const label = replicaSceneLabels[sceneId];
   const photos = replicaViewerPhotosByScene[sceneId];
+  const navigationPreset = replicaNavigationPresets[sceneId];
 
   return {
     id: viewerAssetIdForReplicaScene(sceneId),
@@ -283,14 +339,15 @@ function createReplicaViewerAsset(sceneId: ReplicaSceneId): ViewerAsset {
       up: [0, 1, 0],
     },
     navigationFrame: {
-      autoAlign: true,
+      up: [0, 0, 1],
+      forward: [0, -1, 0],
+      autoAlign: false,
       floor: {
         enabled: true,
-        autoDetect: true,
+        autoDetect: false,
+        height: 0,
         quantile: 0.05,
-        eyeHeight: 1.45,
-        startOffset: 1.8,
-        lookDistance: 3.2,
+        ...navigationPreset,
       },
     },
     transform: {

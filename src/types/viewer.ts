@@ -43,6 +43,10 @@ export interface NavigationFrame {
     eyeHeight?: number;
     startOffset?: number;
     lookDistance?: number;
+    walkBounds?: {
+      center?: Vec3;
+      halfSize: [number, number];
+    };
   };
 }
 

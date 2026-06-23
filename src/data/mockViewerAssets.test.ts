@@ -97,4 +97,43 @@ describe("mockViewerAssets public files", () => {
     assert.equal(normalizeViewerAssetId("sangdo-studio"), room0ViewerAssetId);
     assert.equal(normalizeViewerAssetId("demo/room0/models/room0.splat"), room0ViewerAssetId);
   });
+
+  it("keeps every 3D sample grounded with explicit walking presets", () => {
+    const sampleAssets = viewerAssets.filter((asset) => asset.kind === "splat-scene");
+
+    assert.ok(sampleAssets.length >= 6);
+
+    for (const asset of sampleAssets) {
+      if (asset.kind !== "splat-scene") continue;
+
+      const navigationFrame = asset.navigationFrame;
+      const floor = navigationFrame?.floor;
+
+      assert.ok(floor?.enabled, `${asset.id} must enable grounded navigation`);
+      assert.equal(typeof floor.eyeHeight, "number", `${asset.id} needs eye height`);
+      assert.equal(typeof floor.startOffset, "number", `${asset.id} needs start offset`);
+      assert.equal(typeof floor.lookDistance, "number", `${asset.id} needs look distance`);
+      const { eyeHeight, startOffset, lookDistance } = floor as {
+        eyeHeight: number;
+        startOffset: number;
+        lookDistance: number;
+      };
+      assert.ok(eyeHeight > 0, `${asset.id} eye height must be positive`);
+      assert.ok(startOffset >= 0, `${asset.id} start offset must be valid`);
+      assert.ok(lookDistance > 0, `${asset.id} look distance must be positive`);
+      assert.ok(floor.walkBounds, `${asset.id} needs a walking boundary`);
+      assert.equal(floor.walkBounds.halfSize.length, 2);
+
+      for (const halfSize of floor.walkBounds.halfSize) {
+        assert.ok(halfSize > 0, `${asset.id} walking boundary must be positive`);
+      }
+
+      if (asset.id.startsWith("replica-")) {
+        assert.deepEqual(navigationFrame?.up, [0, 0, 1]);
+        assert.deepEqual(navigationFrame?.forward, [0, -1, 0]);
+        assert.equal(floor.autoDetect, false);
+        assert.equal(floor.height, 0);
+      }
+    }
+  });
 });

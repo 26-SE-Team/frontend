@@ -56,6 +56,15 @@ interface FloorState {
   boundsCenter: THREE.Vector3;
   startOffset: number;
   lookDistance: number;
+  walkBounds?: WalkBoundsState;
+}
+
+interface WalkBoundsState {
+  center: THREE.Vector3;
+  right: THREE.Vector3;
+  forward: THREE.Vector3;
+  halfWidth: number;
+  halfDepth: number;
 }
 
 interface FloorPlaneCandidate {
@@ -177,6 +186,30 @@ function applyFloorHeightLock(
   controls.update();
 }
 
+function clampFloorPointToWalkBounds(point: THREE.Vector3, floor: FloorState) {
+  const walkBounds = floor.walkBounds;
+  if (!walkBounds) return point.clone();
+
+  const offset = point.clone().sub(walkBounds.center);
+  const rightDistance = THREE.MathUtils.clamp(
+    offset.dot(walkBounds.right),
+    -walkBounds.halfWidth,
+    walkBounds.halfWidth
+  );
+  const forwardDistance = THREE.MathUtils.clamp(
+    offset.dot(walkBounds.forward),
+    -walkBounds.halfDepth,
+    walkBounds.halfDepth
+  );
+  const heightDistance = point.dot(floor.up) - walkBounds.center.dot(floor.up);
+
+  return walkBounds.center
+    .clone()
+    .addScaledVector(walkBounds.right, rightDistance)
+    .addScaledVector(walkBounds.forward, forwardDistance)
+    .addScaledVector(floor.up, heightDistance);
+}
+
 function applyGroundedStart(
   viewer: GaussianSplats3D.Viewer,
   asset: ViewerAsset,
@@ -186,15 +219,19 @@ function applyGroundedStart(
   if (!viewer.controls) return;
 
   const forward = resolveNavigationForward(asset, mode, floor.up);
-  const walkCenter = floor.boundsCenter
+  const floorCenter = floor.boundsCenter
     .clone()
     .addScaledVector(
       floor.up,
-      floor.floorHeight + floor.eyeHeight - floor.boundsCenter.dot(floor.up)
+      floor.floorHeight - floor.boundsCenter.dot(floor.up)
     );
-  const cameraPosition = walkCenter
+  const startFloorPoint = clampFloorPointToWalkBounds(
+    floorCenter.clone().addScaledVector(forward, -floor.startOffset),
+    floor
+  );
+  const cameraPosition = startFloorPoint
     .clone()
-    .addScaledVector(forward, -floor.startOffset);
+    .addScaledVector(floor.up, floor.eyeHeight);
   const lookAt = cameraPosition.clone().addScaledVector(forward, floor.lookDistance);
 
   viewer.camera.position.copy(cameraPosition);
@@ -292,7 +329,10 @@ function moveGroundedCameraTo(
       : currentView.lengthSq() > 0.0001
         ? resolveGroundedHeading(currentView, floor)
         : resolveGroundedHeading(fallbackForward, floor);
-  const cameraPosition = floorPoint.clone().addScaledVector(floor.up, floor.eyeHeight);
+  const clampedFloorPoint = clampFloorPointToWalkBounds(floorPoint, floor);
+  const cameraPosition = clampedFloorPoint
+    .clone()
+    .addScaledVector(floor.up, floor.eyeHeight);
 
   viewer.camera.position.copy(cameraPosition);
   viewer.camera.up.copy(floor.up);
@@ -496,6 +536,36 @@ async function readSplatPointStats(
   };
 }
 
+function resolveManualWalkBounds(
+  asset: ViewerAsset,
+  floorUp: THREE.Vector3,
+  floorHeight: number,
+  fallbackCenter: THREE.Vector3
+): WalkBoundsState | undefined {
+  if (asset.kind !== "splat-scene") return undefined;
+
+  const walkBounds = asset.navigationFrame?.floor?.walkBounds;
+  if (!walkBounds) return undefined;
+
+  const forward = resolveNavigationForward(asset, "orbit", floorUp);
+  const right = new THREE.Vector3().crossVectors(forward, floorUp);
+  if (right.lengthSq() < 0.0001) return undefined;
+  right.normalize();
+
+  const center = walkBounds.center
+    ? vectorFromTuple(walkBounds.center)
+    : fallbackCenter.clone();
+  center.addScaledVector(floorUp, floorHeight - center.dot(floorUp));
+
+  return {
+    center,
+    right,
+    forward,
+    halfWidth: walkBounds.halfSize[0],
+    halfDepth: walkBounds.halfSize[1],
+  };
+}
+
 function resolveSplatFloorState(
   asset: ViewerAsset,
   upHint: THREE.Vector3,
@@ -531,14 +601,21 @@ function resolveSplatFloorState(
   }
 
   if (floorHeight === undefined) return null;
+  const boundsCenter = stats.min.clone().add(stats.max).multiplyScalar(0.5);
 
   return {
     up: floorUp,
     floorHeight,
     eyeHeight,
-    boundsCenter: stats.min.clone().add(stats.max).multiplyScalar(0.5),
+    boundsCenter,
     startOffset,
     lookDistance,
+    walkBounds: resolveManualWalkBounds(
+      asset,
+      floorUp,
+      floorHeight,
+      boundsCenter
+    ),
   };
 }
 
