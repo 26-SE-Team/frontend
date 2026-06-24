@@ -5,6 +5,7 @@ import {
   isBrokerUser,
   isCertifiedBroker,
 } from "../services/authService";
+import { createLoginRedirectPath } from "../utils/authRedirect";
 import "./RoleProtectedRoute.css";
 
 interface RoleProtectedRouteProps {
@@ -40,7 +41,16 @@ export function RoleProtectedRoute({
   }
 
   if (!isAuthenticated || !user) {
-    return <Navigate to="/login" replace />;
+    return (
+      <Navigate
+        to={createLoginRedirectPath(
+          location.pathname,
+          location.search,
+          location.hash
+        )}
+        replace
+      />
+    );
   }
 
   if (requireCertifiedBroker && !isCertifiedBroker(user)) {

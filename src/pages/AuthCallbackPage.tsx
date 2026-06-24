@@ -6,6 +6,7 @@ import {
   parseCallbackTokens,
 } from "../services/authService";
 import { useAuth } from "../contexts/AuthContext";
+import { consumeRememberedPostLoginRedirect } from "../utils/authRedirect";
 import "./authCallback.css";
 
 export function AuthCallbackPage() {
@@ -33,7 +34,7 @@ export function AuthCallbackPage() {
       authStorage.setSession(parsed.tokens, parsed.user ?? null);
       const user = (await fetchCurrentUser()) ?? parsed.user ?? null;
       setUser(user);
-      navigate("/home", { replace: true });
+      navigate(consumeRememberedPostLoginRedirect(), { replace: true });
     };
 
     void handleCallback();

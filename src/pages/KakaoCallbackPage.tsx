@@ -6,6 +6,7 @@ import {
   fetchCurrentUser,
 } from "../services/authService";
 import { useAuth } from "../contexts/AuthContext";
+import { consumeRememberedPostLoginRedirect } from "../utils/authRedirect";
 import "./authCallback.css";
 
 export function KakaoCallbackPage() {
@@ -35,7 +36,7 @@ export function KakaoCallbackPage() {
         authStorage.setSession(tokens);
         const user = await fetchCurrentUser();
         setUser(user);
-        navigate("/home", { replace: true });
+        navigate(consumeRememberedPostLoginRedirect(), { replace: true });
       } catch (err) {
         setMessage(
           err instanceof Error ? err.message : "카카오 로그인에 실패했습니다."

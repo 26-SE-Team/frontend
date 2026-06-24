@@ -42,8 +42,16 @@ jobs:
           VITE_GOOGLE_CLIENT_ID: ${{ secrets.VITE_GOOGLE_CLIENT_ID }}
           VITE_GOOGLE_MAPS_API_KEY: ${{ secrets.VITE_GOOGLE_MAPS_API_KEY }}
 
-      - name: Add SPA fallback
-        run: cp dist/index.html dist/404.html
+      - name: Add SPA fallbacks
+        run: |
+          cp dist/index.html dist/404.html
+          for route in \
+            login register home map browse chat mypage stored certification \
+            my-listings listing viewer auth auth/kakao
+          do
+            mkdir -p "dist/${route}"
+            cp dist/index.html "dist/${route}/index.html"
+          done
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v4

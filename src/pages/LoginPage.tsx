@@ -1,23 +1,25 @@
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { StayViewLogo } from "../components/start/StayViewLogo";
 import { HouseIllustration } from "../components/start/HouseIllustration";
 import { KakaoIcon, GoogleIcon } from "../components/start/SocialIcons";
 import { useAuth } from "../contexts/AuthContext";
 import { useSocialLogin } from "../hooks/useSocialLogin";
+import { getPostLoginRedirectFromSearch } from "../utils/authRedirect";
 import "./start.css";
 
 export function LoginPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { isAuthenticated, isLoading } = useAuth();
   const { loginWithKakao, loginWithGoogle, loading, error, clearError } =
     useSocialLogin();
 
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
-      navigate("/home", { replace: true });
+      navigate(getPostLoginRedirectFromSearch(location.search), { replace: true });
     }
-  }, [isAuthenticated, isLoading, navigate]);
+  }, [isAuthenticated, isLoading, location.search, navigate]);
 
   return (
     <main className="start-screen">

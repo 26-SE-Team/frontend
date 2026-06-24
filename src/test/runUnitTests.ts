@@ -1,4 +1,5 @@
 import "../utils/filterListings.test";
+import "../utils/authRedirect.test";
 import "../utils/mapListingFilters.test";
 import "../utils/mapViewport.test";
 import "../data/mockListings.test";

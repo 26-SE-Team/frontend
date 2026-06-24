@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   authStorage,
   createPrototypeSession,
@@ -17,11 +17,16 @@ import {
 import { useAuth } from "../contexts/AuthContext";
 import { useGoogleSdk } from "../contexts/GoogleSdkContext";
 import { publicEnv } from "../config/publicEnv";
+import {
+  getPostLoginRedirectFromSearch,
+  rememberPostLoginRedirect,
+} from "../utils/authRedirect";
 
 type LoadingProvider = AuthProvider | null;
 
 export function useSocialLogin() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { setUser, refreshUser } = useAuth();
   const { requestAccessToken } = useGoogleSdk();
   const [loading, setLoading] = useState<LoadingProvider>(null);
@@ -50,9 +55,9 @@ export function useSocialLogin() {
 
       setUser(user);
       await refreshUser();
-      navigate("/home", { replace: true });
+      navigate(getPostLoginRedirectFromSearch(location.search), { replace: true });
     },
-    [navigate, refreshUser, setUser]
+    [location.search, navigate, refreshUser, setUser]
   );
 
   const loginWithGoogleToken = useCallback(
@@ -94,6 +99,7 @@ export function useSocialLogin() {
       if (publicEnv.useBackendAuth) {
         const backendUp = await isBackendReachable();
         if (backendUp) {
+          rememberPostLoginRedirect(location.search);
           startOAuthRedirect("google");
           return;
         }
@@ -108,7 +114,7 @@ export function useSocialLogin() {
     } finally {
       setLoading(null);
     }
-  }, [completeLogin, loginWithGoogleToken, requestAccessToken]);
+  }, [completeLogin, location.search, loginWithGoogleToken, requestAccessToken]);
 
   const loginWithKakao = useCallback(async () => {
     setError(null);
@@ -116,6 +122,7 @@ export function useSocialLogin() {
 
     const hasKakaoKey = Boolean(publicEnv.kakaoJsKey);
     if (hasKakaoKey) {
+      rememberPostLoginRedirect(location.search);
       startKakaoAuthorize();
       return;
     }
@@ -123,6 +130,7 @@ export function useSocialLogin() {
     if (publicEnv.useBackendAuth) {
       const backendUp = await isBackendReachable();
       if (backendUp) {
+        rememberPostLoginRedirect(location.search);
         startOAuthRedirect("kakao");
         return;
       }
@@ -131,7 +139,7 @@ export function useSocialLogin() {
     const user = createPrototypeSession("kakao");
     await completeLogin("kakao", user);
     setLoading(null);
-  }, [completeLogin]);
+  }, [completeLogin, location.search]);
 
   const clearError = useCallback(() => setError(null), []);
 
