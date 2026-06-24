@@ -1,12 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-import {
-  GoogleMap,
-  Marker,
-  OVERLAY_MOUSE_TARGET,
-  OverlayView,
-  useJsApiLoader,
-} from "@react-google-maps/api";
-import { publicEnv } from "../../config/publicEnv";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 import type { Listing } from "../../types/listing";
 import { formatMapPrice } from "../../utils/formatMapPrice";
 import {
@@ -18,44 +12,13 @@ import {
   shouldShowListingCardMarkers,
 } from "./mapMarkerConfig";
 
-const MAP_CONTAINER_STYLE = { width: "100%", height: "100%" };
-const SEOUL_CENTER = { lat: 37.5368, lng: 126.9784 };
-
-const MAP_OPTIONS: google.maps.MapOptions = {
-  disableDefaultUI: true,
-  zoomControl: false,
-  mapTypeControl: false,
-  streetViewControl: false,
-  fullscreenControl: false,
-  clickableIcons: false,
-  gestureHandling: "greedy",
-  maxZoom: 18,
-};
+const SEOUL_CENTER: [number, number] = [37.5368, 126.9784];
 
 interface PropertyMapProps {
   listings: Listing[];
   selectedListingId?: string | null;
   onListingClick?: (listing: Listing) => void;
   onVisibleListingsChange?: (listings: Listing[]) => void;
-}
-
-function createClusterIcon(count: number, isSelected: boolean): google.maps.Icon {
-  const size = count >= 10 ? 52 : 46;
-  const color = isSelected ? "#1e293b" : "#2563eb";
-  const border = isSelected ? "#0f172a" : "#dbeafe";
-
-  const svg = `
-    <svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
-      <circle cx="${size / 2}" cy="${size / 2}" r="18" fill="${color}" stroke="${border}" stroke-width="3"/>
-      <text x="${size / 2}" y="${Math.max(24, Math.floor(size * 0.58))}" fill="#ffffff" font-size="${count >= 10 ? 16 : 14}" font-weight="900" font-family="Pretendard, sans-serif" text-anchor="middle">${count}</text>
-    </svg>
-  `;
-
-  return {
-    url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg.trim())}`,
-    scaledSize: new google.maps.Size(size, size),
-    anchor: new google.maps.Point(size / 2, size / 2),
-  };
 }
 
 type ClusterPoint = {
@@ -67,13 +30,6 @@ type ClusterPoint = {
   listing?: Listing;
   listings: Listing[];
 };
-
-function getListingCardOffset(width: number, height: number) {
-  return {
-    x: Math.round(width / -2),
-    y: Math.round(-height - 12),
-  };
-}
 
 function getPriceCaption(price: string) {
   const normalized = price.trim();
@@ -94,16 +50,10 @@ export function PropertyMap({
   onListingClick,
   onVisibleListingsChange,
 }: PropertyMapProps) {
-  const apiKey = publicEnv.googleMapsApiKey;
-  const [map, setMap] = useState<google.maps.Map | null>(null);
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const mapInstanceRef = useRef<L.Map | null>(null);
+  const markersGroupRef = useRef<L.LayerGroup | null>(null);
   const [zoomLevel, setZoomLevel] = useState(11);
-
-  const { isLoaded, loadError } = useJsApiLoader({
-    id: "stayview-google-map",
-    googleMapsApiKey: apiKey,
-    language: "ko",
-    region: "KR",
-  });
 
   const mappedListings = useMemo(
     () => listings.filter((listing) => listing.mapPosition),
@@ -112,18 +62,16 @@ export function PropertyMap({
   const showListingCards = shouldShowListingCardMarkers(zoomLevel);
 
   const emitVisibleListings = useCallback(
-    (targetMap: google.maps.Map | null) => {
-      if (!onVisibleListingsChange) return;
+    (targetMap: L.Map | null) => {
+      if (!onVisibleListingsChange || !targetMap) return;
 
-      const bounds = targetMap?.getBounds();
-      const literalBounds: MapBoundsLiteral | null = bounds
-        ? {
-            north: bounds.getNorthEast().lat(),
-            east: bounds.getNorthEast().lng(),
-            south: bounds.getSouthWest().lat(),
-            west: bounds.getSouthWest().lng(),
-          }
-        : null;
+      const bounds = targetMap.getBounds();
+      const literalBounds: MapBoundsLiteral = {
+        north: bounds.getNorth(),
+        east: bounds.getEast(),
+        south: bounds.getSouth(),
+        west: bounds.getWest(),
+      };
 
       onVisibleListingsChange(
         filterListingsByMapBounds(mappedListings, literalBounds)
@@ -196,157 +144,157 @@ export function PropertyMap({
     });
   }, [mappedListings, zoomLevel]);
 
+  // Initialize Map
   useEffect(() => {
-    if (!map || !isLoaded || mappedListings.length === 0) return;
+    if (!mapContainerRef.current || mapInstanceRef.current) return;
 
-    const bounds = new google.maps.LatLngBounds();
-    mappedListings.forEach((listing) => {
-      const position = listing.mapPosition;
-      if (!position) return;
-      bounds.extend({ lat: position.lat, lng: position.lng });
+    const map = L.map(mapContainerRef.current, {
+      zoomControl: false,
+      attributionControl: false,
+    }).setView(SEOUL_CENTER, 11);
+
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 18,
+    }).addTo(map);
+
+    markersGroupRef.current = L.layerGroup().addTo(map);
+    mapInstanceRef.current = map;
+
+    map.on("zoomend", () => {
+      setZoomLevel(map.getZoom());
     });
 
-    map.fitBounds(bounds, 64);
-  }, [isLoaded, map, mappedListings]);
+    map.on("moveend", () => {
+      emitVisibleListings(map);
+    });
 
-  const handleMapLoad = useCallback((nextMap: google.maps.Map) => {
-    setMap(nextMap);
-    setZoomLevel(nextMap.getZoom() ?? 11);
-    emitVisibleListings(nextMap);
+    emitVisibleListings(map);
+
+    return () => {
+      map.off();
+      map.remove();
+      mapInstanceRef.current = null;
+      markersGroupRef.current = null;
+    };
   }, [emitVisibleListings]);
 
-  const handleMapIdle = useCallback(() => {
-    if (!map) return;
-    setZoomLevel(map.getZoom() ?? 11);
-    emitVisibleListings(map);
-  }, [emitVisibleListings, map]);
-
+  // Fit bounds when listings load
   useEffect(() => {
-    emitVisibleListings(map);
-  }, [emitVisibleListings, map]);
+    const map = mapInstanceRef.current;
+    if (!map || mappedListings.length === 0) return;
 
-  const handlePointClick = useCallback(
-    (point: ClusterPoint) => () => {
-      if (point.isCluster && point.listings.length > 1) {
-        if (!map) return;
-        map.setCenter({ lat: point.lat, lng: point.lng });
-        const nextZoom = Math.min((map.getZoom() ?? 14) + 2, 18);
-        map.setZoom(nextZoom);
-        return;
-      }
-
-      if (point.listing) {
-        onListingClick?.(point.listing);
-      }
-    },
-    [map, onListingClick]
-  );
-
-  if (!apiKey) {
-    return (
-      <div className="map-page__error">
-        <p className="map-page__error-title">지도를 불러올 수 없습니다</p>
-        <p className="map-page__error-desc">
-          잠시 후 다시 시도해주세요.
-        </p>
-      </div>
+    const bounds = L.latLngBounds(
+      mappedListings.map((l) => [l.mapPosition!.lat, l.mapPosition!.lng])
     );
-  }
+    map.fitBounds(bounds, { padding: [64, 64] });
+  }, [mappedListings]);
 
-  if (loadError) {
-    return (
-      <div className="map-page__error">
-        <p className="map-page__error-title">지도를 불러올 수 없습니다</p>
-        <p className="map-page__error-desc">
-          잠시 후 다시 시도해주세요.
-        </p>
-      </div>
-    );
-  }
+  // Sync visible listings on listings change
+  useEffect(() => {
+    emitVisibleListings(mapInstanceRef.current);
+  }, [listings, emitVisibleListings]);
 
-  if (!isLoaded) {
-    return (
-      <div className="map-page__loading">
-        <span className="map-page__spinner" />
-        <p>지도 불러오는 중...</p>
-      </div>
-    );
-  }
+  // Draw Markers
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    const markersGroup = markersGroupRef.current;
+    if (!map || !markersGroup) return;
 
-  return (
-    <GoogleMap
-      mapContainerStyle={MAP_CONTAINER_STYLE}
-      center={SEOUL_CENTER}
-      zoom={11}
-      options={MAP_OPTIONS}
-      onLoad={handleMapLoad}
-      onIdle={handleMapIdle}
-      onUnmount={() => setMap(null)}
-    >
-      {mapPoints.map((point) => {
-        const listing = point.listing;
-        if (point.isCluster) {
-          const isSelected =
-            selectedListingId &&
-            point.listings.some((candidate) => candidate.id === selectedListingId);
+    markersGroup.clearLayers();
 
-          return (
-            <Marker
-              key={point.id}
-              position={{ lat: point.lat, lng: point.lng }}
-              icon={createClusterIcon(point.listingCount, Boolean(isSelected))}
-              title={`${point.listingCount}건`}
-              onClick={handlePointClick(point)}
-              zIndex={isSelected ? 10 : 1}
-            />
-          );
-        }
+    mapPoints.forEach((point) => {
+      const listing = point.listing;
+      const isSelected = selectedListingId
+        ? point.isCluster
+          ? point.listings.some((candidate) => candidate.id === selectedListingId)
+          : listing?.id === selectedListingId
+        : false;
 
-        if (!listing?.mapPosition) return null;
-        const position = listing.mapPosition;
-        const isSelected = listing.id === selectedListingId;
+      let markerIcon: L.DivIcon;
+
+      if (point.isCluster) {
+        const count = point.listingCount;
+        const color = isSelected ? "#1e293b" : "#2563eb";
+        const border = isSelected ? "#0f172a" : "#dbeafe";
+        const size = count >= 10 ? 52 : 46;
+
+        const svg = `
+          <svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+            <circle cx="${size / 2}" cy="${size / 2}" r="18" fill="${color}" stroke="${border}" stroke-width="3"/>
+            <text x="${size / 2}" y="${Math.max(24, Math.floor(size * 0.58))}" fill="#ffffff" font-size="${count >= 10 ? 16 : 14}" font-weight="900" font-family="Pretendard, sans-serif" text-anchor="middle">${count}</text>
+          </svg>
+        `;
+
+        markerIcon = L.divIcon({
+          html: svg.trim(),
+          className: "custom-cluster-icon",
+          iconSize: [size, size],
+          iconAnchor: [size / 2, size / 2],
+        });
+      } else {
+        if (!listing?.mapPosition) return;
 
         if (showListingCards) {
-          return (
-            <OverlayView
-              key={point.id}
-              position={{ lat: point.lat, lng: point.lng }}
-              mapPaneName={OVERLAY_MOUSE_TARGET}
-              zIndex={isSelected ? 20 : 2}
-              getPixelPositionOffset={getListingCardOffset}
+          const priceCaption = getPriceCaption(listing.price);
+          const priceValue = formatMapPrice(listing.price);
+          const html = `
+            <button
+              type="button"
+              class="map-listing-card-marker ${isSelected ? "is-active" : ""}"
+              style="margin: 0; pointer-events: auto;"
             >
-              <button
-                type="button"
-                className={`map-listing-card-marker${
-                  isSelected ? " is-active" : ""
-                }`}
-                onClick={(event) => {
-                  event.stopPropagation();
-                  onListingClick?.(listing);
-                }}
-                aria-label={`${listing.price} ${listing.type}`}
-              >
-                <img src={listing.imageUrl} alt="" />
-                <span>
-                  <em>{getPriceCaption(listing.price)}</em>
-                  <strong>{formatMapPrice(listing.price)}</strong>
-                </span>
-              </button>
-            </OverlayView>
-          );
-        }
+              <img src="${listing.imageUrl}" alt="" />
+              <span>
+                <em>${priceCaption}</em>
+                <strong>${priceValue}</strong>
+              </span>
+            </button>
+          `;
 
-        return (
-          <Marker
-            key={point.id}
-            position={{ lat: point.lat, lng: point.lng }}
-            icon={createClusterIcon(point.listingCount, isSelected)}
-            title={position.label ?? `${listing.location} ${listing.type}`}
-            onClick={handlePointClick(point)}
-            zIndex={isSelected ? 10 : 1}
-          />
-        );
-      })}
-    </GoogleMap>
+          markerIcon = L.divIcon({
+            html: html.trim(),
+            className: "custom-listing-card-icon",
+            iconSize: [120, 36],
+            iconAnchor: [60, 36],
+          });
+        } else {
+          const color = isSelected ? "#1e293b" : "#2563eb";
+          const border = isSelected ? "#0f172a" : "#dbeafe";
+          const size = 30;
+
+          const svg = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+              <circle cx="${size / 2}" cy="${size / 2}" r="10" fill="${color}" stroke="${border}" stroke-width="2"/>
+            </svg>
+          `;
+
+          markerIcon = L.divIcon({
+            html: svg.trim(),
+            className: "custom-listing-dot-icon",
+            iconSize: [size, size],
+            iconAnchor: [size / 2, size / 2],
+          });
+        }
+      }
+
+      const marker = L.marker([point.lat, point.lng], { icon: markerIcon });
+
+      marker.on("click", (event) => {
+        L.DomEvent.stopPropagation(event);
+        if (point.isCluster && point.listings.length > 1) {
+          map.setView([point.lat, point.lng], Math.min(map.getZoom() + 2, 18));
+        } else if (point.listing) {
+          onListingClick?.(point.listing);
+        }
+      });
+
+      marker.addTo(markersGroup);
+    });
+  }, [mapPoints, selectedListingId, showListingCards, onListingClick]);
+
+  return (
+    <div style={{ width: "100%", height: "100%", position: "relative" }}>
+      <div ref={mapContainerRef} style={{ width: "100%", height: "100%" }} />
+    </div>
   );
 }
