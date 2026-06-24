@@ -1,0 +1,51 @@
+services:
+  # 1. PostgreSQL 데이터베이스 서비스
+  db:
+    image: postgres:15-alpine
+    container_name: stayview-db
+    restart: always
+    environment:
+      POSTGRES_DB: stayview
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password123 # 데이터베이스 비밀번호 설정
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # 2. 백엔드 Spring Boot API 서버 서비스
+  backend:
+    build:
+      context: ./backend
+    container_name: stayview-backend
+    restart: always
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    environment:
+      # 컨테이너 간 통신 시 db 서비스 이름을 호스트로 지정
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/stayview
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: password123
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update # 실행 시 스키마가 없는 경우 자동 생성
+      # 백엔드 JVM 최대 메모리를 512MB로 제한 (마크 서버 보호용)
+      JAVA_TOOL_OPTIONS: "-Xmx512m -Xms256m"
+
+  # 3. 프론트엔드 React 웹 서버 서비스
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        # ※ 브라우저가 접속하여 백엔드 API를 호출할 리눅스 서버의 실제 주소를 지정합니다.
+        # 실제 리눅스 서버의 사설 IP 주소(예: http://192.168.0.10:8080)로 빌드 직전에 변경해야 정상 통신됩니다.
+        - VITE_API_BASE_URL=http://stayview-api.ddakfit.com
+    container_name: stayview-frontend
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
