@@ -243,8 +243,10 @@ export function PropertyMap({
               class="map-listing-card-marker ${isSelected ? "is-active" : ""}"
               style="margin: 0; pointer-events: auto;"
             >
-              <img src="${listing.imageUrl}" alt="" />
-              <span>
+              <span class="map-listing-card-marker__photo">
+                <img src="${listing.imageUrl}" alt="" />
+              </span>
+              <span class="map-listing-card-marker__text">
                 <em>${priceCaption}</em>
                 <strong>${priceValue}</strong>
               </span>
@@ -254,8 +256,8 @@ export function PropertyMap({
           markerIcon = L.divIcon({
             html: html.trim(),
             className: "custom-listing-card-icon",
-            iconSize: [120, 36],
-            iconAnchor: [60, 36],
+            iconSize: [112, 42],
+            iconAnchor: [56, 46],
           });
         } else {
           const color = isSelected ? "#1e293b" : "#2563eb";
