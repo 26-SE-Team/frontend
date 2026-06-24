@@ -110,15 +110,27 @@ describe("mockViewerAssets public files", () => {
       const floor = navigationFrame?.floor;
 
       assert.ok(floor?.enabled, `${asset.id} must enable grounded navigation`);
-      assert.equal(typeof floor.eyeHeight, "number", `${asset.id} needs eye height`);
+      const hasFixedEyeHeight = typeof floor.eyeHeight === "number";
+      const hasRatioEyeHeight = typeof floor.eyeHeightRatio === "number";
+      assert.ok(
+        hasFixedEyeHeight || hasRatioEyeHeight,
+        `${asset.id} needs eye height`
+      );
       assert.equal(typeof floor.startOffset, "number", `${asset.id} needs start offset`);
       assert.equal(typeof floor.lookDistance, "number", `${asset.id} needs look distance`);
-      const { eyeHeight, startOffset, lookDistance } = floor as {
-        eyeHeight: number;
+      const { startOffset, lookDistance } = floor as {
         startOffset: number;
         lookDistance: number;
       };
-      assert.ok(eyeHeight > 0, `${asset.id} eye height must be positive`);
+      if (hasFixedEyeHeight) {
+        assert.ok(
+          floor.eyeHeight !== undefined && floor.eyeHeight > 0,
+          `${asset.id} eye height must be positive`
+        );
+      }
+      if (hasRatioEyeHeight) {
+        assert.equal(floor.eyeHeightRatio, 0.7);
+      }
       assert.ok(startOffset >= 0, `${asset.id} start offset must be valid`);
       assert.ok(lookDistance > 0, `${asset.id} look distance must be positive`);
       assert.ok(floor.walkBounds, `${asset.id} needs a walking boundary`);

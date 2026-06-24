@@ -169,7 +169,7 @@ export const room0ViewerAsset: ViewerAsset = {
       enabled: true,
       autoDetect: true,
       quantile: 0.05,
-      eyeHeight: 1.32,
+      eyeHeightRatio: 0.7,
       startOffset: 1.35,
       lookDistance: 2.7,
       walkBounds: {
@@ -222,7 +222,7 @@ const replicaSceneLabels: Record<ReplicaSceneId, string> = {
 const replicaNavigationPresets: Record<
   ReplicaSceneId,
   {
-    eyeHeight: number;
+    eyeHeightRatio: number;
     startOffset: number;
     lookDistance: number;
     walkBounds: {
@@ -232,37 +232,37 @@ const replicaNavigationPresets: Record<
   }
 > = {
   apartment_0: {
-    eyeHeight: 0.86,
+    eyeHeightRatio: 0.7,
     startOffset: 0.85,
     lookDistance: 2.1,
     walkBounds: { center: [0.05, -0.05, 0], halfSize: [1.15, 0.95] },
   },
   apartment_1: {
-    eyeHeight: 0.78,
+    eyeHeightRatio: 0.7,
     startOffset: 0.8,
     lookDistance: 2,
     walkBounds: { center: [0, -0.02, 0], halfSize: [1.05, 0.92] },
   },
   apartment_2: {
-    eyeHeight: 0.82,
+    eyeHeightRatio: 0.7,
     startOffset: 0.82,
     lookDistance: 2.05,
     walkBounds: { center: [-0.05, -0.04, 0], halfSize: [1.12, 0.95] },
   },
   hotel_0: {
-    eyeHeight: 0.9,
+    eyeHeightRatio: 0.7,
     startOffset: 0.9,
     lookDistance: 2.15,
     walkBounds: { center: [0.02, -0.05, 0], halfSize: [1.22, 1.02] },
   },
   room_1: {
-    eyeHeight: 0.84,
+    eyeHeightRatio: 0.7,
     startOffset: 0.82,
     lookDistance: 2.05,
     walkBounds: { center: [0, -0.06, 0], halfSize: [1.08, 0.92] },
   },
   room_2: {
-    eyeHeight: 0.8,
+    eyeHeightRatio: 0.7,
     startOffset: 0.78,
     lookDistance: 2,
     walkBounds: { center: [-0.03, -0.03, 0], halfSize: [1.04, 0.9] },

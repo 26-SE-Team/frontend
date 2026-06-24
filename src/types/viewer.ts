@@ -41,6 +41,10 @@ export interface NavigationFrame {
     height?: number;
     quantile?: number;
     eyeHeight?: number;
+    eyeHeightRatio?: number;
+    ceilingQuantile?: number;
+    minEyeHeight?: number;
+    maxEyeHeight?: number;
     startOffset?: number;
     lookDistance?: number;
     walkBounds?: {

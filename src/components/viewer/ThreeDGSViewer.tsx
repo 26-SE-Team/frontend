@@ -13,6 +13,7 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { PLYLoader } from "three/examples/jsm/loaders/PLYLoader.js";
 import type {
   GaussianSceneData,
+  NavigationFrame,
   SplatCameraPreset,
   ViewerAsset,
   ViewerMode,
@@ -482,6 +483,53 @@ function quantileValue(values: number[], quantile: number) {
   return sortedValues[index];
 }
 
+function collectSplatHeights(
+  stats: SplatPointStats,
+  upDirection: THREE.Vector3
+) {
+  const view = new DataView(stats.buffer);
+  const heights: number[] = [];
+
+  for (let index = 0; index < stats.splatCount; index += 1) {
+    const offset = index * splatStrideBytes;
+    heights.push(
+      view.getFloat32(offset, true) * upDirection.x +
+        view.getFloat32(offset + 4, true) * upDirection.y +
+        view.getFloat32(offset + 8, true) * upDirection.z
+    );
+  }
+
+  return heights;
+}
+
+function resolveSplatEyeHeight(
+  floorConfig: NavigationFrame["floor"] | undefined,
+  stats: SplatPointStats,
+  floorUp: THREE.Vector3,
+  floorHeight: number
+) {
+  const eyeHeightRatio = floorConfig?.eyeHeightRatio;
+
+  if (eyeHeightRatio !== undefined) {
+    const heights = collectSplatHeights(stats, floorUp);
+    const ceilingHeight = quantileValue(
+      heights,
+      floorConfig?.ceilingQuantile ?? 0.96
+    );
+
+    if (ceilingHeight !== undefined && ceilingHeight > floorHeight) {
+      const ratioEyeHeight = (ceilingHeight - floorHeight) * eyeHeightRatio;
+      return THREE.MathUtils.clamp(
+        ratioEyeHeight,
+        floorConfig?.minEyeHeight ?? 0.45,
+        floorConfig?.maxEyeHeight ?? 1.95
+      );
+    }
+  }
+
+  return floorConfig?.eyeHeight ?? 1.45;
+}
+
 async function readSplatPointStats(
   asset: ViewerAsset,
   upHint: THREE.Vector3,
@@ -575,7 +623,6 @@ function resolveSplatFloorState(
 
   const floorConfig = asset.navigationFrame?.floor;
   const quantile = floorConfig?.quantile ?? 0.05;
-  const eyeHeight = floorConfig?.eyeHeight ?? 1.45;
   const startOffset = floorConfig?.startOffset ?? 1.8;
   const lookDistance = floorConfig?.lookDistance ?? 3.2;
   let floorHeight = floorConfig?.height;
@@ -601,6 +648,12 @@ function resolveSplatFloorState(
   }
 
   if (floorHeight === undefined) return null;
+  const eyeHeight = resolveSplatEyeHeight(
+    floorConfig,
+    stats,
+    floorUp,
+    floorHeight
+  );
   const boundsCenter = stats.min.clone().add(stats.max).multiplyScalar(0.5);
 
   return {
