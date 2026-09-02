@@ -256,7 +256,7 @@ function getFilterButtonLabel(filters: MapListingFilters): string {
     filters.monthlyRentMax === defaultMapListingFilters.monthlyRentMax &&
     filters.managementFeeMax === defaultMapListingFilters.managementFeeMax
   ) {
-    return "거래 유형/가격";
+    return "거래 유형 / 가격";
   }
 
   const tradeLabel =
